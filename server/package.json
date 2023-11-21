@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "backend-start": "nodemon cloud/main.js"
+    "backend-start": "nodemon src/main.js"
   },
   "dependencies": {
     "axios": "^1.6.2",

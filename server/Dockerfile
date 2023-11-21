@@ -1,11 +1,13 @@
-# Use the official Node.js image as the base image
 FROM node:18
 
-# Set the working directory in the container
-WORKDIR /cloud
+WORKDIR /usr/src/main
 
-# Install the application dependencies
+COPY package*.json ./
+
 RUN npm install
 
-# Define the entry point for the container
-CMD ["npm", "backend-start"]
+COPY . .
+
+EXPOSE 3000
+
+CMD [ "node", "src/main.js" ]

@@ -1,8 +1,8 @@
 import express from "express";
 
-const main = express();
+const app = express();
 
-main.get('/', async (req, res) => {
+app.get('/', async (req, res) => {
 
     try {
         res.send('Hello')
@@ -11,4 +11,8 @@ main.get('/', async (req, res) => {
     }
 });
 
-module.exports = main;
+app.listen(3000, () => {
+
+});
+
+module.exports = app;
