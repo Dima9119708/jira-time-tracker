@@ -13,7 +13,7 @@ app.use(cookieParser())
 app.use(express.json())
 
 app.get('/', (req, res) => {
-    res.send(`Welcome`);
+    res.send('Welcome');
 });
 
 app.post('/login', async (req, res) => {
