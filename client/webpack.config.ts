@@ -87,6 +87,9 @@ export default (env: IBuildEnv) => {
             new webpack.DefinePlugin({
                 __BASE_APP_ROUTE__: JSON.stringify(baseRoute),
             }),
+            new webpack.ProvidePlugin({
+                Buffer: ['buffer', 'Buffer'],
+            }),
             isProd && new MiniCssExtractPlugin({
                 filename: 'static/css/[name].[contenthash:8].css',
                 chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
