@@ -2,7 +2,7 @@
 FROM node:20-alpine
 
 # We set /appRoot as the working directory within the container
-WORKDIR /app
+WORKDIR /app2
 
 # We copy package.json and package-lock.json into the /appRoot directory in the container
 COPY package*.json ./
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # The command required to run the appRoot is specified
-CMD [ "node", "src/app.js" ]
+CMD [ "node", "src/app2.js" ]
