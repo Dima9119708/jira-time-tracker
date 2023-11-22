@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import axios from 'axios'
 
 const app = express()
 const port = 3000
@@ -51,6 +52,28 @@ app.get('/', (req, res) => {
       </body>
     </html>
   `)
+})
+
+app.post('/login', async (req, res) => {
+    try {
+        const email = req.body.email
+        const host = req.body.host
+        const apiToken = req.body.apiToken
+
+        const encodedAuth = Buffer.from(`${email}:${apiToken}`).toString('base64')
+
+        const response = await axios.get(`${host}/rest/api/2/myself`, {
+            headers: {
+                Authorization: `Basic ${encodedAuth}`,
+            },
+        })
+
+        res.cookie('auth', encodedAuth, { httpOnly: true, sameSite: 'strict' })
+
+        res.status(response.status).send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
 })
 
 app.listen(port, () => {
