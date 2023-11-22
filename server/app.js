@@ -37,7 +37,7 @@ app.post('/login', async (req, res) => {
 app.get('/auth', async (req, res) => {
     try {
         if (!req.cookies.host || !req.cookies.auth) {
-            return res.status(401).send()
+            return res.status(401).send('401')
         }
 
         const response = await axios.get(`${req.cookies.host}/rest/api/2/myself`, {
