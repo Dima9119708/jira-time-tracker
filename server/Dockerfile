@@ -1,5 +1,5 @@
 # Use Node.js v14
-FROM node:18-alpine
+FROM node:18.18.2-alpine
 
 # Create app directory
 WORKDIR /usr/src/app
