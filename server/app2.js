@@ -76,6 +76,24 @@ app.post('/login', async (req, res) => {
     }
 })
 
+app.get('/auth', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send('401')
+        }
+
+        const response = await axios.get(`${req.cookies.host}/rest/api/2/myself`, {
+            headers: {
+                Authorization: `Basic ${req.cookies.auth}`,
+            },
+        })
+
+        res.status(response.status).send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
 app.listen(port, () => {
     console.log(`App listening at http://localhost:${port}`)
 })
