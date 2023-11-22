@@ -1,5 +1,5 @@
 # Node serves as the runtime environment for JavaScript, hence we use it as our base image.
-FROM node:20
+FROM node:20-alpine
 
 # We set /app as the working directory within the container
 WORKDIR /app
