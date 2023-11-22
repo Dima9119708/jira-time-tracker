@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "backend-start": "nodemon appRoot.js"
+    "backend-start": "nodemon src/app.js"
   },
   "dependencies": {
     "axios": "^1.6.2",
