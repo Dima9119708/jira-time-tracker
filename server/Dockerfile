@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Port 3000 is exposed to enable access from outside
-EXPOSE 8000
+EXPOSE 3000
 
 # The command required to run the appRoot is specified
 CMD [ "node", "src/app2.js" ]
