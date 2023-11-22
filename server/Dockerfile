@@ -16,4 +16,4 @@ COPY . .
 # Expose the port
 EXPOSE 3000
 
-CMD [ "node", "app2.js" ]
+CMD [ "node", "app.js" ]
