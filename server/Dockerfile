@@ -1,5 +1,5 @@
-# Use Node.js v18
-FROM node:18
+# Use Node.js v14
+FROM node:14
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -16,4 +16,4 @@ COPY . .
 # Expose the port
 EXPOSE 3000
 
-CMD [ "node", "app.js" ]
+CMD [ "node", "app2.js" ]
