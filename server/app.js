@@ -12,6 +12,10 @@ app.use(cookieParser())
 
 app.use(express.json())
 
+app.get('/test', (req, res) => {
+    res.send('Hello');
+});
+
 app.post('/login', async (req, res) => {
     try {
         const email = req.body.email
