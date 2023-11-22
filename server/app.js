@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser'
 import axios from 'axios'
 
 const app = express()
-const post = process.env.PORT || 8000
+const post = 3000
 
 app.use(cors({ origin: true, credentials: true }))
 

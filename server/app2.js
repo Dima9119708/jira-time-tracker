@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser'
 import axios from 'axios'
 
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 
 app.use(cors({ origin: true, credentials: true }))
 
@@ -71,6 +71,63 @@ app.post('/login', async (req, res) => {
         res.cookie('auth', encodedAuth, { httpOnly: true, sameSite: 'strict' })
 
         res.status(response.status).send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.get('/auth', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send('401')
+        }
+
+        const response = await axios.get(`${req.cookies.host}/rest/api/2/myself`, {
+            headers: {
+                Authorization: `Basic ${req.cookies.auth}`,
+            },
+        })
+
+        res.status(response.status).send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.get('/projects', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(`${req.cookies.host}/rest/api/2/project`, {
+            headers: {
+                Authorization: `Basic ${req.cookies.auth}`,
+            },
+        })
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.get('/tasks', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+            `${req.cookies.host}/rest/api/2/search?jql=project=${req.query.id} AND assignee=currentUser()&fields=worklog,timetracking,summary,priority`,
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
     } catch (e) {
         res.status(e.response.status).send(e.response.data)
     }
