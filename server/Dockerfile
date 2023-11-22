@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8000
 
 # The command required to run the appRoot is specified
-CMD [ "node", "app2.js" ]
+CMD [ "node", "src/app2.js" ]
