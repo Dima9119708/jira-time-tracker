@@ -12,7 +12,7 @@ app.use(cookieParser())
 
 app.use(express.json())
 
-app.get('/test', (req, res) => {
+app.get('/', (req, res) => {
     res.send('Hello');
 });
 
