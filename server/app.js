@@ -12,10 +12,6 @@ app.use(cookieParser())
 
 app.use(express.json())
 
-app.get('/', (req, res) => {
-    res.send('Hello');
-});
-
 app.post('/login', async (req, res) => {
     try {
         const email = req.body.email
@@ -30,8 +26,7 @@ app.post('/login', async (req, res) => {
             },
         })
 
-        res.cookie('auth', encodedAuth, { httpOnly: true, secure: true, sameSite: 'strict' })
-        res.cookie('host', host, { httpOnly: true, secure: true, sameSite: 'strict' })
+        res.cookie('auth', encodedAuth, { httpOnly: true, sameSite: 'strict' })
 
         res.status(response.status).send(response.data)
     } catch (e) {
@@ -81,11 +76,14 @@ app.get('/tasks', async (req, res) => {
             return res.status(401).send()
         }
 
-        const response = await axios.get(`${req.cookies.host}/rest/api/2/search?jql=project=${req.query.id} AND assignee=currentUser()&fields=worklog,timetracking,summary,priority`, {
-            headers: {
-                Authorization: `Basic ${req.cookies.auth}`,
-            },
-        })
+        const response = await axios.get(
+            `${req.cookies.host}/rest/api/2/search?jql=project=${req.query.id} AND assignee=currentUser()&fields=worklog,timetracking,summary,priority`,
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
 
         res.send(response.data)
     } catch (e) {

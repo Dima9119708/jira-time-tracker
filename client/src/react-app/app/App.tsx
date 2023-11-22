@@ -1,30 +1,17 @@
 import React, { useEffect } from 'react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import ThemeProvider from './Theme/Theme'
+import { Route, Routes } from 'react-router-dom'
 import LayoutRoot from './LayoutRoot/LayoutRoot'
-import axios from "axios";
+import { axiosInstance } from '../shared/config/api/api'
 
 const App = () => {
-    useEffect(() => {
-        axios.get('http://localhost:8000/auth',  { params: { id: 10000 }, withCredentials: true })
-            .then(() => {})
-            .catch(() => {})
-        axios.get('http://localhost:8000/tasks',  { params: { id: 10000 }, withCredentials: true })
-            .then(() => {})
-            .catch(() => {})
-    }, [])
+    useEffect(() => {}, [])
 
     return (
-        <ThemeProvider>
-            <MemoryRouter>
-                <Routes>
-                    <Route path="/" element={<LayoutRoot />}>
-                        <Route path="/aa" element={<div />} />
-                        <Route path="/ccccccc" element={<div />} />
-                    </Route>
-                </Routes>
-            </MemoryRouter>
-        </ThemeProvider>
+        <Routes>
+            <Route path="/" element={<LayoutRoot />}>
+                <Route path="/auth" element={<div />} />
+            </Route>
+        </Routes>
     )
 }
 
