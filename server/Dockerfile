@@ -2,7 +2,7 @@
 FROM node:20-alpine
 
 # We set /appRoot as the working directory within the container
-WORKDIR /app2
+WORKDIR /app
 
 # We copy package.json and package-lock.json into the /appRoot directory in the container
 COPY package*.json ./
