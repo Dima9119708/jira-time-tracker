@@ -3,16 +3,16 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import axios from 'axios'
 
-const server = express()
+const app = express()
 const port = process.env.PORT || 3000
 
-server.use(cors({ origin: true, credentials: true }))
+app.use(cors({ origin: true, credentials: true }))
 
-server.use(cookieParser())
+app.use(cookieParser())
 
-server.use(express.json())
+app.use(express.json())
 
-server.get('/', (req, res) => {
+app.get('/', (req, res) => {
     res.send(`
     <html>
       <head>
@@ -48,13 +48,13 @@ server.get('/', (req, res) => {
         </style>
       </head>
       <body>
-        <h1>Welcome to Back4server Containerssacsa</h1>
+        <h1>Welcome to Back4app Containerssacsa</h1>
       </body>
     </html>
   `)
 })
 
-server.post('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
     try {
         const email = req.body.email
         const host = req.body.host
@@ -76,7 +76,7 @@ server.post('/login', async (req, res) => {
     }
 })
 
-server.get('/auth', async (req, res) => {
+app.get('/auth', async (req, res) => {
     try {
         if (!req.cookies.host || !req.cookies.auth) {
             return res.status(401).send('401')
@@ -94,7 +94,7 @@ server.get('/auth', async (req, res) => {
     }
 })
 
-server.get('/projects', async (req, res) => {
+app.get('/projects', async (req, res) => {
     try {
         if (!req.cookies.host || !req.cookies.auth) {
             return res.status(401).send()
@@ -112,7 +112,7 @@ server.get('/projects', async (req, res) => {
     }
 })
 
-server.get('/tasks', async (req, res) => {
+app.get('/tasks', async (req, res) => {
     try {
         if (!req.cookies.host || !req.cookies.auth) {
             return res.status(401).send()
@@ -133,6 +133,6 @@ server.get('/tasks', async (req, res) => {
     }
 })
 
-server.listen(port, () => {
-    console.log(`server listening at http://localhost:${port}`)
+app.listen(port, () => {
+    console.log(`app listening at http://localhost:${port}`)
 })
