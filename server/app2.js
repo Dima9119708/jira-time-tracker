@@ -9,6 +9,8 @@ app.use(cors({ origin: true, credentials: true }))
 
 app.use(cookieParser())
 
+app.use(express.json())
+
 app.get('/test', (req, res) => {
     res.send('Hello');
 });
