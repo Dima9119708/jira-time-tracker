@@ -9,7 +9,6 @@ module.exports = {
         transitionDuration: false,
         borderColor: false,
     },
-    important: '#root',
     plugins: [
         (api) => {
             api.addUtilities({

@@ -70,6 +70,7 @@ app.post('/login', async (req, res) => {
         })
 
         res.cookie('auth', encodedAuth, { httpOnly: true, sameSite: 'strict' })
+        res.cookie('host', host)
 
         res.status(response.status).send(response.data)
     } catch (e) {

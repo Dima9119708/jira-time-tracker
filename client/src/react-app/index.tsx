@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import '@mantine/core/styles.css'
+import './app/styles/index.css'
 import App from './app/App'
 import QueryClientProvide from './app/QueryClientProvide/QueryClientProvide'
 import ThemeProvider from './app/Theme/Theme'
