@@ -5,6 +5,7 @@ import App from './app/App'
 import QueryClientProvide from './app/QueryClientProvide/QueryClientProvide'
 import ThemeProvider from './app/Theme/Theme'
 import { MemoryRouter } from 'react-router-dom'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -15,5 +16,7 @@ root.render(
                 <App />
             </MemoryRouter>
         </ThemeProvider>
+
+        <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvide>
 )

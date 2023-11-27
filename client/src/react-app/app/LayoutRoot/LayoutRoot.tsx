@@ -1,16 +1,14 @@
 import { Outlet } from 'react-router-dom'
+import { Box } from '@mantine/core'
 
-interface LayoutRootProps {
-    className?: string
-}
-
-const LayoutRoot = (props: LayoutRootProps) => {
-    const {} = props
-
+const LayoutRoot = () => {
     return (
-        <div>
-            <Outlet />{' '}
-        </div>
+        <Box
+            bg="gray.2"
+            className="p-[2rem] min-h-[100vh]"
+        >
+            <Outlet />
+        </Box>
     )
 }
 

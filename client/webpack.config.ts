@@ -1,45 +1,44 @@
-import path from 'path';
-import webpack from 'webpack';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import type { Configuration as DevServerConfiguration } from 'webpack-dev-server';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
-import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
-import TerserPlugin from 'terser-webpack-plugin';
-import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
-import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
-import CopyPlugin from 'copy-webpack-plugin';
+import path from 'path'
+import webpack from 'webpack'
+import HtmlWebpackPlugin from 'html-webpack-plugin'
+import type { Configuration as DevServerConfiguration } from 'webpack-dev-server'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin'
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin'
+import TerserPlugin from 'terser-webpack-plugin'
+import { WebpackManifestPlugin } from 'webpack-manifest-plugin'
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
+import CopyPlugin from 'copy-webpack-plugin'
+import Dotenv from 'dotenv-webpack'
 
 interface IBuildEnv {
     mode: 'development' | 'production'
-    port: number,
-    apiURL: string,
-    baseRoute: string,
+    port: number
+    apiURL: string
+    baseRoute: string
 }
 
 export default (env: IBuildEnv) => {
-    const port = env.port || 3000;
-    const mode = env?.mode || 'development';
-    const isDev = mode === 'development';
-    const isProd = !isDev;
-    const apiUrl = env?.apiURL || 'http://localhost:8000';
-    const baseRoute = env.baseRoute || '/';
+    const port = env.port || 3000
+    const mode = env?.mode || 'development'
+    const isDev = mode === 'development'
+    const isProd = !isDev
+    const apiUrl = env?.apiURL || 'http://localhost:8000'
+    const baseRoute = env.baseRoute || '/'
 
     const devServer: DevServerConfiguration = {
         open: true,
         port,
         historyApiFallback: true,
         hot: true,
-    };
+    }
 
-    let config: webpack.Configuration;
+    let config: webpack.Configuration
     config = {
         mode,
         entry: path.resolve(__dirname, 'src', 'react-app', 'index.tsx'),
         output: {
-            filename: isDev
-                ? 'static/js/bundle.js'
-                : 'static/js/[name].[contenthash:8].js',
+            filename: isDev ? 'static/js/bundle.js' : 'static/js/[name].[contenthash:8].js',
             path: path.resolve(__dirname, 'build'),
             clean: true,
             publicPath: isDev ? '/' : '',
@@ -49,10 +48,7 @@ export default (env: IBuildEnv) => {
             extensions: ['.tsx', '.ts', '.js', '.jsx'],
             preferAbsolute: true,
             mainFiles: ['index'],
-            modules: [
-                path.resolve(__dirname, 'src'),
-                'node_modules',
-            ],
+            modules: [path.resolve(__dirname, 'src'), 'node_modules'],
             alias: {},
         },
         optimization: {
@@ -61,8 +57,8 @@ export default (env: IBuildEnv) => {
                 new TerserPlugin({
                     terserOptions: {
                         compress: {
-                            drop_console: true
-                        }
+                            drop_console: true,
+                        },
                     },
                     extractComments: false,
                     include: /static\/.*/i,
@@ -82,7 +78,7 @@ export default (env: IBuildEnv) => {
         plugins: [
             new webpack.ProgressPlugin(),
             new HtmlWebpackPlugin({
-                template: path.resolve(__dirname, 'public', 'index.html')
+                template: path.resolve(__dirname, 'public', 'index.html'),
             }),
             new webpack.DefinePlugin({
                 __BASE_APP_ROUTE__: JSON.stringify(baseRoute),
@@ -90,21 +86,26 @@ export default (env: IBuildEnv) => {
             new webpack.ProvidePlugin({
                 Buffer: ['buffer', 'Buffer'],
             }),
-            isProd && new MiniCssExtractPlugin({
-                filename: 'static/css/[name].[contenthash:8].css',
-                chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+            new Dotenv({
+                path: './.env',
             }),
-            isProd && new CopyPlugin({
-                patterns: [
-                    {
-                        from: path.resolve(__dirname, 'public'),
-                        to: path.resolve(__dirname, 'build'),
-                        globOptions: {
-                            ignore: ['**/index.html', '**/manifest.json'],
+            isProd &&
+                new MiniCssExtractPlugin({
+                    filename: 'static/css/[name].[contenthash:8].css',
+                    chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+                }),
+            isProd &&
+                new CopyPlugin({
+                    patterns: [
+                        {
+                            from: path.resolve(__dirname, 'public'),
+                            to: path.resolve(__dirname, 'build'),
+                            globOptions: {
+                                ignore: ['**/index.html', '**/manifest.json'],
+                            },
                         },
-                    },
-                ],
-            }),
+                    ],
+                }),
             isProd && new WebpackManifestPlugin({}),
             isDev && new webpack.HotModuleReplacementPlugin(),
             isDev && new ReactRefreshWebpackPlugin(),
@@ -120,13 +121,8 @@ export default (env: IBuildEnv) => {
                     use: {
                         loader: 'babel-loader',
                         options: {
-                            presets: [
-                                ['@babel/preset-env'],
-                            ],
-                            plugins: [
-                                ['@babel/plugin-transform-typescript', { isTSX: true }],
-                                '@babel/plugin-transform-runtime',
-                            ],
+                            presets: [['@babel/preset-env']],
+                            plugins: [['@babel/plugin-transform-typescript', { isTSX: true }], '@babel/plugin-transform-runtime'],
                         },
                     },
                 },
@@ -149,9 +145,7 @@ export default (env: IBuildEnv) => {
                             options: {
                                 modules: {
                                     auto: (pathFile: string) => Boolean(pathFile.includes('.module.')),
-                                    localIdentName: isDev
-                                        ? '[local]--[hash:base64:5]'
-                                        : '[hash:base64:5]',
+                                    localIdentName: isDev ? '[local]--[hash:base64:5]' : '[hash:base64:5]',
                                 },
                             },
                         },
@@ -160,7 +154,7 @@ export default (env: IBuildEnv) => {
                 },
             ],
         },
-    };
+    }
 
-    return config;
-};
+    return config
+}

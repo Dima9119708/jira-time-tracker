@@ -10,7 +10,6 @@ app.use(cors({ origin: true, credentials: true }))
 
 app.use(cookieParser())
 
-/* Test */
 app.use(express.json())
 
 app.get('/', (req, res) => {
@@ -19,9 +18,13 @@ app.get('/', (req, res) => {
 
 app.post('/login', async (req, res) => {
     try {
-        const email = req.body.email
-        const host = req.body.host
-        const apiToken = req.body.apiToken
+        const host = req.body.host ?? req.cookies.host
+        const email = req.body.email ?? Buffer.from(`${req.cookies.auth}`, 'base64').toString('ascii').split(':')[0]
+        const apiToken = req.body.apiToken ?? Buffer.from(`${req.cookies.auth}`, 'base64').toString('ascii').split(':')[1]
+
+        if (!host || !email || !apiToken) {
+            return res.status(401).send('401')
+        }
 
         const encodedAuth = Buffer.from(`${email}:${apiToken}`).toString('base64')
 
@@ -33,24 +36,6 @@ app.post('/login', async (req, res) => {
 
         res.cookie('auth', encodedAuth, { httpOnly: true, sameSite: 'strict' })
         res.cookie('host', host)
-
-        res.status(response.status).send(response.data)
-    } catch (e) {
-        res.status(e.response.status).send(e.response.data)
-    }
-})
-
-app.get('/auth', async (req, res) => {
-    try {
-        if (!req.cookies.host || !req.cookies.auth) {
-            return res.status(401).send('401')
-        }
-
-        const response = await axios.get(`${req.cookies.host}/rest/api/2/myself`, {
-            headers: {
-                Authorization: `Basic ${req.cookies.auth}`,
-            },
-        })
 
         res.status(response.status).send(response.data)
     } catch (e) {

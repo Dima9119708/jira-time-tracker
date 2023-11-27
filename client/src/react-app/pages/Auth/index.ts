@@ -1,3 +1,3 @@
-import Auth from './ui/Auth'
+import AuthPage from './ui/AuthPage'
 
-export { Auth }
+export { AuthPage }

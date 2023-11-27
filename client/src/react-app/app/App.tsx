@@ -1,32 +1,38 @@
-import React, { useEffect } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import React from 'react'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import LayoutRoot from './LayoutRoot/LayoutRoot'
-import { axiosInstance } from '../shared/config/api/api'
-import Auth from '../pages/Auth/ui/Auth'
-import { useQuery } from 'react-query'
+import AuthPage from '../pages/Auth/ui/AuthPage'
+import { useAuthByEmailAndToken } from '../features/authByEmailAndToken'
+import { Loader } from '@mantine/core'
+import { ProjectsPage } from '../pages/Projects'
 
 const App = () => {
-    useEffect(() => {}, [])
+    const { isFetching, isAuthorized } = useAuthByEmailAndToken()
 
-    const { isLoading } = useQuery({
-        queryKey: 'test',
-        queryFn: () => {},
-        enabled: true,
-    })
-
-    console.log('isLoading', isLoading)
+    if (!isAuthorized && isFetching) {
+        return (
+            <div className="h-[100vh] flex-center">
+                <Loader />
+            </div>
+        )
+    }
 
     return (
         <Routes>
             <Route
                 path="/"
-                element={<LayoutRoot />}
+                element={isAuthorized && !isFetching ? <LayoutRoot /> : <Navigate to="/auth" />}
             >
                 <Route
-                    path="/auth"
-                    element={<Auth />}
+                    index
+                    path="/projects"
+                    element={<ProjectsPage />}
                 />
             </Route>
+            <Route
+                path="/auth"
+                element={<AuthPage />}
+            />
         </Routes>
     )
 }

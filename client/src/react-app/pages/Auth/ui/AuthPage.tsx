@@ -1,12 +1,9 @@
 import React from 'react'
 import { Container, Title, Paper, Box } from '@mantine/core'
 import { AuthByEmailAndToken, BaseAuthFormFields } from '../../../features/authByEmailAndToken'
+import { axiosInstance } from '../../../shared/config/api/api'
 
-const Auth = () => {
-    const onSubmit = (formValues: BaseAuthFormFields) => {
-        console.log('formValues', formValues)
-    }
-
+const AuthPage = () => {
     return (
         <Box bg="gray.2">
             <Container
@@ -38,11 +35,11 @@ const Auth = () => {
                         Jira
                     </Title>
 
-                    <AuthByEmailAndToken onSubmit={onSubmit} />
+                    <AuthByEmailAndToken />
                 </Paper>
             </Container>
         </Box>
     )
 }
 
-export default Auth
+export default AuthPage
