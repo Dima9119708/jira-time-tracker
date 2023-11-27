@@ -2,7 +2,7 @@ import { Button, PasswordInput, TextInput } from '@mantine/core'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { BaseAuthFormFields } from '../types'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 
 const AuthByEmailAndToken = () => {
@@ -20,9 +20,11 @@ const AuthByEmailAndToken = () => {
         },
     })
 
+    const queryClient = useQueryClient()
+
     const { isPending, mutate } = useMutation({
         mutationFn: (variables: BaseAuthFormFields) => axiosInstance.post('/login', variables),
-        onSuccess: () => navigate('/projects'),
+        onSuccess: () => queryClient.setQueryData(['login'], true),
     })
 
     const onSubmit: SubmitHandler<BaseAuthFormFields> = (formValues) => mutate(formValues)

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { axiosInstance } from '../../../shared/config/api/api'
 import { useNavigate } from 'react-router-dom'
-import { BaseAuthFormFields } from '../types'
+import { useEffect } from 'react'
+import { axiosInstance } from '../../../shared/config/api/api'
 
 export const useAuthByEmailAndToken = () => {
     const navigate = useNavigate()
@@ -9,13 +9,21 @@ export const useAuthByEmailAndToken = () => {
     const { data, isFetching } = useQuery({
         queryKey: ['login'],
         queryFn: async () => {
-            const response = await axiosInstance.post('/login', {})
+            if (/host/.test(document.cookie)) {
+                const response = await axiosInstance.post('/login', {})
 
-            navigate('/projects')
-            return !!response.data
+                return !!response.data
+            }
+
+            return false
         },
-        enabled: /host/.test(document.cookie),
     })
+
+    useEffect(() => {
+        if (data) {
+            navigate('/projects')
+        }
+    }, [data])
 
     return {
         isFetching,
