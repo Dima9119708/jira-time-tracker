@@ -2,10 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { Projects } from '../types/types'
 import { Badge, Button, Card, Group, Image, Text } from '@mantine/core'
-import { AxiosResponse } from 'axios'
 
 const ProjectsPage = () => {
-    const { data = [], isFetching } = useQuery({
+    const {
+        data = [],
+        isFetching,
+        isPlaceholderData,
+    } = useQuery({
         queryKey: ['projects'],
         queryFn: () => axiosInstance.get<Projects[]>('/projects'),
         select: (data) => data.data,

@@ -1,14 +1,27 @@
 import { Outlet } from 'react-router-dom'
-import { Box } from '@mantine/core'
+import { AppShell, Box, Group } from '@mantine/core'
+import { IconTransferOut } from '@tabler/icons-react'
 
 const LayoutRoot = () => {
     return (
-        <Box
+        <AppShell
             bg="gray.2"
-            className="p-[2rem] min-h-[100vh]"
+            p={20}
         >
-            <Outlet />
-        </Box>
+            <AppShell.Header
+                bg="gray.2"
+                px={20}
+                py={10}
+            >
+                <Group>
+                    <IconTransferOut />
+                </Group>
+            </AppShell.Header>
+
+            <AppShell.Main pt={40}>
+                <Outlet />
+            </AppShell.Main>
+        </AppShell>
     )
 }
 
