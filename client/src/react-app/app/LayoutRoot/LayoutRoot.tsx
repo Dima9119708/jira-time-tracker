@@ -1,6 +1,7 @@
-import { Outlet } from 'react-router-dom'
-import { AppShell, Box, Group } from '@mantine/core'
+import { AppShell, Group } from '@mantine/core'
 import { IconTransferOut } from '@tabler/icons-react'
+import { Outlet } from 'react-router-dom'
+import { Breadcrumbs } from '../../shared/ui/Breadcrumbs'
 
 const LayoutRoot = () => {
     return (
@@ -13,12 +14,13 @@ const LayoutRoot = () => {
                 px={20}
                 py={10}
             >
-                <Group>
-                    <IconTransferOut />
+                <Group justify="end">
+                    <IconTransferOut cursor="pointer" />
                 </Group>
             </AppShell.Header>
 
             <AppShell.Main pt={40}>
+                <Breadcrumbs mb={20} />
                 <Outlet />
             </AppShell.Main>
         </AppShell>

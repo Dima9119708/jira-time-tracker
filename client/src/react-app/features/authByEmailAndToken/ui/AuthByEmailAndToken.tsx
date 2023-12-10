@@ -24,7 +24,10 @@ const AuthByEmailAndToken = () => {
 
     const { isPending, mutate } = useMutation({
         mutationFn: (variables: BaseAuthFormFields) => axiosInstance.post('/login', variables),
-        onSuccess: () => queryClient.setQueryData(['login'], true),
+        onSuccess: () => {
+            queryClient.setQueryData(['login'], true)
+            navigate('/projects')
+        },
     })
 
     const onSubmit: SubmitHandler<BaseAuthFormFields> = (formValues) => mutate(formValues)

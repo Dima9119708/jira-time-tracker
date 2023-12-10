@@ -1,3 +1,3 @@
-import ProjectsPage from './ui/ProjectsPage'
+import { queryGetProjects } from './model/queryOptions'
 
-export { ProjectsPage }
+export { queryGetProjects }

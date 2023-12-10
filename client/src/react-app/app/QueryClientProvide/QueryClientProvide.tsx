@@ -5,7 +5,7 @@ interface QueryClientProvideProps {
     children: ReactNode
 }
 
-const queryClient = new QueryClient()
+export const queryClient = new QueryClient()
 
 const QueryClientProvide = (props: QueryClientProvideProps) => {
     const { children } = props

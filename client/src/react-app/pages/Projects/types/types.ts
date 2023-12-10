@@ -11,3 +11,9 @@ export interface Projects {
         '32x32': string
     }
 }
+
+export interface CardProps {
+    src: string
+    name: string
+    id: string
+}

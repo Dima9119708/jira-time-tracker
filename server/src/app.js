@@ -61,6 +61,48 @@ app.get('/projects', async (req, res) => {
     }
 })
 
+app.get('/boards', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+            `${req.cookies.host}/rest/agile/1.0/board?projectKeyOrId=${req.query.id}`,
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.get('/board/configuration', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+            `${req.cookies.host}/rest/agile/1.0/board/${req.query.id}/configuration`,
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
 app.get('/tasks', async (req, res) => {
     try {
         if (!req.cookies.host || !req.cookies.auth) {
@@ -68,7 +110,7 @@ app.get('/tasks', async (req, res) => {
         }
 
         const response = await axios.get(
-            `${req.cookies.host}/rest/api/2/search?jql=project=${req.query.id} AND assignee=currentUser()&fields=worklog,timetracking,summary,priority`,
+            `${req.cookies.host}/rest/agile/1.0/board/${req.query.id}/issue?jql=status="${req.query.columnName}"`,
             {
                 headers: {
                     Authorization: `Basic ${req.cookies.auth}`,

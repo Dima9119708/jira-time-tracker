@@ -1,22 +1,33 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './app/styles/index.css'
-import App from './app/App'
 import QueryClientProvide from './app/QueryClientProvide/QueryClientProvide'
 import ThemeProvider from './app/Theme/Theme'
-import { MemoryRouter } from 'react-router-dom'
+import { RouterProvider } from 'react-router-dom'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { router } from './app/router/router'
+import { Loader } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
 root.render(
     <QueryClientProvide>
         <ThemeProvider>
-            <MemoryRouter>
-                <App />
-            </MemoryRouter>
+            <Notifications />
+            <RouterProvider
+                router={router}
+                fallbackElement={
+                    <div className="h-[100vh] flex-center">
+                        <Loader />
+                    </div>
+                }
+            />
         </ThemeProvider>
 
-        <ReactQueryDevtools initialIsOpen={false} />
+        <ReactQueryDevtools
+            initialIsOpen={false}
+            buttonPosition={'bottom-left'}
+        />
     </QueryClientProvide>
 )
