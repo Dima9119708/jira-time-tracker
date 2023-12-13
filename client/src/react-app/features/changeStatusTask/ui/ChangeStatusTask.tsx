@@ -1,18 +1,17 @@
-import { StatusesTask, TStatusTask } from '../../../entities/StatusesTask'
-import { memo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { StatusesTask, TStatusTask } from '../../../entities/StatusesTask'
 import { axiosInstance } from '../../../shared/config/api/api'
-import { TasksResponse } from '../types/types'
+import { TasksResponse } from '../../../pages/Tasks/types/types'
 import { produce } from 'immer'
+import { StatusesTaskProps } from '../../../entities/StatusesTask'
 
-interface StatusTaskProps {
-    id: string
-    name: string
+interface ChangeStatusTaskProps extends Omit<StatusesTaskProps, 'onChange'> {
     queryKey: string
+    onChange?: () => void
 }
 
-const StatusTask = (props: StatusTaskProps) => {
-    const { name, id, queryKey } = props
+const ChangeStatusTask = (props: ChangeStatusTaskProps) => {
+    const { id, queryKey, children, position, disabled, onChange } = props
 
     const queryClient = useQueryClient()
 
@@ -30,7 +29,7 @@ const StatusTask = (props: StatusTaskProps) => {
             queryClient.setQueryData([queryKey], (old: TasksResponse): TasksResponse => {
                 const newTask = produce(old.issues, (draft) => {
                     const idx = draft.findIndex((value) => value.id === id)
-                    draft[idx].fields.status.name = variables.name
+                    draft[idx].fields.status = variables.to
                 })
 
                 return {
@@ -39,12 +38,13 @@ const StatusTask = (props: StatusTaskProps) => {
                 }
             })
 
+            if (typeof onChange === 'function') {
+                onChange()
+            }
+
             return {
                 oldState,
             }
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKey] })
         },
         onError: (error, variables, context) => {
             queryClient.setQueryData([queryKey], context!.oldState)
@@ -54,10 +54,13 @@ const StatusTask = (props: StatusTaskProps) => {
     return (
         <StatusesTask
             id={id}
-            value={name}
-            onChange={(status: TStatusTask) => mutate(status)}
-        />
+            position={position}
+            disabled={disabled}
+            onChange={(status) => mutate(status)}
+        >
+            {children}
+        </StatusesTask>
     )
 }
 
-export default memo(StatusTask)
+export default ChangeStatusTask

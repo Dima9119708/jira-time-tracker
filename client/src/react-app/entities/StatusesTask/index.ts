@@ -1,6 +1,6 @@
 import StatusesTask from './ui/StatusesTask'
-import { TStatusTask } from './types/types'
+import { StatusesTaskProps, TStatusTask, StatusesTaskResponse } from './types/types'
 
 export { StatusesTask }
 
-export type { TStatusTask }
+export type { TStatusTask, StatusesTaskProps, StatusesTaskResponse }

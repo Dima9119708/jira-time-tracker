@@ -1,12 +1,11 @@
-import { Badge, Card as Mantine_Card, Group, Title } from '@mantine/core'
+import { Alert, Badge, Button, Card as Mantine_Card, Group, Popover, Title, Text } from '@mantine/core'
 import { TaskProps, TasksResponse } from '../types/types'
-import { memo } from 'react'
-import { IconPlayerPauseFilled } from '@tabler/icons-react'
+import React, { memo } from 'react'
+import { IconAlertTriangle, IconInfoCircle, IconPlayerPauseFilled } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
 import TaskTimer from './TaskTimer'
-import StatusTask from './StatusTask'
-import { useWorklogQuery } from '../lib/useWorklogQuery'
 import { secondsToUIFormat } from '../lib/dateHelper'
+import { ChangeStatusTask } from '../../../features/changeStatusTask'
 
 const TaskTracking = (props: TaskProps) => {
     const { fields, id, setSearchParams } = props
@@ -49,16 +48,16 @@ const TaskTracking = (props: TaskProps) => {
         })
     }
 
-    useWorklogQuery({
-        taskId: id,
-    })
+    // useWorklogQuery({
+    //     taskId: id,
+    // })
 
     return (
         <Mantine_Card
             key={id}
             shadow="sm"
             radius="md"
-            bg="cyan.1"
+            bg="teal.0"
             mb="sm"
             withBorder
         >
@@ -67,6 +66,17 @@ const TaskTracking = (props: TaskProps) => {
                 mb={10}
                 justify="space-between"
             >
+                {fields.status.statusCategory.key !== 'indeterminate' && (
+                    <Alert
+                        className="w-[100%]"
+                        variant="light"
+                        color="red"
+                        title={'Warning!'}
+                        icon={<IconAlertTriangle />}
+                    >
+                        This task is not in the "In progress" status please change its status. However, time continues to be logged for it.
+                    </Alert>
+                )}
                 <Title order={5}>{fields.summary}</Title>
 
                 <Badge
@@ -80,11 +90,17 @@ const TaskTracking = (props: TaskProps) => {
             </Group>
 
             <Group justify="space-between">
-                <StatusTask
+                <ChangeStatusTask
                     id={id}
-                    name={fields.status.name}
                     queryKey="tracking tasks"
-                />
+                >
+                    <Button
+                        variant="outline"
+                        size="xs"
+                    >
+                        {fields.status.name}
+                    </Button>
+                </ChangeStatusTask>
 
                 <IconPlayerPauseFilled
                     onClick={onPlayTracking}

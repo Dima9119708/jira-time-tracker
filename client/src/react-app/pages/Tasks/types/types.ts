@@ -1,5 +1,7 @@
 import { SetURLSearchParams } from 'react-router-dom'
 
+export type TaskStatusCategory = 'new' | 'indeterminate' | 'done'
+
 export interface TasksResponse {
     issues: Array<{
         id: string
@@ -7,6 +9,9 @@ export interface TasksResponse {
             summary: string
             status: {
                 name: string
+                statusCategory: {
+                    key: TaskStatusCategory
+                }
             }
             timeoriginalestimate: number
             timespent: number

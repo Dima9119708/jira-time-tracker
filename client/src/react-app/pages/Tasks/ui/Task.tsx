@@ -1,10 +1,10 @@
-import { Badge, Card as Mantine_Card, Group, Title } from '@mantine/core'
+import { Badge, Button, Card as Mantine_Card, Group, Title } from '@mantine/core'
 import { TaskProps, TasksResponse } from '../types/types'
-import { memo } from 'react'
+import React, { memo } from 'react'
 import { IconPlayerPlayFilled } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
-import StatusTask from './StatusTask'
 import { secondsToUIFormat } from '../lib/dateHelper'
+import { ChangeStatusTask } from '../../../features/changeStatusTask'
 
 const Task = (props: TaskProps) => {
     const { fields, id, setSearchParams } = props
@@ -20,21 +20,25 @@ const Task = (props: TaskProps) => {
                 }
             }
 
-            queryClient.setQueryData(['tracking tasks'], (old: TasksResponse): TasksResponse => {
-                return {
-                    ...old,
-                    issues: [props, ...(old ? old.issues : [])],
-                }
-            })
-
-            queryClient.setQueryData(['tasks'], (old: TasksResponse): TasksResponse => {
-                return {
-                    ...old,
-                    issues: (old ? old.issues : []).filter((issue) => issue.id !== props.id),
-                }
-            })
-
             return { keysTaskTracking: string }
+        })
+
+        const oldState = queryClient.getQueryData<TasksResponse>(['tasks'])
+
+        const task = oldState!.issues.find((issue) => issue.id === id)!
+
+        queryClient.setQueryData(['tracking tasks'], (old: TasksResponse): TasksResponse => {
+            return {
+                ...old,
+                issues: [task, ...(old ? old.issues : [])],
+            }
+        })
+
+        queryClient.setQueryData(['tasks'], (old: TasksResponse): TasksResponse => {
+            return {
+                ...old,
+                issues: (old ? old.issues : []).filter((issue) => issue.id !== task.id),
+            }
         })
     }
 
@@ -63,16 +67,30 @@ const Task = (props: TaskProps) => {
             </Group>
 
             <Group justify="space-between">
-                <StatusTask
+                <ChangeStatusTask
                     id={id}
-                    name={fields.status.name}
                     queryKey="tasks"
-                />
+                >
+                    <Button
+                        variant="outline"
+                        size="xs"
+                    >
+                        {fields.status.name}
+                    </Button>
+                </ChangeStatusTask>
 
-                <IconPlayerPlayFilled
-                    onClick={onPlayTracking}
-                    className="cursor-pointer [&_path]:fill-[var(--mantine-color-violet-5)]"
-                />
+                <ChangeStatusTask
+                    id={id}
+                    queryKey="tasks"
+                    position="left"
+                    onChange={() => onPlayTracking()}
+                    disabled={fields.status.statusCategory.key === 'indeterminate'}
+                >
+                    <IconPlayerPlayFilled
+                        className="cursor-pointer [&_path]:fill-[var(--mantine-color-violet-5)]"
+                        {...(fields.status.statusCategory.key === 'indeterminate' && { onClick: onPlayTracking })}
+                    />
+                </ChangeStatusTask>
             </Group>
         </Mantine_Card>
     )

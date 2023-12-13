@@ -34,7 +34,7 @@ export const queryGetTasksTracking = (id: string, keys: string) =>
                     .then((data) => data.data)
             }
 
-            return
+            return null
         },
         gcTime: 0,
     })
