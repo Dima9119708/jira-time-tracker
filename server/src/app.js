@@ -61,35 +61,14 @@ app.get('/projects', async (req, res) => {
     }
 })
 
-app.get('/boards', async (req, res) => {
+app.get('/statuses-task', async (req, res) => {
     try {
         if (!req.cookies.host || !req.cookies.auth) {
             return res.status(401).send()
         }
 
         const response = await axios.get(
-            `${req.cookies.host}/rest/agile/1.0/board?projectKeyOrId=${req.query.id}`,
-            {
-                headers: {
-                    Authorization: `Basic ${req.cookies.auth}`,
-                },
-            }
-        )
-
-        res.send(response.data)
-    } catch (e) {
-        res.status(e.response.status).send(e.response.data)
-    }
-})
-
-app.get('/board/configuration', async (req, res) => {
-    try {
-        if (!req.cookies.host || !req.cookies.auth) {
-            return res.status(401).send()
-        }
-
-        const response = await axios.get(
-            `${req.cookies.host}/rest/agile/1.0/board/${req.query.id}/configuration`,
+            `${req.cookies.host}/rest/api/2/issue/${req.query.id}/transitions`,
             {
                 headers: {
                     Authorization: `Basic ${req.cookies.auth}`,
@@ -110,7 +89,132 @@ app.get('/tasks', async (req, res) => {
         }
 
         const response = await axios.get(
-            `${req.cookies.host}/rest/agile/1.0/board/${req.query.id}/issue?jql=status="${req.query.columnName}"`,
+            `${req.cookies.host}/rest/api/2/search?jql=project=${req.query.id} AND assignee=currentuser() ${req.query.keys ? `AND NOT issueKey in (${req.query.keys})`: ''} `,
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.get('/tracking-tasks', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+            `${req.cookies.host}/rest/api/2/search?jql=project=${req.query.id} AND issueKey in (${req.query.keys})`,
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.get('/worklog-task', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+            `${req.cookies.host}/rest/api/3/issue/${req.query.id}/worklog`,
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.post('/worklog-task', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.post(
+            `${req.cookies.host}/rest/api/3/issue/${req.body.taskId}/worklog`,
+            {
+                timeSpent: req.body.timeSpent
+            },
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.put('/worklog-task', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.put(
+            `${req.cookies.host}/rest/api/3/issue/${req.body.taskId}/worklog/${req.body.id}`,
+            {
+                timeSpent: req.body.timeSpent
+            },
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.post('/change-status-task', async (req, res) => {
+    try {
+        if (!req.cookies.host || !req.cookies.auth) {
+            return res.status(401).send()
+        }
+
+        await axios.post(
+            `${req.cookies.host}/rest/api/2/issue/${req.body.taskId}/transitions`,
+            {
+                transition: {
+                    id: req.body.transitionId
+                }
+            },
+            {
+                headers: {
+                    Authorization: `Basic ${req.cookies.auth}`,
+                },
+            }
+        )
+
+        const response = await axios.get(
+            `${req.cookies.host}/rest/api/2/issue/${req.body.taskId}`,
             {
                 headers: {
                     Authorization: `Basic ${req.cookies.auth}`,

@@ -1,20 +1,40 @@
 import { queryOptions } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
-import { Tasks } from '../types/types'
+import { TasksResponse } from '../types/types'
 
-export const queryGetBoardColumns = (id: string) =>
+export const queryGetTasks = (id: string, keys: string | null) =>
     queryOptions({
-        queryKey: ['board columns', id],
-        queryFn: () =>
-            axiosInstance.get<Tasks>('/board/configuration', {
-                params: {
-                    id,
-                },
-            }),
-        select: (data) => {
-            return {
-                defaultColumn: data.data.columnConfig.columns[0].name,
-                columns: data.data.columnConfig.columns,
+        queryKey: ['tasks'],
+        queryFn: ({ signal }) =>
+            axiosInstance
+                .get<TasksResponse>('/tasks', {
+                    params: {
+                        id,
+                        keys,
+                    },
+                    signal,
+                })
+                .then((data) => data.data),
+        gcTime: 0,
+    })
+
+export const queryGetTasksTracking = (id: string, keys: string) =>
+    queryOptions({
+        queryKey: ['tracking tasks'],
+        queryFn: ({ signal }) => {
+            if (keys.length) {
+                return axiosInstance
+                    .get<TasksResponse>('/tracking-tasks', {
+                        params: {
+                            id,
+                            keys,
+                        },
+                        signal,
+                    })
+                    .then((data) => data.data)
             }
+
+            return
         },
+        gcTime: 0,
     })

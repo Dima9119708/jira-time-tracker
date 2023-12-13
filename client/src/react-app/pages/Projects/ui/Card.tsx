@@ -7,7 +7,7 @@ const Card = (props: CardProps) => {
     const { src, name, id } = props
     const navigate = useNavigate()
 
-    const onProject = () => navigate(`/boards/${id}`)
+    const onProject = () => navigate(`/tasks/${id}`)
 
     return (
         <InView triggerOnce>

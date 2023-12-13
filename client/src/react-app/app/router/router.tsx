@@ -5,13 +5,13 @@ import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { loaderAuth } from '../../features/authByEmailAndToken'
 import LayoutRoot from '../LayoutRoot/LayoutRoot'
 import { loaderTasks } from '../../pages/Tasks'
-import { loaderBoards } from '../../pages/Boards'
 
 export const router = createBrowserRouter([
     {
         path: '',
         Component: LayoutRoot,
         loader: loaderAuth(queryClient),
+        shouldRevalidate: (args) => false,
         children: [
             {
                 index: true,
@@ -26,19 +26,9 @@ export const router = createBrowserRouter([
                 },
             },
             {
-                path: 'boards/:projectId',
-                loader: loaderBoards(queryClient),
-                lazy: async () => {
-                    const component = await import('../../pages/Boards/ui/BoardsPage')
-
-                    return {
-                        Component: component.default,
-                    }
-                },
-            },
-            {
-                path: 'tasks/:projectId/:boardId',
+                path: 'tasks/:boardId',
                 loader: loaderTasks(queryClient),
+                shouldRevalidate: () => false,
                 lazy: async () => {
                     const component = await import('../../pages/Tasks/ui/TasksPage')
 

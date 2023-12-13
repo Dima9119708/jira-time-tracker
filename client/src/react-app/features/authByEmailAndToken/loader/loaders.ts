@@ -12,11 +12,12 @@ export const loaderAuth = (queryClient: QueryClient) => async () => {
                 if (/host/.test(document.cookie)) {
                     const response = await axiosInstance.post('/login', {})
 
-                    return !!response.data
+                    return response.data
                 }
 
                 return false
             },
+            gcTime: Infinity,
         })
 
         if (!value) {

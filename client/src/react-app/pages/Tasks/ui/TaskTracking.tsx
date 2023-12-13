@@ -1,51 +1,68 @@
 import { Badge, Card as Mantine_Card, Group, Title } from '@mantine/core'
 import { TaskProps, TasksResponse } from '../types/types'
 import { memo } from 'react'
-import { IconPlayerPlayFilled } from '@tabler/icons-react'
+import { IconPlayerPauseFilled } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
+import TaskTimer from './TaskTimer'
 import StatusTask from './StatusTask'
+import { useWorklogQuery } from '../lib/useWorklogQuery'
 import { secondsToUIFormat } from '../lib/dateHelper'
 
-const Task = (props: TaskProps) => {
+const TaskTracking = (props: TaskProps) => {
     const { fields, id, setSearchParams } = props
     const queryClient = useQueryClient()
 
     const onPlayTracking = () => {
         setSearchParams((prev) => {
-            let string = id
+            const numbers = prev
+                .get('keysTaskTracking')!
+                .split(',')
+                .map((item) => {
+                    return parseInt(item, 10)
+                })
 
-            for (const value of prev.values()) {
-                if (value) {
-                    string += `,${value}`
-                }
+            const indexToRemove = numbers.indexOf(Number(id))
+
+            if (indexToRemove !== -1) {
+                numbers.splice(indexToRemove, 1)
             }
+
+            const resultString = numbers.join(',')
 
             queryClient.setQueryData(['tracking tasks'], (old: TasksResponse): TasksResponse => {
                 return {
                     ...old,
-                    issues: [props, ...(old ? old.issues : [])],
+                    issues: old.issues.filter((issue) => issue.id !== id),
                 }
             })
 
             queryClient.setQueryData(['tasks'], (old: TasksResponse): TasksResponse => {
                 return {
                     ...old,
-                    issues: (old ? old.issues : []).filter((issue) => issue.id !== props.id),
+                    issues: [props, ...old.issues],
                 }
             })
 
-            return { keysTaskTracking: string }
+            return {
+                keysTaskTracking: resultString,
+            }
         })
     }
+
+    useWorklogQuery({
+        taskId: id,
+    })
 
     return (
         <Mantine_Card
             key={id}
             shadow="sm"
             radius="md"
+            bg="cyan.1"
             mb="sm"
             withBorder
         >
+            <TaskTimer />
             <Group
                 mb={10}
                 justify="space-between"
@@ -66,10 +83,10 @@ const Task = (props: TaskProps) => {
                 <StatusTask
                     id={id}
                     name={fields.status.name}
-                    queryKey="tasks"
+                    queryKey="tracking tasks"
                 />
 
-                <IconPlayerPlayFilled
+                <IconPlayerPauseFilled
                     onClick={onPlayTracking}
                     className="cursor-pointer [&_path]:fill-[var(--mantine-color-violet-5)]"
                 />
@@ -78,4 +95,4 @@ const Task = (props: TaskProps) => {
     )
 }
 
-export default memo(Task)
+export default memo(TaskTracking)

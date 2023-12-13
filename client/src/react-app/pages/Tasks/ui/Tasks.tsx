@@ -1,45 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
-import { axiosInstance } from '../../../shared/config/api/api'
-import { useParams } from 'react-router-dom'
-import { Card as Mantine_Card, Text, Title } from '@mantine/core'
+import { useParams, useSearchParams } from 'react-router-dom'
+import { queryGetTasks } from '../model/queryOption'
+import Task from './Task'
 
-interface TaskProps {
-    columnName: string
-}
-
-interface Tasks {
-    issues: Array<{
-        id: string
-        fields: {
-            summary: string
-            timespent: number
-            timeoriginalestimate: number
-        }
-    }>
-}
-
-const Tasks = (props: TaskProps) => {
-    const { columnName } = props
+const Tasks = () => {
     const params = useParams<{ projectId: string; boardId: string }>()
+    const [searchParams, setSearchParams] = useSearchParams()
 
-    const { data } = useQuery({
-        queryKey: ['tasks', columnName],
-        queryFn: () => axiosInstance.get<Tasks>('/tasks', { params: { columnName, id: params.boardId } }),
-        select: (data) => data.data,
-    })
+    const { data } = useQuery(queryGetTasks(params.boardId!, searchParams.get('keysTaskTracking')!))
 
     return data?.issues.map(({ fields, id }) => (
-        <Mantine_Card
+        <Task
             key={id}
-            className="flex flex-row items-center cursor-pointer"
-            shadow="sm"
-            radius="md"
-            mb="sm"
-            withBorder
-            onClick={() => {}}
-        >
-            <Title order={5}>{fields.summary}</Title>
-        </Mantine_Card>
+            id={id}
+            fields={fields}
+            setSearchParams={setSearchParams}
+        />
     ))
 }
 
