@@ -34,7 +34,7 @@ app.post('/login', async (req, res) => {
             },
         })
 
-        res.cookie('auth', encodedAuth, { httpOnly: true, sameSite: 'strict' })
+        res.cookie('auth', encodedAuth, { httpOnly: true, sameSite: 'none' })
         res.cookie('host', host)
 
         res.status(response.status).send(response.data)
