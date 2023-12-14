@@ -34,6 +34,8 @@ export const loaderAuth = (queryClient: QueryClient) => async () => {
             })
         }
 
-        return redirect('/auth')
+        console.log('ERORO =>', error)
+
+        return redirect('auth')
     }
 }

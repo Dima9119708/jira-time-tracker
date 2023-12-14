@@ -1,14 +1,14 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createHashRouter, createBrowserRouter, Navigate, RouteObject } from 'react-router-dom'
 import AuthPage from '../../pages/Auth/ui/AuthPage'
-import { loaderProjects } from '../../pages/Projects/loader/loader'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { loaderAuth } from '../../features/authByEmailAndToken'
 import LayoutRoot from '../LayoutRoot/LayoutRoot'
-import { loaderTasks } from '../../pages/Tasks'
 
-export const router = createBrowserRouter([
+const createRouter = (routes: RouteObject[]) => (__BUILD_ENV__ === 'browser' ? createBrowserRouter(routes) : createHashRouter(routes))
+
+export const router = createRouter([
     {
-        path: '',
+        path: __BASE_APP_ROUTE__,
         Component: LayoutRoot,
         loader: loaderAuth(queryClient),
         shouldRevalidate: (args) => false,
@@ -16,24 +16,24 @@ export const router = createBrowserRouter([
             {
                 index: true,
                 path: 'projects',
-                loader: loaderProjects(queryClient),
                 lazy: async () => {
-                    const component = await import('../../pages/Projects/ui/ProjectsPage')
+                    const { loaderProjects, ProjectsPage } = await import('../../pages/Projects')
 
                     return {
-                        Component: component.default,
+                        loader: loaderProjects(queryClient),
+                        Component: ProjectsPage,
                     }
                 },
             },
             {
                 path: 'tasks/:boardId',
-                loader: loaderTasks(queryClient),
                 shouldRevalidate: () => false,
                 lazy: async () => {
-                    const component = await import('../../pages/Tasks/ui/TasksPage')
+                    const { loaderTasks, TasksPage } = await import('../../pages/Tasks')
 
                     return {
-                        Component: component.default,
+                        Component: TasksPage,
+                        loader: loaderTasks(queryClient),
                     }
                 },
             },
@@ -41,10 +41,18 @@ export const router = createBrowserRouter([
                 path: '',
                 element: <Navigate to="projects" />,
             },
+            {
+                path: '*',
+                element: <div>Not Found</div>,
+            },
         ],
     },
     {
         path: 'auth',
         Component: AuthPage,
+    },
+    {
+        path: '*',
+        element: <div>Not Found</div>,
     },
 ])

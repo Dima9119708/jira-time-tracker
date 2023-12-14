@@ -7,7 +7,9 @@ const createWindow = () => {
     })
 
     // and load the index.html of the app.
-    win.loadURL(`http://localhost:3000`)
+    // win.loadURL(`http://localhost:3000`)
+
+    win.loadURL(`file://${__dirname}/../../build/index.html`)
 
     // Open the DevTools.
     win.webContents.openDevTools()
