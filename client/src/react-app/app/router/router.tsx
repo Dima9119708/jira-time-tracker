@@ -12,7 +12,7 @@ const createRouter = (routes: RouteObject[]) => {
 
 export const router = createRouter([
     {
-        path: '',
+        path: '/',
         Component: LayoutRoot,
         loader: loaderAuth(queryClient),
         shouldRevalidate: (args) => false,
@@ -42,7 +42,7 @@ export const router = createRouter([
                 },
             },
             {
-                path: '',
+                path: '/',
                 element: <Navigate to="projects" />,
             },
             {
