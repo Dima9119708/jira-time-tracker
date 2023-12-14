@@ -48,7 +48,7 @@ export const router = createRouter([
         ],
     },
     {
-        path: 'auth',
+        path: `${__BASE_APP_ROUTE__}/auth`,
         Component: AuthPage,
     },
     {
