@@ -1,5 +1,5 @@
 export interface BaseAuthFormFields {
-    host: string
+    jiraSubDomain: string
     email: string
     apiToken: string
 }

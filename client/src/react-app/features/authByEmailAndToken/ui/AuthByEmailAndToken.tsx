@@ -14,7 +14,7 @@ const AuthByEmailAndToken = () => {
         formState: { errors },
     } = useForm<BaseAuthFormFields>({
         values: {
-            host: process.env.SERVER_URL!,
+            jiraSubDomain: process.env.SERVER_URL!,
             email: process.env.EMAIL!,
             apiToken: process.env.API_TOKEN!,
         },
@@ -23,22 +23,37 @@ const AuthByEmailAndToken = () => {
     const queryClient = useQueryClient()
 
     const { isPending, mutate } = useMutation({
-        mutationFn: (variables: BaseAuthFormFields) => axiosInstance.post('/login', variables),
-        onSuccess: () => {
+        mutationFn: (variables: { jiraSubDomain: string; encodedAuth: string }) => {
+            return axiosInstance.post('/login', {
+                encodedauth: variables.encodedAuth,
+                jirasubdomain: variables.jiraSubDomain,
+            })
+        },
+        onSuccess: (data, variables) => {
+            localStorage.setItem('encodedAuth', variables.encodedAuth)
+            localStorage.setItem('jiraSubDomain', variables.jiraSubDomain)
+
             queryClient.setQueryData(['login'], true)
             navigate('/projects')
         },
     })
 
-    const onSubmit: SubmitHandler<BaseAuthFormFields> = (formValues) => mutate(formValues)
+    const onSubmit: SubmitHandler<BaseAuthFormFields> = (formValues) => {
+        const encodedAuth = Buffer.from(`${formValues.email}:${formValues.apiToken}`).toString('base64')
+
+        mutate({
+            jiraSubDomain: formValues.jiraSubDomain,
+            encodedAuth,
+        })
+    }
 
     return (
         <>
             <TextInput
-                {...register('host')}
+                {...register('jiraSubDomain')}
                 label="Server URL"
                 placeholder="https://your-domain.atlassian.net/"
-                error={errors.host?.message}
+                error={errors.jiraSubDomain?.message}
                 required
                 mb="xs"
             />

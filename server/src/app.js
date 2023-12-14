@@ -18,24 +18,18 @@ app.get('/', (req, res) => {
 
 app.post('/login', async (req, res) => {
     try {
-        const host = req.body.host ?? req.cookies.host
-        const email = req.body.email ?? Buffer.from(`${req.cookies.auth}`, 'base64').toString('ascii').split(':')[0]
-        const apiToken = req.body.apiToken ?? Buffer.from(`${req.cookies.auth}`, 'base64').toString('ascii').split(':')[1]
+        const jiraSubDomain = req.body.jirasubdomain ?? req.headers.jirasubdomain
+        const encodedAuth = req.body.encodedauth ?? req.headers.encodedauth
 
-        if (!host || !email || !apiToken) {
+        if (!jiraSubDomain || !encodedAuth) {
             return res.status(401).send('401')
         }
 
-        const encodedAuth = Buffer.from(`${email}:${apiToken}`).toString('base64')
-
-        const response = await axios.get(`${host}/rest/api/2/myself`, {
+        const response = await axios.get(`${jiraSubDomain}/rest/api/2/myself`, {
             headers: {
                 Authorization: `Basic ${encodedAuth}`,
             },
         })
-
-        res.cookie('auth', encodedAuth, { httpOnly: true, sameSite: 'none' })
-        res.cookie('host', host)
 
         res.status(response.status).send(response.data)
     } catch (e) {
@@ -45,13 +39,13 @@ app.post('/login', async (req, res) => {
 
 app.get('/projects', async (req, res) => {
     try {
-        if (!req.cookies.host || !req.cookies.auth) {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
         }
 
-        const response = await axios.get(`${req.cookies.host}/rest/api/2/project`, {
+        const response = await axios.get(`${req.headers.jirasubdomain}/rest/api/2/project`, {
             headers: {
-                Authorization: `Basic ${req.cookies.auth}`,
+                Authorization: `Basic ${req.headers.encodedauth}`,
             },
         })
 
@@ -63,15 +57,15 @@ app.get('/projects', async (req, res) => {
 
 app.get('/statuses-task', async (req, res) => {
     try {
-        if (!req.cookies.host || !req.cookies.auth) {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
         }
 
         const response = await axios.get(
-            `${req.cookies.host}/rest/api/2/issue/${req.query.id}/transitions`,
+            `${req.headers.jirasubdomain}/rest/api/2/issue/${req.query.id}/transitions`,
             {
                 headers: {
-                    Authorization: `Basic ${req.cookies.auth}`,
+                    Authorization: `Basic ${req.headers.encodedauth}`,
                 },
             }
         )
@@ -84,15 +78,15 @@ app.get('/statuses-task', async (req, res) => {
 
 app.get('/tasks', async (req, res) => {
     try {
-        if (!req.cookies.host || !req.cookies.auth) {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
         }
 
         const response = await axios.get(
-            `${req.cookies.host}/rest/api/2/search?jql=project=${req.query.id} AND assignee=currentuser() ${req.query.keys ? `AND NOT issueKey in (${req.query.keys})`: ''} `,
+            `${req.headers.jirasubdomain}/rest/api/2/search?jql=project=${req.query.id} AND assignee=currentuser() ${req.query.keys ? `AND NOT issueKey in (${req.query.keys})`: ''} `,
             {
                 headers: {
-                    Authorization: `Basic ${req.cookies.auth}`,
+                    Authorization: `Basic ${req.headers.encodedauth}`,
                 },
             }
         )
@@ -105,15 +99,15 @@ app.get('/tasks', async (req, res) => {
 
 app.get('/tracking-tasks', async (req, res) => {
     try {
-        if (!req.cookies.host || !req.cookies.auth) {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
         }
 
         const response = await axios.get(
-            `${req.cookies.host}/rest/api/2/search?jql=project=${req.query.id} AND issueKey in (${req.query.keys})`,
+            `${req.headers.jirasubdomain}/rest/api/2/search?jql=project=${req.query.id} AND issueKey in (${req.query.keys})`,
             {
                 headers: {
-                    Authorization: `Basic ${req.cookies.auth}`,
+                    Authorization: `Basic ${req.headers.encodedauth}`,
                 },
             }
         )
@@ -126,15 +120,15 @@ app.get('/tracking-tasks', async (req, res) => {
 
 app.get('/worklog-task', async (req, res) => {
     try {
-        if (!req.cookies.host || !req.cookies.auth) {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
         }
 
         const response = await axios.get(
-            `${req.cookies.host}/rest/api/3/issue/${req.query.id}/worklog`,
+            `${req.headers.jirasubdomain}/rest/api/3/issue/${req.query.id}/worklog`,
             {
                 headers: {
-                    Authorization: `Basic ${req.cookies.auth}`,
+                    Authorization: `Basic ${req.headers.encodedauth}`,
                 },
             }
         )
@@ -147,18 +141,18 @@ app.get('/worklog-task', async (req, res) => {
 
 app.post('/worklog-task', async (req, res) => {
     try {
-        if (!req.cookies.host || !req.cookies.auth) {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
         }
 
         const response = await axios.post(
-            `${req.cookies.host}/rest/api/3/issue/${req.body.taskId}/worklog`,
+            `${req.headers.jirasubdomain}/rest/api/3/issue/${req.body.taskId}/worklog`,
             {
                 timeSpent: req.body.timeSpent
             },
             {
                 headers: {
-                    Authorization: `Basic ${req.cookies.auth}`,
+                    Authorization: `Basic ${req.headers.encodedauth}`,
                 },
             }
         )
@@ -171,18 +165,18 @@ app.post('/worklog-task', async (req, res) => {
 
 app.put('/worklog-task', async (req, res) => {
     try {
-        if (!req.cookies.host || !req.cookies.auth) {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
         }
 
         const response = await axios.put(
-            `${req.cookies.host}/rest/api/3/issue/${req.body.taskId}/worklog/${req.body.id}`,
+            `${req.headers.jirasubdomain}/rest/api/3/issue/${req.body.taskId}/worklog/${req.body.id}`,
             {
                 timeSpent: req.body.timeSpent
             },
             {
                 headers: {
-                    Authorization: `Basic ${req.cookies.auth}`,
+                    Authorization: `Basic ${req.headers.encodedauth}`,
                 },
             }
         )
@@ -195,12 +189,12 @@ app.put('/worklog-task', async (req, res) => {
 
 app.post('/change-status-task', async (req, res) => {
     try {
-        if (!req.cookies.host || !req.cookies.auth) {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
         }
 
         await axios.post(
-            `${req.cookies.host}/rest/api/2/issue/${req.body.taskId}/transitions`,
+            `${req.headers.jirasubdomain}/rest/api/2/issue/${req.body.taskId}/transitions`,
             {
                 transition: {
                     id: req.body.transitionId
@@ -208,16 +202,16 @@ app.post('/change-status-task', async (req, res) => {
             },
             {
                 headers: {
-                    Authorization: `Basic ${req.cookies.auth}`,
+                    Authorization: `Basic ${req.headers.encodedauth}`,
                 },
             }
         )
 
         const response = await axios.get(
-            `${req.cookies.host}/rest/api/2/issue/${req.body.taskId}`,
+            `${req.headers.jirasubdomain}/rest/api/2/issue/${req.body.taskId}`,
             {
                 headers: {
-                    Authorization: `Basic ${req.cookies.auth}`,
+                    Authorization: `Basic ${req.headers.encodedauth}`,
                 },
             }
         )
@@ -228,6 +222,4 @@ app.post('/change-status-task', async (req, res) => {
     }
 })
 
-app.listen(port, () => {
-    console.log(`app listening at http://localhost:${port}`)
-})
+app.listen(port)

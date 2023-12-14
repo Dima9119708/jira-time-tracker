@@ -9,7 +9,7 @@ export const loaderAuth = (queryClient: QueryClient) => async () => {
         const value = await queryClient.fetchQuery({
             queryKey: ['login'],
             queryFn: async () => {
-                if (/host/.test(document.cookie)) {
+                if (localStorage.getItem('jiraSubDomain') && localStorage.getItem('encodedAuth')) {
                     const response = await axiosInstance.post('/login', {})
 
                     return response.data
@@ -33,8 +33,6 @@ export const loaderAuth = (queryClient: QueryClient) => async () => {
                 color: 'red',
             })
         }
-
-        console.log('ERORO =>', error)
 
         return redirect('auth')
     }
