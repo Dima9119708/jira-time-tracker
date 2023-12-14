@@ -19,10 +19,12 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '18.x'
+      - name: Install Yarn
+        run: npm install -g yarn
       - name: Install dependencies
-        run: npm install
+        run: yarn install
       - name: Build the project
-        run: npm run build:prod:browser
+        run: yarn build:prod:browser
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.0
         with:
