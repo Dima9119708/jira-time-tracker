@@ -1,4 +1,9 @@
 const { app, BrowserWindow } = require('electron')
+const path = require('path')
+
+if (!process.env.NODE_ENV) {
+    process.env.NODE_ENV = 'production'
+}
 
 const createWindow = () => {
     const win = new BrowserWindow({
@@ -6,13 +11,12 @@ const createWindow = () => {
         height: 1080,
     })
 
-    // and load the index.html of the app.
-    // win.loadURL(`http://localhost:3000`)
-
-    win.loadURL(`file://${__dirname}/../../build/index.html`)
-
-    // Open the DevTools.
-    win.webContents.openDevTools()
+    if (process.env.NODE_ENV === 'production') {
+        win.loadFile(path.join(__dirname, 'build/index.html'))
+    } else {
+        win.loadURL(`http://localhost:3000`)
+        win.webContents.openDevTools()
+    }
 }
 
 app.whenReady().then(() => {

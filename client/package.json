@@ -1,20 +1,33 @@
 {
-  "name": "crypto-wallet-admins-ui",
-  "version": "0.1.1",
+  "name": "jira-time-tracker",
+  "version": "0.0.1",
   "private": true,
-  "main": "src/electron-app/index.js",
+  "main": "src/electron-app/main.js",
+  "homepage": "https://github.com/Dima9119708/jira-time-tracker",
+  "author": "Dima Viron vivo@gmail.com",
   "scripts": {
-    "react-app-dev": "webpack serve --no-open --env port=3000",
-    "electron-app-dev": "electron .",
-    "build:dev": "webpack --env mode=development",
-    "build:prod": "webpack --env mode=production",
+    "react:server:dev": "webpack serve --no-open --env port=3000",
+    "electron:server:dev": "NODE_ENV=development electron .",
+    "electron:server:prod": "NODE_ENV=production electron .",
+    "build:electron": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder",
+    "build:dev:browser": "webpack --env mode=development",
     "build:prod:browser": "webpack --env mode=production baseRoute=/jira-time-tracker buildEnv=browser baseURL=https://jiratimetracker1-ic6pybtf.b4a.run",
-    "build:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron",
+    "build:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron baseURL=https://jiratimetracker1-ic6pybtf.b4a.run",
     "lint:ts": "../node_modules/.bin/eslint \\\"**/*.{ts,tsx,js,jsx}\\\"",
     "lint:ts:fix": "../node_modules/.bin/eslint \\\"**/*.{ts,tsx,js,jsx}\\\" --fix",
     "lint:css": "yarn ../node_modules/.bin/stylelint \\\"src/**/*.css\\\"",
     "lint:css:fix": "yarn ../node_modules/.bin/stylelint \\\"src/**/*.css\\\" --fix",
     "test:unit": "jest"
+  },
+  "build": {
+    "appId": "com.example.jiratimetracker",
+    "linux": {
+      "maintainer": "Dima Viron vivo@gmail.com",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
   },
   "browserslist": {
     "production": [
@@ -64,6 +77,7 @@
     "css-minimizer-webpack-plugin": "^5.0.1",
     "dotenv-webpack": "^8.0.1",
     "electron": "^27.1.2",
+    "electron-builder": "^24.9.1",
     "eslint": "^8.45.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^17.0.0",
