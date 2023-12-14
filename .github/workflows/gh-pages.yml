@@ -1,7 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy Client to GitHub Pages
 
 on:
   push:
+    paths:
+      - 'client/**'
     branches:
       - main
 
@@ -14,14 +16,12 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '18.x'
-      - name: Change to the "client" directory
-        run: cd client
       - name: Install dependencies
-        run: npm install
+        run: cd client && npm install
       - name: Build the project
-        run: npm run build:prod:browser
+        run: cd client && npm run build:prod:browser
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.0
         with:
           branch: gh-pages
-          folder: build
+          folder: client/build
