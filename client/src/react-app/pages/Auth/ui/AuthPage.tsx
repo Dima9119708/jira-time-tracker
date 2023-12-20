@@ -1,7 +1,7 @@
 import React from 'react'
 import { Container, Title, Paper, Box } from '@mantine/core'
-import { AuthByEmailAndToken, BaseAuthFormFields } from '../../../features/authByEmailAndToken'
-import { axiosInstance } from '../../../shared/config/api/api'
+import { AuthByEmailAndToken } from '../../../features/authByEmailAndToken'
+import { Logo } from '../../../shared/components/Logo'
 
 const AuthPage = () => {
     return (
@@ -11,13 +11,10 @@ const AuthPage = () => {
                 size={480}
                 py={40}
             >
-                <Title
-                    size="h1"
-                    c="indigo.7"
-                    className="flex-center"
-                >
-                    Time Tracker
-                </Title>
+                <Logo
+                    size={1}
+                    className="text-center"
+                />
 
                 <Paper
                     withBorder

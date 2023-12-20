@@ -1,25 +1,41 @@
 import { AppShell, Group } from '@mantine/core'
 import { IconTransferOut } from '@tabler/icons-react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { Breadcrumbs } from '../../shared/ui/Breadcrumbs'
+import { queryClient } from '../QueryClientProvide/QueryClientProvide'
+import { Logo } from '../../shared/components/Logo'
 
 const LayoutRoot = () => {
+    const navigate = useNavigate()
+
+    const onLogout = () => {
+        navigate('/auth')
+        queryClient.removeQueries()
+    }
+
     return (
         <AppShell
             bg="gray.2"
-            p={20}
+            header={{ height: 60 }}
+            padding="lg"
         >
             <AppShell.Header
                 bg="gray.2"
-                px={20}
-                py={10}
+                px="lg"
             >
-                <Group justify="end">
-                    <IconTransferOut cursor="pointer" />
+                <Group
+                    justify="space-between"
+                    h="100%"
+                >
+                    <Logo size={2} />
+                    <IconTransferOut
+                        onClick={onLogout}
+                        cursor="pointer"
+                    />
                 </Group>
             </AppShell.Header>
 
-            <AppShell.Main pt={40}>
+            <AppShell.Main>
                 <Breadcrumbs mb={20} />
                 <Outlet />
             </AppShell.Main>
