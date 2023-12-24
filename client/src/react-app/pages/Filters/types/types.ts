@@ -12,6 +12,18 @@ export interface Projects {
     }
 }
 
+export interface Filters {
+    values: Array<{
+        self: string
+        name: string
+        id: string
+    }>
+}
+
+export interface FilterDetails {
+    jql: string
+}
+
 export interface CardProps {
     src: string
     name: string

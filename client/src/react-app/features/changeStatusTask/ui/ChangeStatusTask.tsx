@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { StatusesTask, TStatusTask } from '../../../entities/StatusesTask'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { TasksResponse } from '../../../pages/Tasks/types/types'
@@ -8,10 +8,12 @@ import { StatusesTaskProps } from '../../../entities/StatusesTask'
 interface ChangeStatusTaskProps extends Omit<StatusesTaskProps, 'onChange'> {
     queryKey: string
     onChange?: () => void
+    idxPage: number
+    idxIssue: number
 }
 
 const ChangeStatusTask = (props: ChangeStatusTaskProps) => {
-    const { id, queryKey, children, position, disabled, onChange } = props
+    const { id, queryKey, children, position, disabled, idxPage, idxIssue, onChange } = props
 
     const queryClient = useQueryClient()
 
@@ -26,16 +28,10 @@ const ChangeStatusTask = (props: ChangeStatusTaskProps) => {
 
             const oldState = queryClient.getQueryData<TasksResponse>([queryKey])
 
-            queryClient.setQueryData([queryKey], (old: TasksResponse): TasksResponse => {
-                const newTask = produce(old.issues, (draft) => {
-                    const idx = draft.findIndex((value) => value.id === id)
-                    draft[idx].fields.status = variables.to
+            queryClient.setQueryData([queryKey], (old: InfiniteData<TasksResponse>): InfiniteData<TasksResponse> => {
+                return produce(old, (draft) => {
+                    draft.pages[idxPage].issues[idxIssue].fields.status = variables.to
                 })
-
-                return {
-                    ...old,
-                    issues: newTask,
-                }
             })
 
             if (typeof onChange === 'function') {

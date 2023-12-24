@@ -27,6 +27,8 @@ export type Task = TasksResponse['issues'][number]
 export interface TaskProps {
     id: TasksResponse['issues'][number]['id']
     fields: Task['fields']
+    idxPage: number
+    idxIssue: number
     setSearchParams: SetURLSearchParams
 }
 

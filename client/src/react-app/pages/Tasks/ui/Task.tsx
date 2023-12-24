@@ -2,12 +2,13 @@ import { Badge, Button, Card as Mantine_Card, Group, Title } from '@mantine/core
 import { TaskProps, TasksResponse } from '../types/types'
 import React, { memo } from 'react'
 import { IconPlayerPlayFilled } from '@tabler/icons-react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../lib/dateHelper'
 import { ChangeStatusTask } from '../../../features/changeStatusTask'
+import { produce } from 'immer'
 
 const Task = (props: TaskProps) => {
-    const { fields, id, setSearchParams } = props
+    const { fields, id, setSearchParams, idxPage, idxIssue } = props
     const queryClient = useQueryClient()
 
     const onPlayTracking = () => {
@@ -23,22 +24,10 @@ const Task = (props: TaskProps) => {
             return { keysTaskTracking: string }
         })
 
-        const oldState = queryClient.getQueryData<TasksResponse>(['tasks'])
-
-        const task = oldState!.issues.find((issue) => issue.id === id)!
-
-        queryClient.setQueryData(['tracking tasks'], (old: TasksResponse): TasksResponse => {
-            return {
-                ...old,
-                issues: [task, ...(old ? old.issues : [])],
-            }
-        })
-
-        queryClient.setQueryData(['tasks'], (old: TasksResponse): TasksResponse => {
-            return {
-                ...old,
-                issues: (old ? old.issues : []).filter((issue) => issue.id !== task.id),
-            }
+        queryClient.setQueryData(['tasks'], (old: InfiniteData<TasksResponse>): InfiniteData<TasksResponse> => {
+            return produce(old, (draft) => {
+                draft.pages[idxPage].issues.splice(idxIssue, 1)
+            })
         })
     }
 
@@ -69,6 +58,8 @@ const Task = (props: TaskProps) => {
             <Group justify="space-between">
                 <ChangeStatusTask
                     id={id}
+                    idxPage={idxPage}
+                    idxIssue={idxIssue}
                     queryKey="tasks"
                 >
                     <Button
@@ -81,6 +72,8 @@ const Task = (props: TaskProps) => {
 
                 <ChangeStatusTask
                     id={id}
+                    idxPage={idxPage}
+                    idxIssue={idxIssue}
                     queryKey="tasks"
                     position="left"
                     onChange={() => onPlayTracking()}

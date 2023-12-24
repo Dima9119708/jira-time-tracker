@@ -22,9 +22,9 @@ const TasksPage = () => {
                 Tasks
             </Title>
 
-            <TasksTracking />
+            {/*<TasksTracking />*/}
 
-            <Tasks />
+            {/*<Tasks />*/}
         </>
     )
 }

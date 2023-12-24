@@ -61,52 +61,52 @@ const TaskTracking = (props: TaskProps) => {
             mb="sm"
             withBorder
         >
-            <TaskTimer />
-            <Group
-                mb={10}
-                justify="space-between"
-            >
-                {fields.status.statusCategory.key !== 'indeterminate' && (
-                    <Alert
-                        className="w-[100%]"
-                        variant="light"
-                        color="red"
-                        title={'Warning!'}
-                        icon={<IconAlertTriangle />}
-                    >
-                        This task is not in the "In progress" status please change its status. However, time continues to be logged for it.
-                    </Alert>
-                )}
-                <Title order={5}>{fields.summary}</Title>
+            {/*<TaskTimer />*/}
+            {/*<Group*/}
+            {/*    mb={10}*/}
+            {/*    justify="space-between"*/}
+            {/*>*/}
+            {/*    {fields.status.statusCategory.key !== 'indeterminate' && (*/}
+            {/*        <Alert*/}
+            {/*            className="w-[100%]"*/}
+            {/*            variant="light"*/}
+            {/*            color="red"*/}
+            {/*            title={'Warning!'}*/}
+            {/*            icon={<IconAlertTriangle />}*/}
+            {/*        >*/}
+            {/*            This task is not in the "In progress" status please change its status. However, time continues to be logged for it.*/}
+            {/*        </Alert>*/}
+            {/*    )}*/}
+            {/*    <Title order={5}>{fields.summary}</Title>*/}
 
-                <Badge
-                    color="blue"
-                    className="flex-row"
-                >
-                    <span className="mr-[0.5rem]">{secondsToUIFormat(fields.timespent)}</span>
-                    <span className="mr-[0.5rem]">/</span>
-                    <span>{secondsToUIFormat(fields.timeoriginalestimate)}</span>
-                </Badge>
-            </Group>
+            {/*    <Badge*/}
+            {/*        color="blue"*/}
+            {/*        className="flex-row"*/}
+            {/*    >*/}
+            {/*        <span className="mr-[0.5rem]">{secondsToUIFormat(fields.timespent)}</span>*/}
+            {/*        <span className="mr-[0.5rem]">/</span>*/}
+            {/*        <span>{secondsToUIFormat(fields.timeoriginalestimate)}</span>*/}
+            {/*    </Badge>*/}
+            {/*</Group>*/}
 
-            <Group justify="space-between">
-                <ChangeStatusTask
-                    id={id}
-                    queryKey="tracking tasks"
-                >
-                    <Button
-                        variant="outline"
-                        size="xs"
-                    >
-                        {fields.status.name}
-                    </Button>
-                </ChangeStatusTask>
+            {/*<Group justify="space-between">*/}
+            {/*    <ChangeStatusTask*/}
+            {/*        id={id}*/}
+            {/*        queryKey="tracking tasks"*/}
+            {/*    >*/}
+            {/*        <Button*/}
+            {/*            variant="outline"*/}
+            {/*            size="xs"*/}
+            {/*        >*/}
+            {/*            {fields.status.name}*/}
+            {/*        </Button>*/}
+            {/*    </ChangeStatusTask>*/}
 
-                <IconPlayerPauseFilled
-                    onClick={onPlayTracking}
-                    className="cursor-pointer [&_path]:fill-[var(--mantine-color-violet-5)]"
-                />
-            </Group>
+            {/*    <IconPlayerPauseFilled*/}
+            {/*        onClick={onPlayTracking}*/}
+            {/*        className="cursor-pointer [&_path]:fill-[var(--mantine-color-violet-5)]"*/}
+            {/*    />*/}
+            {/*</Group>*/}
         </Mantine_Card>
     )
 }

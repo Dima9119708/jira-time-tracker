@@ -83,12 +83,77 @@ app.get('/tasks', async (req, res) => {
         }
 
         const response = await axios.get(
-            `${req.headers.jirasubdomain}/rest/api/2/search?jql=project=${req.query.id} AND assignee=currentuser() ${req.query.keys ? `AND NOT issueKey in (${req.query.keys})`: ''} `,
+            `${req.headers.jirasubdomain}/rest/api/3/search`,
             {
                 headers: {
                     Authorization: `Basic ${req.headers.encodedauth}`,
                 },
+                params: req.query
             }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.get('/filters', async (req, res) => {
+    try {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+          `${req.headers.jirasubdomain}/rest/api/3/filter/search?filterName=TimeTracking___`,
+          {
+              headers: {
+                  Authorization: `Basic ${req.headers.encodedauth}`,
+              },
+          }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.get('/filter-details', async (req, res) => {
+    try {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+          `${req.headers.jirasubdomain}/rest/api/3/filter/${req.query.id}`,
+          {
+              headers: {
+                  Authorization: `Basic ${req.headers.encodedauth}`,
+              },
+          }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.post('/filter-details', async (req, res) => {
+    try {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.post(
+          `${req.headers.jirasubdomain}/rest/api/3/filter`,
+          req.body,
+          {
+              headers: {
+                  Authorization: `Basic ${req.headers.encodedauth}`,
+              },
+          }
         )
 
         res.send(response.data)

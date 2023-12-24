@@ -19,25 +19,14 @@ export const router = createRouter([
         children: [
             {
                 index: true,
-                path: 'projects',
+                path: 'filters',
+                shouldRevalidate: (args) => false,
                 lazy: async () => {
-                    const { loaderProjects, ProjectsPage } = await import('../../pages/Projects')
+                    const { loaderFilters, FiltersPage } = await import('../../pages/Filters')
 
                     return {
-                        loader: loaderProjects(queryClient),
-                        Component: ProjectsPage,
-                    }
-                },
-            },
-            {
-                path: 'tasks/:boardId',
-                shouldRevalidate: () => false,
-                lazy: async () => {
-                    const { loaderTasks, TasksPage } = await import('../../pages/Tasks')
-
-                    return {
-                        Component: TasksPage,
-                        loader: loaderTasks(queryClient),
+                        loader: loaderFilters(queryClient),
+                        Component: FiltersPage,
                     }
                 },
             },
