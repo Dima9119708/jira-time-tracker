@@ -1,5 +1,5 @@
 import { queryGetFilter } from './model/queryOptions'
 import TasksPage from './ui/TasksPage'
-import { loaderFilters } from './loader/loader'
+import { loaderTasks } from './loader/loader'
 
-export { queryGetFilter, TasksPage, loaderFilters }
+export { queryGetFilter, TasksPage, loaderTasks }

@@ -19,13 +19,13 @@ export const router = createRouter([
         children: [
             {
                 index: true,
-                path: 'filters',
+                path: 'tasks',
                 shouldRevalidate: (args) => false,
                 lazy: async () => {
-                    const { loaderFilters, TasksPage } = await import('../../pages/Tasks')
+                    const { loaderTasks, TasksPage } = await import('../../pages/Tasks')
 
                     return {
-                        loader: loaderFilters(queryClient),
+                        loader: loaderTasks(queryClient),
                         Component: TasksPage,
                     }
                 },

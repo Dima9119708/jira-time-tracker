@@ -5,7 +5,7 @@ import { queryGetTasks } from '../model/queryOptions'
 import { LoaderFunction } from 'react-router-dom'
 import { updateNotKeyIn } from '../../../shared/lib/helpers/updateNotKeyIn'
 
-export const loaderFilters =
+export const loaderTasks =
     (queryClient: QueryClient): LoaderFunction =>
     async ({ request }) => {
         let jql = ''
