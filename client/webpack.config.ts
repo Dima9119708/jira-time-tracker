@@ -52,7 +52,14 @@ export default (env: IBuildEnv) => {
             preferAbsolute: true,
             mainFiles: ['index'],
             modules: [path.resolve(__dirname, 'src'), 'node_modules'],
-            alias: {},
+            alias: {
+                '@emotion/core': '@emotion/react',
+                // 'emotion-theming': '@emotion/react',
+            },
+            fallback: {
+                assert: require.resolve('assert/'),
+                util: require.resolve('util/'),
+            },
         },
         optimization: {
             minimize: isProd,

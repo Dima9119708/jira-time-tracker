@@ -22,11 +22,11 @@ export const router = createRouter([
                 path: 'filters',
                 shouldRevalidate: (args) => false,
                 lazy: async () => {
-                    const { loaderFilters, FiltersPage } = await import('../../pages/Filters')
+                    const { loaderFilters, TasksPage } = await import('../../pages/Tasks')
 
                     return {
                         loader: loaderFilters(queryClient),
-                        Component: FiltersPage,
+                        Component: TasksPage,
                     }
                 },
             },

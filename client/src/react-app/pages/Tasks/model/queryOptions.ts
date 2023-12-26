@@ -1,7 +1,7 @@
 import { queryOptions, infiniteQueryOptions } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { Filters } from '../types/types'
-import { TasksResponse } from '../../Tasks/types/types'
+import { TasksResponse } from '../../TasksDepracated/types/types'
 
 export const queryGetFilter = () =>
     queryOptions({

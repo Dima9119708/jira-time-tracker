@@ -105,7 +105,7 @@ app.get('/filters', async (req, res) => {
         }
 
         const response = await axios.get(
-          `${req.headers.jirasubdomain}/rest/api/3/filter/search?filterName=TimeTracking___`,
+          `${req.headers.jirasubdomain}/rest/api/3/filter/search?filterName=${req.query.filterValue}`,
           {
               headers: {
                   Authorization: `Basic ${req.headers.encodedauth}`,
@@ -149,6 +149,71 @@ app.post('/filter-details', async (req, res) => {
         const response = await axios.post(
           `${req.headers.jirasubdomain}/rest/api/3/filter`,
           req.body,
+          {
+              headers: {
+                  Authorization: `Basic ${req.headers.encodedauth}`,
+              },
+          }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.put('/filter-details', async (req, res) => {
+    try {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.put(
+          `${req.headers.jirasubdomain}/rest/api/3/filter/${req.query.id}`,
+          req.body,
+          {
+              headers: {
+                  Authorization: `Basic ${req.headers.encodedauth}`,
+              },
+          }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.post('/autocomplete', async (req, res) => {
+    try {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.post(
+          `${req.headers.jirasubdomain}${req.query.url}`,
+          req.body,
+          {
+              headers: {
+                  Authorization: `Basic ${req.headers.encodedauth}`,
+              },
+          }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.get('/autocomplete', async (req, res) => {
+    try {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+          `${req.headers.jirasubdomain}${req.query.url}`,
           {
               headers: {
                   Authorization: `Basic ${req.headers.encodedauth}`,

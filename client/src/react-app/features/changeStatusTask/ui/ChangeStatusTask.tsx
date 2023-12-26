@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { StatusesTask, TStatusTask } from '../../../entities/StatusesTask'
 import { axiosInstance } from '../../../shared/config/api/api'
-import { TasksResponse } from '../../../pages/Tasks/types/types'
+import { TasksResponse } from '../../../pages/TasksDepracated/types/types'
 import { produce } from 'immer'
 import { StatusesTaskProps } from '../../../entities/StatusesTask'
 

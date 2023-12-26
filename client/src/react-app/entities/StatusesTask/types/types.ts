@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { MenuProps } from '@mantine/core'
-import { TaskStatusCategory } from '../../../pages/Tasks'
+import { TaskStatusCategory } from '../../../pages/TasksDepracated'
 
 export interface StatusesTaskResponse {
     transitions: Array<{

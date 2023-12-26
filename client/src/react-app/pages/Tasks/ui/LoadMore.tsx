@@ -4,10 +4,12 @@ import { queryGetTasks } from '../model/queryOptions'
 import { Button } from '@mantine/core'
 import { memo, useEffect } from 'react'
 import { cn } from '../../../shared/lib/classNames '
+import { useLoaderData } from 'react-router-dom'
 
 const LoadMore = () => {
+    const JQLString = useLoaderData() as string
     const { ref, inView } = useInView()
-    const { isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteQuery(queryGetTasks(''))
+    const { isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteQuery(queryGetTasks(JQLString))
 
     useEffect(() => {
         if (inView && !isFetching) {

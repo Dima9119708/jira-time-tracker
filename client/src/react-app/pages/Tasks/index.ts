@@ -1,7 +1,5 @@
-import { loaderTasks } from './loader/loader'
-import { TaskStatusCategory } from './types/types'
+import { queryGetFilter } from './model/queryOptions'
 import TasksPage from './ui/TasksPage'
+import { loaderFilters } from './loader/loader'
 
-export type { TaskStatusCategory }
-
-export { loaderTasks, TasksPage }
+export { queryGetFilter, TasksPage, loaderFilters }
