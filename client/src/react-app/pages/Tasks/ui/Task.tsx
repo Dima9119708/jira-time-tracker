@@ -27,15 +27,19 @@ const Task = (props: TaskProps) => {
 
         useGlobalState.getState().updateJQL()
 
-        queryClient.setQueryData(['tasks'], (old: InfiniteData<TasksResponse>): InfiniteData<TasksResponse> => {
+        queryClient.setQueryData(['tasks tracking'], (old: TasksResponse): TasksResponse => {
+            const tasks = queryClient.getQueryData<InfiniteData<TasksResponse>>(['tasks'])
+
             return produce(old, (draft) => {
-                draft.pages[idxPage!].issues.splice(idxIssue, 1)
+                if (tasks) {
+                    draft.issues.unshift(tasks.pages[idxPage!].issues[idxIssue])
+                }
             })
         })
 
-        queryClient.setQueryData(['tasks tracking'], (old: TasksResponse): TasksResponse => {
+        queryClient.setQueryData(['tasks'], (old: InfiniteData<TasksResponse>): InfiniteData<TasksResponse> => {
             return produce(old, (draft) => {
-                draft.issues.unshift(props)
+                draft.pages[idxPage!].issues.splice(idxIssue, 1)
             })
         })
     }
