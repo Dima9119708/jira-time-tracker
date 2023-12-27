@@ -1,25 +1,46 @@
 import { queryOptions, infiniteQueryOptions } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
-import { Filters } from '../types/types'
-import { TasksResponse } from '../../TasksDepracated/types/types'
+import { TasksResponse } from '../types/types'
+import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 
-export const queryGetFilter = () =>
+export const queryGetTasksTracking = () =>
     queryOptions({
-        queryKey: ['filters'],
-        queryFn: () => axiosInstance.get<Filters[]>('/filters'),
-        select: (data) => data.data,
-        staleTime: 1000,
+        queryKey: ['tasks tracking'],
+        queryFn: async (context) => {
+            const tasksIDS = useGlobalState.getState().getSearchParamsIds()
+
+            if (tasksIDS) {
+                const lengthTasks = tasksIDS.split(',').length
+
+                const MAX_RESULTS = lengthTasks + 1
+
+                const response = await axiosInstance.get<TasksResponse>('/tracking-tasks', {
+                    params: {
+                        jql: `id in (${tasksIDS})`,
+                        startAt: 0,
+                        maxResults: MAX_RESULTS,
+                    },
+                    signal: context.signal,
+                })
+
+                return response.data
+            }
+
+            return {
+                issues: [],
+            }
+        },
     })
 
-export const queryGetTasks = (jql: string) =>
+export const queryGetTasks = () =>
     infiniteQueryOptions({
         queryKey: ['tasks'],
         queryFn: async (context) => {
-            const MAX_RESULTS = 5
+            const MAX_RESULTS = 20
 
             const response = await axiosInstance.get<TasksResponse>('/tasks', {
                 params: {
-                    jql,
+                    jql: useGlobalState.getState().jql,
                     startAt: context.pageParam * MAX_RESULTS,
                     maxResults: MAX_RESULTS,
                 },

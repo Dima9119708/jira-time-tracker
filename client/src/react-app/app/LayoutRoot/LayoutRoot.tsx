@@ -17,6 +17,7 @@ const LayoutRoot = () => {
         <AppShell
             bg="gray.2"
             header={{ height: 60 }}
+            footer={{ height: 60 }}
             padding="lg"
         >
             <AppShell.Header

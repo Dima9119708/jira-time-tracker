@@ -184,7 +184,7 @@ app.put('/filter-details', async (req, res) => {
     }
 })
 
-app.post('/autocomplete', async (req, res) => {
+app.post('/jql-search', async (req, res) => {
     try {
         if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
@@ -206,7 +206,7 @@ app.post('/autocomplete', async (req, res) => {
     }
 })
 
-app.get('/autocomplete', async (req, res) => {
+app.get('/jql-search', async (req, res) => {
     try {
         if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
             return res.status(401).send()
@@ -234,11 +234,12 @@ app.get('/tracking-tasks', async (req, res) => {
         }
 
         const response = await axios.get(
-            `${req.headers.jirasubdomain}/rest/api/2/search?jql=project=${req.query.id} AND issueKey in (${req.query.keys})`,
+            `${req.headers.jirasubdomain}/rest/api/2/search`,
             {
                 headers: {
                     Authorization: `Basic ${req.headers.encodedauth}`,
                 },
+                params: req.query
             }
         )
 

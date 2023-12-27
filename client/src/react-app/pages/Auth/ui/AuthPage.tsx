@@ -1,6 +1,6 @@
 import React from 'react'
 import { Container, Title, Paper, Box } from '@mantine/core'
-import { AuthByEmailAndToken } from '../../../features/authByEmailAndToken'
+import { AuthByEmailAndToken } from '../../../features/AuthByEmailAndToken'
 import { Logo } from '../../../shared/components/Logo'
 
 const AuthPage = () => {

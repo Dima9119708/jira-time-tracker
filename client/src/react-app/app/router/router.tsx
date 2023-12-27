@@ -1,7 +1,7 @@
 import { createHashRouter, createBrowserRouter, Navigate, RouteObject } from 'react-router-dom'
 import AuthPage from '../../pages/Auth/ui/AuthPage'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
-import { loaderAuth } from '../../features/authByEmailAndToken'
+import { loaderAuth } from '../../features/AuthByEmailAndToken'
 import LayoutRoot from '../LayoutRoot/LayoutRoot'
 
 const createRouter = (routes: RouteObject[]) => {

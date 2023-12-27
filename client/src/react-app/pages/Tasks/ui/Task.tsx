@@ -1,11 +1,12 @@
 import { Badge, Button, Card as Mantine_Card, Group, Title } from '@mantine/core'
-import { TaskProps, TasksResponse } from '../types/types'
 import React, { memo } from 'react'
 import { IconPlayerPlayFilled } from '@tabler/icons-react'
 import { useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../lib/dateHelper'
-import { ChangeStatusTask } from '../../../features/changeStatusTask'
+import { ChangeStatusTask } from '../../../features/ChangeStatusTask'
 import { produce } from 'immer'
+import { TaskProps, TasksResponse } from '../types/types'
+import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 
 const Task = (props: TaskProps) => {
     const { fields, id, setSearchParams, idxPage, idxIssue } = props
@@ -24,9 +25,17 @@ const Task = (props: TaskProps) => {
             return { keysTaskTracking: string }
         })
 
+        useGlobalState.getState().updateJQL()
+
         queryClient.setQueryData(['tasks'], (old: InfiniteData<TasksResponse>): InfiniteData<TasksResponse> => {
             return produce(old, (draft) => {
-                draft.pages[idxPage].issues.splice(idxIssue, 1)
+                draft.pages[idxPage!].issues.splice(idxIssue, 1)
+            })
+        })
+
+        queryClient.setQueryData(['tasks tracking'], (old: TasksResponse): TasksResponse => {
+            return produce(old, (draft) => {
+                draft.issues.unshift(props)
             })
         })
     }
