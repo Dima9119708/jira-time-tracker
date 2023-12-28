@@ -1,12 +1,22 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { queryGetTasks } from '../model/queryOptions'
-import { useSearchParams } from 'react-router-dom'
 import Task from './Task'
+import { useEffect } from 'react'
+import { notifications } from '@mantine/notifications'
+import { NOTIFICATION_VARIANT } from '../../../shared/const/notification-variant'
 
-const TasksTracking = () => {
-    const [, setSearchParams] = useSearchParams()
+const Tasks = () => {
+    const { data, error } = useInfiniteQuery(queryGetTasks())
 
-    const { data } = useInfiniteQuery(queryGetTasks())
+    useEffect(() => {
+        if (error) {
+            notifications.show({
+                title: `Error loading task`,
+                message: error.response?.data.errorMessages.join(', '),
+                ...NOTIFICATION_VARIANT.ERROR,
+            })
+        }
+    }, [error])
 
     return (
         <>
@@ -18,7 +28,6 @@ const TasksTracking = () => {
                         idxIssue={idxIssue}
                         fields={task.fields}
                         id={task.id}
-                        setSearchParams={setSearchParams}
                     />
                 ))
             )}
@@ -26,4 +35,4 @@ const TasksTracking = () => {
     )
 }
 
-export default TasksTracking
+export default Tasks

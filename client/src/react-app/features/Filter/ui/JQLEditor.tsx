@@ -8,13 +8,17 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { FilterDetails } from '../../../pages/Tasks/types/types'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import { AxiosError, AxiosResponse } from 'axios'
+import { ErrorType } from '../../../shared/types/jiraTypes'
+import { notifications } from '@mantine/notifications'
+import { NOTIFICATION_VARIANT } from '../../../shared/const/notification-variant'
 
 const JQLEditor = (props: FilterProps) => {
     const { className } = props
     const queryClient = useQueryClient()
     const query = useGlobalState((state) => state.jql)
 
-    const { mutate, isPending } = useMutation({
+    const { mutate, isPending } = useMutation<AxiosResponse<FilterDetails>, AxiosError<ErrorType>>({
         mutationFn: () =>
             axiosInstance.put<FilterDetails>(
                 '/filter-details',
@@ -29,6 +33,13 @@ const JQLEditor = (props: FilterProps) => {
             ),
         onMutate: () => {
             queryClient.invalidateQueries({ queryKey: ['tasks'] })
+        },
+        onError: (error) => {
+            notifications.show({
+                title: `Error loading issue`,
+                message: error.response?.data.errorMessages.join(', '),
+                ...NOTIFICATION_VARIANT.ERROR,
+            })
         },
     })
 

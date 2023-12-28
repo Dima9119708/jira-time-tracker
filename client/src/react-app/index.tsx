@@ -21,7 +21,10 @@ const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 root.render(
     <QueryClientProvide>
         <ThemeProvider>
-            <Notifications />
+            <Notifications
+                autoClose={1.8e6}
+                position="top-right"
+            />
             <RouterProvider
                 router={router}
                 fallbackElement={

@@ -5,34 +5,22 @@ import { useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../lib/dateHelper'
 import { ChangeStatusTask } from '../../../features/ChangeStatusTask'
 import { produce } from 'immer'
-import { TaskProps, TasksResponse } from '../types/types'
+import { TaskProps, TasksResponse, TasksTrackingResponse } from '../types/types'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 
 const Task = (props: TaskProps) => {
-    const { fields, id, setSearchParams, idxPage, idxIssue } = props
+    const { fields, id, idxPage, idxIssue } = props
     const queryClient = useQueryClient()
 
     const onPlayTracking = () => {
-        setSearchParams((prev) => {
-            let string = id
+        useGlobalState.getState().changeIssueIdsSearchParams('add', id)
 
-            for (const value of prev.values()) {
-                if (value) {
-                    string += `,${value}`
-                }
-            }
-
-            return { keysTaskTracking: string }
-        })
-
-        useGlobalState.getState().updateJQL()
-
-        queryClient.setQueryData(['tasks tracking'], (old: TasksResponse): TasksResponse => {
+        queryClient.setQueryData(['tasks tracking'], (old: TasksTrackingResponse): TasksTrackingResponse => {
             const tasks = queryClient.getQueryData<InfiniteData<TasksResponse>>(['tasks'])
 
             return produce(old, (draft) => {
                 if (tasks) {
-                    draft.issues.unshift(tasks.pages[idxPage!].issues[idxIssue])
+                    draft.unshift(tasks.pages[idxPage!].issues[idxIssue])
                 }
             })
         })

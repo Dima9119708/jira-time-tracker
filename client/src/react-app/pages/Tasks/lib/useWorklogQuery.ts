@@ -4,7 +4,14 @@ import { axiosInstance } from '../../../shared/config/api/api'
 import dayjs from 'dayjs'
 import { secondsToJiraFormat } from './dateHelper'
 import { produce } from 'immer'
-import { MySelfResponse, TasksResponse, UseWorklogQuery, WorklogResponse, WorklogTaskMutation } from '../types/types'
+import { MySelfResponse, TasksTrackingResponse, UseWorklogQuery, WorklogResponse, WorklogTaskMutation } from '../types/types'
+import { AxiosError, AxiosResponse } from 'axios'
+import { ErrorType } from '../../../shared/types/jiraTypes'
+import { notifications } from '@mantine/notifications'
+import { NOTIFICATION_VARIANT } from '../../../shared/const/notification-variant'
+
+const TIME_WORKLOG = 60000
+const TIMESPENT = 60
 
 export const useWorklogQuery = (props: UseWorklogQuery) => {
     const { taskId } = props
@@ -12,25 +19,25 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
 
     const queryClient = useQueryClient()
 
-    const { mutate } = useMutation({
-        mutationFn: (variables: WorklogTaskMutation) => {
-            if (variables.id) return axiosInstance.put<{ id: string }>('/worklog-task', variables)
-            else return axiosInstance.post<{ id: string }>('/worklog-task', variables)
+    const mutation = useMutation<AxiosResponse<WorklogTaskMutation>, AxiosError<ErrorType>, WorklogTaskMutation>({
+        mutationFn: (variables) => {
+            if (variables.id) return axiosInstance.put<WorklogTaskMutation>('/worklog-task', variables)
+            else return axiosInstance.post<WorklogTaskMutation>('/worklog-task', variables)
         },
         onMutate: () => {
-            queryClient.setQueryData(['tracking tasks'], (old: TasksResponse): TasksResponse => {
+            queryClient.setQueryData(['tasks tracking'], (old: TasksTrackingResponse): TasksTrackingResponse => {
                 return produce(old, (draft) => {
-                    const task = draft.issues.find((issue) => issue.id === taskId)
+                    const task = draft.find((issue) => issue.id === taskId)
 
                     if (task) {
-                        task.fields.timespent += 60
+                        task.fields.timespent += TIMESPENT
                     }
                 })
             })
         },
     })
 
-    useQuery({
+    const worklogQuery = useQuery<unknown, AxiosError<ErrorType>>({
         queryKey: ['worklog', taskId],
         queryFn: async () => {
             const response = await axiosInstance.get<WorklogResponse>('/worklog-task', {
@@ -50,34 +57,56 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
 
                 const worklogSecond = myFirstWorklogToday?.timeSpentSeconds ?? 0
 
-                const timeSpent = secondsToJiraFormat(worklogSecond + 60)
+                const timeSpent = secondsToJiraFormat(worklogSecond + TIMESPENT)
 
                 if (myFirstWorklogToday) {
-                    mutate({
+                    mutation.mutate({
                         taskId,
                         timeSpent,
                         id: myFirstWorklogToday.id,
                     })
                 } else {
-                    mutate({
+                    mutation.mutate({
                         taskId,
                         timeSpent,
                     })
                 }
             }
+
+            return true
         },
-        refetchInterval: 60000,
+        refetchInterval: TIME_WORKLOG,
         refetchOnWindowFocus: false,
         gcTime: 0,
         enabled: enabled,
-        notifyOnChangeProps: [],
+        notifyOnChangeProps: ['error'],
     })
 
     useEffect(() => {
         const timer = setTimeout(() => {
             setEnabled(true)
-        }, 60000)
+        }, TIME_WORKLOG)
 
         return () => clearTimeout(timer)
     }, [])
+
+    useEffect(() => {
+        if (worklogQuery.error) {
+            notifications.show({
+                title: `Error worklog issue`,
+                message: worklogQuery.error.response?.data.errorMessages.join(', '),
+                ...NOTIFICATION_VARIANT.ERROR,
+            })
+        }
+    }, [worklogQuery])
+
+    useEffect(() => {
+        if (mutation.error) {
+            notifications.show({
+                title: `Error worklog issue`,
+                message: mutation.error.response?.data.errorMessages.join(', '),
+                ...NOTIFICATION_VARIANT.ERROR,
+            })
+        }
+    }, [mutation.error])
 }

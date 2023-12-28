@@ -1,5 +1,3 @@
-import { SetURLSearchParams } from 'react-router-dom'
-
 export interface Filters {
     values: Array<{
         self: string
@@ -36,12 +34,13 @@ export interface TasksResponse {
 
 export type Task = TasksResponse['issues'][number]
 
+export type TasksTrackingResponse = Task[]
+
 export interface TaskProps {
     id: TasksResponse['issues'][number]['id']
     fields: Task['fields']
     idxPage?: number
     idxIssue: number
-    setSearchParams: SetURLSearchParams
 }
 
 export interface UseWorklogQuery {

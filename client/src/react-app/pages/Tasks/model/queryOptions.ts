@@ -1,42 +1,55 @@
-import { queryOptions, infiniteQueryOptions } from '@tanstack/react-query'
+import { queryOptions, infiniteQueryOptions, InfiniteData, QueryKey } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
-import { TasksResponse } from '../types/types'
+import { Task, TasksResponse, TasksTrackingResponse } from '../types/types'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import { notifications } from '@mantine/notifications'
+import { AxiosError } from 'axios'
+import { ErrorType } from '../../../shared/types/jiraTypes'
+import { NOTIFICATION_VARIANT } from '../../../shared/const/notification-variant'
 
 export const queryGetTasksTracking = () =>
-    queryOptions({
+    queryOptions<TasksTrackingResponse>({
         queryKey: ['tasks tracking'],
         queryFn: async (context) => {
-            const tasksIDS = useGlobalState.getState().getSearchParamsIds()
+            const tasksIDS = useGlobalState.getState().getIssueIdsSearchParams()
 
             if (tasksIDS) {
-                const lengthTasks = tasksIDS.split(',').length
+                const responses = await Promise.allSettled(
+                    tasksIDS.split(',').map((id) => axiosInstance.get<Task>('/issue', { params: { id }, signal: context.signal }))
+                )
 
-                const MAX_RESULTS = lengthTasks + 1
+                return responses.reduce<TasksTrackingResponse>((acc, response) => {
+                    if (response.status === 'fulfilled') {
+                        acc.push(response.value.data)
+                    }
 
-                const response = await axiosInstance.get<TasksResponse>('/tracking-tasks', {
-                    params: {
-                        jql: `id in (${tasksIDS})`,
-                        startAt: 0,
-                        maxResults: MAX_RESULTS,
-                    },
-                    signal: context.signal,
-                })
+                    if (response.status === 'rejected') {
+                        const reject = response.reason as AxiosError<ErrorType>
 
-                return response.data
+                        useGlobalState.getState().changeIssueIdsSearchParams('delete', response.reason.config.params.id)
+
+                        notifications.show({
+                            title: `Issue ${reject.config?.params.id}`,
+                            message: reject.response?.data.errorMessages.join(', '),
+                            ...NOTIFICATION_VARIANT.ERROR,
+                        })
+                    }
+
+                    return acc
+                }, [])
             }
 
-            return {
-                issues: [],
-            }
+            return []
         },
     })
 
 export const queryGetTasks = () =>
-    infiniteQueryOptions({
+    infiniteQueryOptions<TasksResponse, AxiosError<ErrorType>, InfiniteData<TasksResponse>, QueryKey, number>({
         queryKey: ['tasks'],
         queryFn: async (context) => {
             const MAX_RESULTS = 20
+
+            const tasksIDS = useGlobalState.getState().getIssueIdsSearchParams()
 
             const response = await axiosInstance.get<TasksResponse>('/tasks', {
                 params: {
@@ -47,7 +60,10 @@ export const queryGetTasks = () =>
                 signal: context.signal,
             })
 
-            return response.data
+            return {
+                ...response.data,
+                issues: response.data.issues.filter((issue) => !tasksIDS.includes(issue.id)),
+            }
         },
         getNextPageParam: (lastPage, allPages, lastPageParam, allPageParams) => {
             if (lastPage.issues.length > 0) {

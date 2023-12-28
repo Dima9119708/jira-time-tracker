@@ -4,6 +4,7 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { Breadcrumbs } from '../../shared/ui/Breadcrumbs'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { Logo } from '../../shared/components/Logo'
+import GlobalStateUrlSync from '../GlobalStateUrlSync/GlobalStateUrlSync'
 
 const LayoutRoot = () => {
     const navigate = useNavigate()
@@ -14,33 +15,35 @@ const LayoutRoot = () => {
     }
 
     return (
-        <AppShell
-            bg="gray.2"
-            header={{ height: 60 }}
-            footer={{ height: 60 }}
-            padding="lg"
-        >
-            <AppShell.Header
+        <>
+            <GlobalStateUrlSync />
+            <AppShell
                 bg="gray.2"
-                px="lg"
+                header={{ height: 60 }}
+                padding="lg"
             >
-                <Group
-                    justify="space-between"
-                    h="100%"
+                <AppShell.Header
+                    bg="gray.2"
+                    px="lg"
                 >
-                    <Logo size={2} />
-                    <IconTransferOut
-                        onClick={onLogout}
-                        cursor="pointer"
-                    />
-                </Group>
-            </AppShell.Header>
+                    <Group
+                        justify="space-between"
+                        h="100%"
+                    >
+                        <Logo size={2} />
+                        <IconTransferOut
+                            onClick={onLogout}
+                            cursor="pointer"
+                        />
+                    </Group>
+                </AppShell.Header>
 
-            <AppShell.Main>
-                <Breadcrumbs mb={20} />
-                <Outlet />
-            </AppShell.Main>
-        </AppShell>
+                <AppShell.Main>
+                    <Breadcrumbs mb={20} />
+                    <Outlet />
+                </AppShell.Main>
+            </AppShell>
+        </>
     )
 }
 

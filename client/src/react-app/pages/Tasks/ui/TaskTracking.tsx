@@ -5,56 +5,36 @@ import { useQueryClient } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../lib/dateHelper'
 import { ChangeStatusTask } from '../../../features/ChangeStatusTask'
 import { Timer } from '../../../features/Timer'
-import { TaskProps, TasksResponse } from '../types/types'
+import { TaskProps, TasksTrackingResponse } from '../types/types'
 import { produce } from 'immer'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import { useWorklogQuery } from '../lib/useWorklogQuery'
 
 const TaskTracking = (props: TaskProps) => {
-    const { fields, id, idxIssue, setSearchParams } = props
+    const { fields, id, idxIssue } = props
     const queryClient = useQueryClient()
     const [isLoading, setLoading] = useState(false)
 
+    useWorklogQuery({
+        taskId: id,
+    })
+
     const onPlayTracking = async () => {
-        setSearchParams((prev) => {
-            const numbers = prev
-                .get('keysTaskTracking')!
-                .split(',')
-                .map((item) => {
-                    return parseInt(item, 10)
-                })
-
-            const indexToRemove = numbers.indexOf(Number(id))
-
-            if (indexToRemove !== -1) {
-                numbers.splice(indexToRemove, 1)
-            }
-
-            const keysTaskTracking = numbers.join(',')
-
-            return {
-                keysTaskTracking: keysTaskTracking,
-            }
-        })
-
-        useGlobalState.getState().updateJQL()
+        useGlobalState.getState().changeIssueIdsSearchParams('delete', id)
 
         setLoading(true)
 
         await queryClient.cancelQueries({ queryKey: ['tasks'] })
         await queryClient.invalidateQueries({ queryKey: ['tasks'] })
 
-        queryClient.setQueryData(['tasks tracking'], (old: TasksResponse): TasksResponse => {
+        queryClient.setQueryData(['tasks tracking'], (old: TasksTrackingResponse): TasksTrackingResponse => {
             return produce(old, (draft) => {
-                draft.issues.splice(idxIssue, 1)
+                draft.splice(idxIssue, 1)
             })
         })
 
         setLoading(false)
     }
-
-    // useWorklogQuery({
-    //     taskId: id,
-    // })
 
     return (
         <Mantine_Card

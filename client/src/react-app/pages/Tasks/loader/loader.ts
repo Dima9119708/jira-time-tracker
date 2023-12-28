@@ -5,6 +5,9 @@ import { LoaderFunction } from 'react-router-dom'
 import { queryGetTasks, queryGetTasksTracking } from '../model/queryOptions'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { STATIC_FILTER_NAME } from '../../../shared/const'
+import { AxiosError } from 'axios'
+import { notifications } from '@mantine/notifications'
+import { NOTIFICATION_VARIANT } from '../../../shared/const/notification-variant'
 
 export const loaderTasks =
     (queryClient: QueryClient): LoaderFunction =>
@@ -27,33 +30,12 @@ export const loaderTasks =
 
                 useGlobalState.getState().setFilterId(filterId)
 
-                const newJQL = useGlobalState.getState().updateJQL(resFilterDetails.data.jql)
-                const oldJQL = resFilterDetails.data.jql
-
-                if (oldJQL !== newJQL) {
-                    axiosInstance
-                        .put<FilterDetails>(
-                            '/filter-details',
-                            {
-                                jql: newJQL,
-                            },
-                            {
-                                params: {
-                                    id: filterId,
-                                },
-                            }
-                        )
-                        .catch(() => {})
-                }
-
-                jql = newJQL
+                jql = resFilterDetails.data.jql
             } else {
-                const ids = useGlobalState.getState().getSearchParamsIds()
-
                 const resFilterDetails = await axiosInstance.post<FilterDetails>('/filter-details', {
                     name: STATIC_FILTER_NAME,
                     description: '',
-                    jql: ids ? `NOT key in (${ids})` : '',
+                    jql: '',
                 })
 
                 jql = resFilterDetails.data.jql
@@ -63,7 +45,15 @@ export const loaderTasks =
 
             queryClient.prefetchInfiniteQuery(queryGetTasks())
             queryClient.prefetchQuery(queryGetTasksTracking())
-        } catch (e) {}
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                notifications.show({
+                    title: `When the page loads`,
+                    message: error.response?.data.errorMessages.join(', '),
+                    ...NOTIFICATION_VARIANT.ERROR,
+                })
+            }
+        }
 
         return true
     }

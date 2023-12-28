@@ -1,24 +1,21 @@
-import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query'
+import { InfiniteData, useMutation, useQueryClient } from '@tanstack/react-query'
 import { StatusesTask, TStatusTask } from '../../../entities/StatusesTask'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { produce } from 'immer'
-import { StatusesTaskProps } from '../../../entities/StatusesTask'
-import { TasksResponse } from '../../../pages/Tasks/types/types'
-
-interface ChangeStatusTaskProps extends Omit<StatusesTaskProps, 'onChange'> {
-    queryKey: string
-    onChange?: () => void
-    idxPage?: number
-    idxIssue: number
-}
+import { TasksResponse, TasksTrackingResponse } from '../../../pages/Tasks/types/types'
+import { AxiosError, AxiosResponse } from 'axios'
+import { ErrorType } from '../../../shared/types/jiraTypes'
+import { notifications } from '@mantine/notifications'
+import { NOTIFICATION_VARIANT } from '../../../shared/const/notification-variant'
+import { ChangeStatusTaskProps } from '../types/types'
 
 const ChangeStatusTask = (props: ChangeStatusTaskProps) => {
     const { id, queryKey, children, position, disabled, idxPage, idxIssue, onChange } = props
 
     const queryClient = useQueryClient()
 
-    const { mutate } = useMutation({
-        mutationFn: (variables: TStatusTask) =>
+    const { mutate } = useMutation<AxiosResponse<TStatusTask>, AxiosError<ErrorType>, TStatusTask, TasksResponse | undefined>({
+        mutationFn: (variables) =>
             axiosInstance.post('/change-status-task', {
                 taskId: id,
                 transitionId: variables.id,
@@ -26,20 +23,18 @@ const ChangeStatusTask = (props: ChangeStatusTaskProps) => {
         onMutate: async (variables) => {
             await queryClient.cancelQueries({ queryKey: [queryKey] })
 
-            const oldState = queryClient.getQueryData<TasksResponse>([queryKey])
-
             queryClient.setQueryData(
                 [queryKey],
-                (old: InfiniteData<TasksResponse> | TasksResponse): InfiniteData<TasksResponse> | TasksResponse => {
-                    if ('issues' in old) {
+                (old: InfiniteData<TasksResponse> | TasksTrackingResponse): InfiniteData<TasksResponse> | TasksTrackingResponse => {
+                    if (Array.isArray(old)) {
                         return produce(old, (draft) => {
-                            draft.issues[idxIssue].fields.status = variables.to
+                            draft[idxIssue].fields.status = variables.to
+                        })
+                    } else {
+                        return produce(old, (draft) => {
+                            draft.pages[idxPage!].issues[idxIssue].fields.status = variables.to
                         })
                     }
-
-                    return produce(old, (draft) => {
-                        draft.pages[idxPage!].issues[idxIssue].fields.status = variables.to
-                    })
                 }
             )
 
@@ -47,12 +42,16 @@ const ChangeStatusTask = (props: ChangeStatusTaskProps) => {
                 onChange()
             }
 
-            return {
-                oldState,
-            }
+            return queryClient.getQueryData<TasksResponse>([queryKey])
         },
         onError: (error, variables, context) => {
-            queryClient.setQueryData([queryKey], context!.oldState)
+            notifications.show({
+                title: `Error issue ${id}`,
+                message: error.response?.data.errorMessages.join(', '),
+                ...NOTIFICATION_VARIANT.ERROR,
+            })
+
+            queryClient.setQueryData([queryKey], context)
         },
     })
 

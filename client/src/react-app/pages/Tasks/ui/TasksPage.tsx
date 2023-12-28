@@ -1,8 +1,11 @@
 import { Title } from '@mantine/core'
 import LoadMore from './LoadMore'
-import { Filter } from '../../../features/JQLEditor'
+import { Filter } from '../../../features/Filter'
 import TasksTracking from './TasksTracking'
 import Tasks from './Tasks'
+import { useSearchParams } from 'react-router-dom'
+import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import { useEffect } from 'react'
 
 const TasksPage = () => {
     return (

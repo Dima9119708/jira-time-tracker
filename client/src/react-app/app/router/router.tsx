@@ -5,9 +5,7 @@ import { loaderAuth } from '../../features/AuthByEmailAndToken'
 import LayoutRoot from '../LayoutRoot/LayoutRoot'
 
 const createRouter = (routes: RouteObject[]) => {
-    return __BUILD_ENV__ === 'browser'
-        ? createBrowserRouter(routes, { basename: __BASE_APP_ROUTE__ })
-        : createHashRouter(routes, { basename: __BASE_APP_ROUTE__ })
+    return createHashRouter(routes, { basename: __BASE_APP_ROUTE__ })
 }
 
 export const router = createRouter([
@@ -32,7 +30,7 @@ export const router = createRouter([
             },
             {
                 path: '/',
-                element: <Navigate to="projects" />,
+                element: <Navigate to="tasks" />,
             },
             {
                 path: '*',
