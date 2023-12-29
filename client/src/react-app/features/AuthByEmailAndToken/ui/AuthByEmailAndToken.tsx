@@ -34,7 +34,7 @@ const AuthByEmailAndToken = () => {
             localStorage.setItem('jiraSubDomain', variables.jiraSubDomain)
 
             queryClient.setQueryData(['login'], data)
-            navigate('/tasks')
+            navigate('/issues')
         },
     })
 

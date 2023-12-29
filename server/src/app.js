@@ -119,6 +119,49 @@ app.get('/issue', async (req, res) => {
     }
 })
 
+app.get('/issue-assignable', async (req, res) => {
+    try {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+            `${req.headers.jirasubdomain}/rest/api/3/user/assignable/search?issueKey=${req.query.id}`,
+            {
+                headers: {
+                    Authorization: `Basic ${req.headers.encodedauth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
+app.put('/issue-assignee', async (req, res) => {
+    try {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.put(
+            `${req.headers.jirasubdomain}/rest/api/3/issue/${req.query.id}/assignee`,
+            req.body,
+            {
+                headers: {
+                    Authorization: `Basic ${req.headers.encodedauth}`,
+                },
+            }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
 app.get('/filters', async (req, res) => {
     try {
         if (!req.headers.jirasubdomain || !req.headers.encodedauth) {

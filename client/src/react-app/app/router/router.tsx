@@ -5,7 +5,9 @@ import { loaderAuth } from '../../features/AuthByEmailAndToken'
 import LayoutRoot from '../LayoutRoot/LayoutRoot'
 
 const createRouter = (routes: RouteObject[]) => {
-    return createHashRouter(routes, { basename: __BASE_APP_ROUTE__ })
+    return __BUILD_ENV__ === 'browser'
+        ? createBrowserRouter(routes, { basename: __BASE_APP_ROUTE__ })
+        : createHashRouter(routes, { basename: __BASE_APP_ROUTE__ })
 }
 
 export const router = createRouter([
@@ -17,20 +19,21 @@ export const router = createRouter([
         children: [
             {
                 index: true,
-                path: 'tasks',
+                path: 'issues',
                 shouldRevalidate: (args) => false,
                 lazy: async () => {
-                    const { loaderTasks, TasksPage } = await import('../../pages/Tasks')
+                    const { loaderIssues, IssuesPage, ErrorBoundary } = await import('../../pages/Issues')
 
                     return {
-                        loader: loaderTasks(queryClient),
-                        Component: TasksPage,
+                        loader: loaderIssues,
+                        Component: IssuesPage,
+                        errorElement: <ErrorBoundary />,
                     }
                 },
             },
             {
                 path: '/',
-                element: <Navigate to="tasks" />,
+                element: <Navigate to="issues" />,
             },
             {
                 path: '*',

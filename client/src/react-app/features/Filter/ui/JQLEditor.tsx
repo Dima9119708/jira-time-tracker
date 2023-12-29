@@ -6,12 +6,14 @@ import { FilterProps } from '../types/types'
 import { memo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
-import { FilterDetails } from '../../../pages/Tasks/types/types'
+import { FilterDetails } from '../../../pages/Issues/types/types'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { AxiosError, AxiosResponse } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'
 import { notifications } from '@mantine/notifications'
-import { NOTIFICATION_VARIANT } from '../../../shared/const/notification-variant'
+import { NOTIFICATION_AUTO_CLOSE, NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
+import { IconCheck } from '@tabler/icons-react'
+import { rem } from '@mantine/core'
 
 const JQLEditor = (props: FilterProps) => {
     const { className } = props
@@ -32,7 +34,27 @@ const JQLEditor = (props: FilterProps) => {
                 }
             ),
         onMutate: () => {
-            queryClient.invalidateQueries({ queryKey: ['tasks'] })
+            const id = notifications.show({
+                title: 'Searching',
+                message: '',
+                loading: true,
+            })
+
+            queryClient
+                .invalidateQueries({ queryKey: ['tasks'] })
+                .then(() => {
+                    notifications.update({
+                        id,
+                        title: 'Searching',
+                        message: '',
+                        icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
+                        loading: false,
+                        autoClose: NOTIFICATION_AUTO_CLOSE,
+                    })
+                })
+                .catch(() => {
+                    notifications.hide(id)
+                })
         },
         onError: (error) => {
             notifications.show({
