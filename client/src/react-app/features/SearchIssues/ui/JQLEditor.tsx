@@ -2,7 +2,7 @@ import { JQLEditorAsync } from '@atlassianlabs/jql-editor'
 import { useAutocompleteProvider } from '@atlassianlabs/jql-editor-autocomplete-rest'
 import { getInitialData, getSuggestions } from '../service/service'
 import { cn } from '../../../shared/lib/classNames '
-import { FilterProps } from '../types/types'
+import { SearchIssuesProps } from '../types/types'
 import { memo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
@@ -15,7 +15,7 @@ import { NOTIFICATION_AUTO_CLOSE, NOTIFICATION_VARIANT } from '../../../shared/c
 import { IconCheck } from '@tabler/icons-react'
 import { rem } from '@mantine/core'
 
-const JQLEditor = (props: FilterProps) => {
+const JQLEditor = (props: SearchIssuesProps) => {
     const { className } = props
     const queryClient = useQueryClient()
     const query = useGlobalState((state) => state.jql)

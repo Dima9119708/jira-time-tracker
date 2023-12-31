@@ -1,6 +1,6 @@
 import { ActionIcon, Alert, Badge, Button, Card as Mantine_Card, Group, Image, Loader, Title } from '@mantine/core'
 import React, { memo, useState } from 'react'
-import { IconAlertTriangle, IconPlayerPauseFilled } from '@tabler/icons-react'
+import { IconAlertTriangle, IconArrowBigDownFilled, IconPlayerPauseFilled } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../lib/dateHelper'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'

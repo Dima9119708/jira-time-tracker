@@ -41,6 +41,9 @@
       "last 1 safari version"
     ]
   },
+  "resolutions": {
+    "prosemirror-model": "1.19.4"
+  },
   "devDependencies": {
     "@babel/core": "^7.22.9",
     "@babel/plugin-transform-runtime": "^7.22.15",
@@ -114,11 +117,17 @@
     "webpack-manifest-plugin": "^5.0.0"
   },
   "dependencies": {
+    "@atlaskit/editor-core": "^190.1.19",
+    "@atlaskit/editor-test-helpers": "^9.11.13",
+    "@atlaskit/link-provider": "^1.6.12",
+    "@atlaskit/media-core": "^34.1.4",
+    "@atlaskit/media-state": "^1.0.3",
+    "@atlaskit/renderer": "^109.1.1",
+    "@atlaskit/util-data-test": "^17.8.46",
     "@atlassianlabs/jql-editor": "^2.0.1",
     "@atlassianlabs/jql-editor-autocomplete-rest": "^1.1.2",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^10.0.7",
-    "@forge/bridge": "^3.2.0",
     "@mantine/core": "^7.2.2",
     "@mantine/hooks": "^7.2.2",
     "@mantine/notifications": "^7.3.0",
@@ -136,6 +145,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
     "react-intersection-observer": "^9.5.3",
+    "react-intl": "^6.5.5",
     "react-redux": "^8.1.3",
     "react-router-dom": "6.20.1",
     "tailwind-merge": "^1.14.0",

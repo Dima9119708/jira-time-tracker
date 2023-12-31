@@ -43,7 +43,7 @@ const StatusesIssue = (props: StatusesTaskProps) => {
                             key={transition.id}
                             value={transition.name}
                             className={cn({
-                                'bg-[var(--mantine-color-dark-light)]': status.id === transition.id,
+                                'bg-[var(--mantine-color-dark-light)]': status.id === transition.to.id,
                             })}
                         >
                             {transition.name}

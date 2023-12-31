@@ -1,6 +1,6 @@
-import { Badge, Button, Card as Mantine_Card, Group, Image, Title } from '@mantine/core'
+import { ActionIcon, Badge, Button, Card as Mantine_Card, Group, Image, rem, Title } from '@mantine/core'
 import React, { memo } from 'react'
-import { IconPlayerPlayFilled, IconUser, IconUserSquare } from '@tabler/icons-react'
+import { IconArrowBigDownFilled, IconPlayerPlayFilled, IconUser, IconUserSquare } from '@tabler/icons-react'
 import { useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../lib/dateHelper'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
@@ -8,6 +8,8 @@ import { produce } from 'immer'
 import { TaskProps, IssueResponse, IssuesTrackingResponse } from '../types/types'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
+import { Comments } from '../../../widgets/Comments'
+import { ButtonComment } from '../../../entities/Comments'
 
 const Issue = (props: TaskProps) => {
     const { fields, id, idxPage, idxIssue, issueKey } = props
@@ -90,7 +92,10 @@ const Issue = (props: TaskProps) => {
                 <Badge variant="light">key: {issueKey}</Badge>
             </Group>
 
-            <Group justify="space-between">
+            <Group
+                mb={15}
+                justify="space-between"
+            >
                 <Group>
                     <ChangeStatusIssue
                         issueId={id}
@@ -145,6 +150,12 @@ const Issue = (props: TaskProps) => {
                     />
                 </ChangeStatusIssue>
             </Group>
+
+            <Group>
+                <ButtonComment />
+            </Group>
+
+            <Comments issueId={id} />
         </Mantine_Card>
     )
 }

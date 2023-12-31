@@ -1,6 +1,6 @@
 import { Title } from '@mantine/core'
 import LoadMore from './LoadMore'
-import { Filter } from '../../../features/Filter'
+import { SearchIssues } from '../../../features/SearchIssues'
 import IssuesTracking from './IssuesTracking'
 import Issues from './Issues'
 import { useSearchParams } from 'react-router-dom'
@@ -17,7 +17,7 @@ const IssuesPage = () => {
                 Issues
             </Title>
 
-            <Filter />
+            <SearchIssues />
 
             <IssuesTracking />
 
