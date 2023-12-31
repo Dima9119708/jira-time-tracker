@@ -70,7 +70,8 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 message: context!.notificationMessage,
             })
 
-            queryClient.invalidateQueries({ queryKey: [queryKey] })
+            // TODO => ???
+            // queryClient.invalidateQueries({ queryKey: [queryKey] })
         },
         onError: (error, variables, context) => {
             notifications.hide(context!.notificationId)

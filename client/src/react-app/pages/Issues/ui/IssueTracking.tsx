@@ -21,13 +21,11 @@ const IssueTracking = (props: TaskProps) => {
     })
 
     const onStopTracking = async () => {
-        useGlobalState.getState().changeIssueIdsSearchParams('delete', id)
-
         setLoading(true)
 
-        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
+        await useGlobalState.getState().changeIssueIdsSearchParams('delete', id)
 
-        setLoading(false)
+        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
 
         queryClient.setQueryData(['tasks tracking'], (old: IssuesTrackingResponse): IssuesTrackingResponse => {
             return produce(old, (draft) => {
@@ -35,6 +33,8 @@ const IssueTracking = (props: TaskProps) => {
                 draft.splice(idx, 1)
             })
         })
+
+        setLoading(false)
     }
 
     return (
@@ -51,7 +51,7 @@ const IssueTracking = (props: TaskProps) => {
                 mb={10}
                 justify="space-between"
             >
-                {fields.status.statusCategory.key !== 'indeterminate' && (
+                {!isLoading && fields.status.statusCategory.key !== 'indeterminate' && (
                     <Alert
                         className="w-[100%]"
                         variant="light"
@@ -146,12 +146,22 @@ const IssueTracking = (props: TaskProps) => {
                 {isLoading ? (
                     <Loader size="sm" />
                 ) : (
-                    <ActionIcon
-                        variant="light"
-                        onClick={onStopTracking}
+                    <ChangeStatusIssue
+                        issueId={id}
+                        issueName={fields.summary}
+                        status={fields.status}
+                        idxIssue={idxIssue}
+                        queryKey="tasks tracking"
+                        onChange={onStopTracking}
+                        disabled={fields.status.statusCategory.key === 'done'}
                     >
-                        <IconPlayerPauseFilled className="cursor-pointer [&_path]:fill-[var(--mantine-color-violet-5)]" />
-                    </ActionIcon>
+                        <ActionIcon
+                            variant="light"
+                            {...(fields.status.statusCategory.key === 'done' && { onClick: onStopTracking })}
+                        >
+                            <IconPlayerPauseFilled className="cursor-pointer [&_path]:fill-[var(--mantine-color-violet-5)]" />
+                        </ActionIcon>
+                    </ChangeStatusIssue>
                 )}
             </Group>
         </Mantine_Card>

@@ -13,7 +13,7 @@ interface UseGlobalState {
     changeIssueIdsSearchParams: (
         type: UseGlobalState['issueIdsSearchParams']['type'],
         value: UseGlobalState['issueIdsSearchParams']['value']
-    ) => void
+    ) => Promise<void>
     getIssueIdsSearchParams: () => string
     setIssueIdsSearchParams: (ids: string) => void
 }
@@ -40,10 +40,24 @@ export const useGlobalState = createStore<UseGlobalState>(
         getIssueIdsSearchParams: () => {
             return get().issueIdsSearchParams.currentParams
         },
-        changeIssueIdsSearchParams: (type, value) => {
+        changeIssueIdsSearchParams: async (type, value) => {
             set((state) => {
                 state.issueIdsSearchParams.type = type
                 state.issueIdsSearchParams.value = value
+            })
+
+            await new Promise((resolve) => {
+                const interval = setInterval(() => {
+                    if (type === 'delete' && !get().issueIdsSearchParams.currentParams.includes(value)) {
+                        clearInterval(interval)
+                        resolve(true)
+                    }
+
+                    if (type === 'add' && get().issueIdsSearchParams.currentParams.includes(value)) {
+                        clearInterval(interval)
+                        resolve(true)
+                    }
+                })
             })
         },
         updateJQL: (jql) => {
