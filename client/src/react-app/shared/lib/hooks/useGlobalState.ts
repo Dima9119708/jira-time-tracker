@@ -1,14 +1,17 @@
 import { createStore } from '../../config/store/store'
+import { ConfigurationTimeTrackingOptions } from '../../../pages/Issues/types/types'
 
 interface UseGlobalState {
     filterId: string
     jql: string
+    workHoursPerWeek: ConfigurationTimeTrackingOptions['workingHoursPerDay']
     issueIdsSearchParams: {
         type: 'add' | 'delete' | null
         value: string
         currentParams: string
     }
     setFilterId: (id: string) => void
+    setWorkHoursPerWeek: (hours: UseGlobalState['workHoursPerWeek']) => void
     updateJQL: (jql: string) => void
     changeIssueIdsSearchParams: (
         type: UseGlobalState['issueIdsSearchParams']['type'],
@@ -22,6 +25,7 @@ export const useGlobalState = createStore<UseGlobalState>(
     (set, get) => ({
         filterId: '',
         jql: '',
+        workHoursPerWeek: 8,
         issueIdsSearchParams: {
             type: null,
             value: '',
@@ -39,6 +43,11 @@ export const useGlobalState = createStore<UseGlobalState>(
         },
         getIssueIdsSearchParams: () => {
             return get().issueIdsSearchParams.currentParams
+        },
+        setWorkHoursPerWeek: (hours) => {
+            set((draft) => {
+                draft.workHoursPerWeek = hours
+            })
         },
         changeIssueIdsSearchParams: async (type, value) => {
             set((state) => {

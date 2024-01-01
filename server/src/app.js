@@ -204,6 +204,27 @@ app.get('/filter-details', async (req, res) => {
     }
 })
 
+app.get('/configuration-timetracking', async (req, res) => {
+    try {
+        if (!req.headers.jirasubdomain || !req.headers.encodedauth) {
+            return res.status(401).send()
+        }
+
+        const response = await axios.get(
+          `${req.headers.jirasubdomain}/rest/api/2/configuration/timetracking/options`,
+          {
+              headers: {
+                  Authorization: `Basic ${req.headers.encodedauth}`,
+              },
+          }
+        )
+
+        res.send(response.data)
+    } catch (e) {
+        res.status(e.response.status).send(e.response.data)
+    }
+})
+
 app.post('/filter-details', async (req, res) => {
     try {
         if (!req.headers.jirasubdomain || !req.headers.encodedauth) {

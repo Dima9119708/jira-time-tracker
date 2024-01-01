@@ -1,5 +1,5 @@
 import { axiosInstance } from '../../../shared/config/api/api'
-import { FilterDetails, Filters } from '../types/types'
+import { ConfigurationTimeTrackingOptions, FilterDetails, Filters } from '../types/types'
 import { LoaderFunction } from 'react-router-dom'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { STATIC_FILTER_NAME } from '../../../shared/const'
@@ -7,11 +7,14 @@ import { STATIC_FILTER_NAME } from '../../../shared/const'
 export const loaderIssues: LoaderFunction = async () => {
     let jql = ''
 
-    const resFilters = await axiosInstance.get<Filters>('/filters', {
-        params: {
-            filterValue: STATIC_FILTER_NAME,
-        },
-    })
+    const [resFilters, resConfigTimeTrackingOptions] = await Promise.all([
+        axiosInstance.get<Filters>('/filters', {
+            params: {
+                filterValue: STATIC_FILTER_NAME,
+            },
+        }),
+        axiosInstance.get<ConfigurationTimeTrackingOptions>('/configuration-timetracking'),
+    ])
 
     if (resFilters.data.values.length > 0) {
         const filterId = resFilters.data.values[0].id
@@ -34,6 +37,7 @@ export const loaderIssues: LoaderFunction = async () => {
     }
 
     useGlobalState.getState().updateJQL(jql)
+    useGlobalState.getState().setWorkHoursPerWeek(resConfigTimeTrackingOptions.data.workingHoursPerDay)
 
     return true
 }

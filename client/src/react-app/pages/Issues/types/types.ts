@@ -1,3 +1,7 @@
+export interface ConfigurationTimeTrackingOptions {
+    workingHoursPerDay: number
+}
+
 export interface Filters {
     values: Array<{
         self: string

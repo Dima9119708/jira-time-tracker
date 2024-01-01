@@ -1,7 +1,9 @@
+import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+
 export const secondsToJiraFormat = (seconds: number) => {
     const secondsPerMinute = 60
     const minutesPerHour = 60
-    const hoursPerDay = 8
+    const hoursPerDay = useGlobalState.getState().workHoursPerWeek
     const secondsPerDay = secondsPerMinute * minutesPerHour * hoursPerDay
     const secondsPerHour = secondsPerMinute * minutesPerHour
 
