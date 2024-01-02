@@ -24,6 +24,7 @@ export const loaderIssues: LoaderFunction = async () => {
         })
 
         useGlobalState.getState().setFilterId(filterId)
+        useGlobalState.getState().parseAndSaveSetting(resFilterDetails.data.description)
 
         jql = resFilterDetails.data.jql
     } else {

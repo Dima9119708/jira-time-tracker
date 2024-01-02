@@ -12,6 +12,7 @@ export interface Filters {
 
 export interface FilterDetails {
     jql: string
+    description: string
 }
 
 export type IssueStatusCategory = 'new' | 'indeterminate' | 'done'

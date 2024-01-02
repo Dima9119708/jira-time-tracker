@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain, Notification } = require('electron')
 const path = require('path')
 
 if (!process.env.NODE_ENV) {
@@ -9,8 +9,14 @@ const createWindow = () => {
     const win = new BrowserWindow({
         width: 1920,
         minWidth: 600,
+        icon: path.join(__dirname, 'clock-play.png'),
         height: 1080,
         useContentSize: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+            enableRemoteModule: true,
+        },
     })
 
     if (process.env.NODE_ENV === 'production') {

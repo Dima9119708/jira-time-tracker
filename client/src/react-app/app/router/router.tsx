@@ -15,12 +15,12 @@ export const router = createRouter([
         path: '/',
         Component: LayoutRoot,
         loader: loaderAuth(queryClient),
-        shouldRevalidate: (args) => false,
+        shouldRevalidate: () => false,
         children: [
             {
                 index: true,
                 path: 'issues',
-                shouldRevalidate: (args) => false,
+                shouldRevalidate: () => false,
                 lazy: async () => {
                     const { loaderIssues, IssuesPage, ErrorBoundary } = await import('../../pages/Issues')
 
@@ -37,7 +37,7 @@ export const router = createRouter([
             },
             {
                 path: '*',
-                element: <div>Not Found</div>,
+                element: <Navigate to="issues" />,
             },
         ],
     },

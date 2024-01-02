@@ -4,13 +4,15 @@ import { cn } from '../../../lib/classNames '
 interface LogoProps {
     size: 1 | 2
     className?: string
+    onClick?: () => void
 }
 
 const Logo = (props: LogoProps) => {
-    const { size, className } = props
+    const { size, className, onClick } = props
 
     return (
         <Text
+            onClick={onClick}
             fw={900}
             variant="gradient"
             className={cn(

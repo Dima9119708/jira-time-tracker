@@ -9,15 +9,16 @@ import { AxiosError, AxiosResponse } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'
 import { notifications } from '@mantine/notifications'
 import { NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
-
-const TIME_WORKLOG = 60000
-const TIMESPENT = 60
+import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 
 export const useWorklogQuery = (props: UseWorklogQuery) => {
     const { taskId } = props
     const [enabled, setEnabled] = useState(false)
 
     const queryClient = useQueryClient()
+
+    const second = useGlobalState((state) => state.settings.timeLoggingIntervalSecond)
+    const millisecond = useGlobalState((state) => state.settings.timeLoggingIntervalMillisecond)
 
     const mutation = useMutation<AxiosResponse<WorklogIssueMutation>, AxiosError<ErrorType>, WorklogIssueMutation>({
         mutationFn: (variables) => {
@@ -30,7 +31,7 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
                     const task = draft.find((issue) => issue.id === taskId)
 
                     if (task) {
-                        task.fields.timespent += TIMESPENT
+                        task.fields.timespent += second
                     }
                 })
             })
@@ -57,7 +58,7 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
 
                 const worklogSecond = myFirstWorklogToday?.timeSpentSeconds ?? 0
 
-                const timeSpent = secondsToJiraFormat(worklogSecond + TIMESPENT)
+                const timeSpent = secondsToJiraFormat(worklogSecond + second)
 
                 if (myFirstWorklogToday) {
                     mutation.mutate({
@@ -75,7 +76,7 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
 
             return true
         },
-        refetchInterval: TIME_WORKLOG,
+        refetchInterval: millisecond,
         refetchOnWindowFocus: false,
         gcTime: 0,
         enabled: enabled,
@@ -85,10 +86,10 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setEnabled(true)
-        }, TIME_WORKLOG)
+        }, millisecond)
 
         return () => clearTimeout(timer)
-    }, [])
+    }, [millisecond])
 
     useEffect(() => {
         if (worklogQuery.error) {
