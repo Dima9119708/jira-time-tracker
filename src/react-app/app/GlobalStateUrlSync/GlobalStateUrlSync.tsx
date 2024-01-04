@@ -5,7 +5,7 @@ import { useGlobalState } from '../../shared/lib/hooks/useGlobalState'
 const GlobalStateUrlSync = () => {
     const [, setSearchParams] = useSearchParams()
     const location = useLocation()
-    console.log('call =>')
+
     const type = useGlobalState((state) => state.issueIdsSearchParams.type)
     const value = useGlobalState((state) => state.issueIdsSearchParams.value)
 
