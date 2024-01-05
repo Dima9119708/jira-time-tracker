@@ -10,6 +10,11 @@ export interface UseGlobalState {
         timeLoggingIntervalValue: number
         timeLoggingIntervalSecond: number
         timeLoggingIntervalMillisecond: number
+
+        sendInactiveNotificationDisabled: boolean
+        sendInactiveNotificationUnit: 'minutes' | 'hours'
+        sendInactiveNotificationValue: number
+        sendInactiveNotificationMillisecond: number
     }
     workHoursPerWeek: ConfigurationTimeTrackingOptions['workingHoursPerDay']
     issueIdsSearchParams: {
@@ -43,6 +48,10 @@ export const useGlobalState = createStore<UseGlobalState>(
             timeLoggingIntervalMillisecond: 60000,
             timeLoggingIntervalSecond: 60,
             timeLoggingIntervalValue: 1,
+            sendInactiveNotificationDisabled: false,
+            sendInactiveNotificationUnit: 'minutes',
+            sendInactiveNotificationValue: 30,
+            sendInactiveNotificationMillisecond: 1800000,
         },
         issueIdsSearchParams: {
             type: null,
@@ -86,7 +95,7 @@ export const useGlobalState = createStore<UseGlobalState>(
             try {
                 const setting = JSON.parse(string)
                 set((state) => {
-                    state.settings = setting
+                    state.settings = { ...state.settings, ...setting }
                 })
             } catch (e) {}
         },
@@ -102,7 +111,7 @@ export const useGlobalState = createStore<UseGlobalState>(
                         clearInterval(interval)
                         resolve(true)
                     }
-                    console.log('arguments =>', get().issueIdsSearchParams.currentParams)
+
                     if (type === 'add' && get().issueIdsSearchParams.currentParams.includes(value)) {
                         clearInterval(interval)
                         resolve(true)

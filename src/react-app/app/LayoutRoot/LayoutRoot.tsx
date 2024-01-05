@@ -7,6 +7,7 @@ import { Logo } from '../../shared/components/Logo'
 import GlobalStateUrlSync from '../GlobalStateUrlSync/GlobalStateUrlSync'
 import Settings from '../../widgets/Settings/ui/Settings'
 import { useGlobalState } from '../../shared/lib/hooks/useGlobalState'
+import NotificationsApp from '../NotificationsApp/NotificationsApp'
 
 const LayoutRoot = () => {
     const navigate = useNavigate()
@@ -19,6 +20,7 @@ const LayoutRoot = () => {
     return (
         <>
             <GlobalStateUrlSync />
+            <NotificationsApp />
             <AppShell
                 bg="gray.2"
                 header={{ height: 60 }}

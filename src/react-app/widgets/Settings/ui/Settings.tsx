@@ -1,4 +1,4 @@
-import { Button, Group, Input, Modal, rem, Select, Text } from '@mantine/core'
+import { Button, Divider, Group, Input, Modal, rem, Select, Switch, Text } from '@mantine/core'
 import { useForm, Controller, SubmitHandler } from 'react-hook-form'
 import dayjs from 'dayjs'
 import { useMutation } from '@tanstack/react-query'
@@ -11,18 +11,20 @@ import { notifications } from '@mantine/notifications'
 import { NOTIFICATION_AUTO_CLOSE, NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
 import { IconCheck } from '@tabler/icons-react'
 
-interface FormValues {
-    timeLoggingIntervalUnit: UseGlobalState['settings']['timeLoggingIntervalUnit']
-    timeLoggingIntervalValue: UseGlobalState['settings']['timeLoggingIntervalValue']
-}
+export type FormValues = Omit<
+    UseGlobalState['settings'],
+    'sendInactiveNotificationMillisecond' | 'timeLoggingIntervalSecond' | 'timeLoggingIntervalMillisecond'
+>
 
 const Settings = () => {
     const opened = useGlobalState((state) => state.openSettings)
 
-    const { control, handleSubmit } = useForm<FormValues>({
+    const { control, handleSubmit, watch } = useForm<FormValues>({
         mode: 'onBlur',
         defaultValues: useGlobalState.getState().settings,
     })
+
+    const sendInactiveNotificationDisabled = !watch('sendInactiveNotificationDisabled')
 
     const { mutate, isPending } = useMutation<
         AxiosResponse<FilterDetails>,
@@ -77,24 +79,26 @@ const Settings = () => {
         },
     })
 
-    const onSave: SubmitHandler<FormValues> = (data, event) => {
-        let millisecond
-        let second
-
-        if (data.timeLoggingIntervalUnit === 'minutes') {
-            millisecond = dayjs.duration(data.timeLoggingIntervalValue, 'minutes').asMilliseconds()
-            second = dayjs.duration(data.timeLoggingIntervalValue, 'minutes').asSeconds()
-        }
-        if (data.timeLoggingIntervalUnit === 'hours') {
-            millisecond = dayjs.duration(data.timeLoggingIntervalValue, 'hours').asMilliseconds()
-            second = dayjs.duration(data.timeLoggingIntervalValue, 'hours').asSeconds()
-        }
-
-        const newSettings = {
+    const onSave: SubmitHandler<FormValues> = (data) => {
+        const newSettings: UseGlobalState['settings'] = {
             timeLoggingIntervalUnit: data.timeLoggingIntervalUnit,
             timeLoggingIntervalValue: data.timeLoggingIntervalValue,
-            timeLoggingIntervalSecond: second!,
-            timeLoggingIntervalMillisecond: millisecond!,
+            timeLoggingIntervalSecond:
+                data.timeLoggingIntervalUnit === 'minutes'
+                    ? dayjs.duration(data.timeLoggingIntervalValue, 'minutes').asSeconds()
+                    : dayjs.duration(data.timeLoggingIntervalValue, 'hours').asSeconds(),
+            timeLoggingIntervalMillisecond:
+                data.timeLoggingIntervalUnit === 'minutes'
+                    ? dayjs.duration(data.timeLoggingIntervalValue, 'minutes').asMilliseconds()
+                    : dayjs.duration(data.timeLoggingIntervalValue, 'hours').asMilliseconds(),
+
+            sendInactiveNotificationDisabled: data.sendInactiveNotificationDisabled,
+            sendInactiveNotificationValue: data.sendInactiveNotificationValue,
+            sendInactiveNotificationUnit: data.sendInactiveNotificationUnit,
+            sendInactiveNotificationMillisecond:
+                data.timeLoggingIntervalUnit === 'minutes'
+                    ? dayjs.duration(data.sendInactiveNotificationValue, 'minutes').asMilliseconds()
+                    : dayjs.duration(data.sendInactiveNotificationValue, 'hours').asMilliseconds(),
         }
 
         useGlobalState.getState().setSettings(newSettings)
@@ -132,7 +136,6 @@ const Settings = () => {
                         control={control}
                         rules={{ required: 'Required' }}
                         render={({ field, fieldState }) => {
-                            console.log('fieldState.error =>', fieldState.error)
                             return (
                                 <Input
                                     value={field.value}
@@ -162,6 +165,77 @@ const Settings = () => {
                                         { label: 'Hour', value: 'hours' },
                                     ]}
                                     error={fieldState.error?.message}
+                                />
+                            )
+                        }}
+                    />
+                </Group>
+            </Group>
+
+            <Divider
+                mt={20}
+                mb={20}
+            />
+
+            <Group
+                justify="space-between"
+                wrap="nowrap"
+            >
+                <Text size="sm">
+                    Should send a notification when the application is open but not in use, and none of the tasks have been taken into work.
+                </Text>
+
+                <Group wrap="nowrap">
+                    <Controller
+                        name="sendInactiveNotificationDisabled"
+                        control={control}
+                        render={({ field }) => {
+                            return (
+                                <Switch
+                                    checked={field.value}
+                                    onChange={field.onChange}
+                                    size="xs"
+                                />
+                            )
+                        }}
+                    />
+
+                    <Controller
+                        name="sendInactiveNotificationValue"
+                        control={control}
+                        rules={{ required: 'Required' }}
+                        render={({ field, fieldState }) => {
+                            return (
+                                <Input
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    onBlur={field.onBlur}
+                                    w={60}
+                                    type="number"
+                                    error={fieldState.error?.message}
+                                    disabled={sendInactiveNotificationDisabled}
+                                />
+                            )
+                        }}
+                    />
+
+                    <Controller
+                        name="sendInactiveNotificationUnit"
+                        control={control}
+                        render={({ field, fieldState }) => {
+                            return (
+                                <Select
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    onBlur={field.onBlur}
+                                    w={100}
+                                    placeholder="Unit"
+                                    data={[
+                                        { label: 'Minute', value: 'minutes' },
+                                        { label: 'Hour', value: 'hours' },
+                                    ]}
+                                    error={fieldState.error?.message}
+                                    disabled={sendInactiveNotificationDisabled}
                                 />
                             )
                         }}

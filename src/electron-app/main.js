@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Notification } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain, Notification } = require('electron')
 const path = require('path')
 const chokidar = require('chokidar')
 const server = require('./server')
@@ -8,7 +8,7 @@ if (!process.env.NODE_ENV) {
 }
 
 const createWindow = () => {
-    const win = new BrowserWindow({
+    const mainWindow = new BrowserWindow({
         width: 1920,
         minWidth: 600,
         icon: path.join(__dirname, 'clock-play.png'),
@@ -21,15 +21,38 @@ const createWindow = () => {
         },
     })
 
+    ipcMain.on('notification', (_, { title, body }) => {
+        const notification = new Notification({
+            title: title,
+            body: body,
+            icon: path.join(__dirname, 'clock-play.png'),
+        })
+
+        notification.show()
+
+        notification.on('click', () => app.focus())
+    })
+
+    mainWindow.on('focus', () => {
+        mainWindow.webContents.send('focus')
+    })
+
+    mainWindow.on('blur', () => {
+        mainWindow.webContents.send('blur')
+    })
+
     if (process.env.NODE_ENV === 'production') {
-        win.loadFile(path.join(__dirname, 'build/index.html'))
+        mainWindow.loadFile(path.join(__dirname, 'build/index.html'))
     } else {
         const watcher = chokidar.watch(__dirname, { ignored: /node_modules|[\/\\]\./ })
 
-        watcher.on('change', () => win.reload())
+        watcher.on('change', () => {
+            app.quit()
+            app.relaunch()
+        })
 
-        win.loadURL(`http://localhost:3000`)
-        win.webContents.openDevTools()
+        mainWindow.loadURL(`http://localhost:3000`)
+        mainWindow.webContents.openDevTools()
     }
 }
 
@@ -45,17 +68,17 @@ app.whenReady().then(() => {
             })
         },
         (error) => {
-            const notification = new Notification({
-                title: 'Server error',
-                body: error,
-            })
-
-            notification.on('click', () => {
-                app.quit()
-                app.relaunch()
-            })
-
-            notification.show()
+            dialog
+                .showMessageBox({
+                    type: 'error',
+                    title: 'Server error',
+                    message: error,
+                    buttons: ['Reload'],
+                })
+                .then(() => {
+                    app.quit()
+                    app.relaunch()
+                })
         }
     )
 })
