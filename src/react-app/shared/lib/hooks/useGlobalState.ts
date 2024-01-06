@@ -1,20 +1,32 @@
 import { createStore } from '../../config/store/store'
 import { ConfigurationTimeTrackingOptions } from '../../../pages/Issues/types/types'
+import deepmerge from '../utils/deepMerge'
 
 export interface UseGlobalState {
     filterId: string
     jql: string
     openSettings: boolean
+    isSystemIdle: boolean
     settings: {
-        timeLoggingIntervalUnit: 'minutes' | 'hours'
-        timeLoggingIntervalValue: number
-        timeLoggingIntervalSecond: number
-        timeLoggingIntervalMillisecond: number
+        timeLoggingInterval: {
+            unit: 'minutes' | 'hours'
+            displayTime: number
+            second: number
+        }
 
-        sendInactiveNotificationDisabled: boolean
-        sendInactiveNotificationUnit: 'minutes' | 'hours'
-        sendInactiveNotificationValue: number
-        sendInactiveNotificationMillisecond: number
+        sendInactiveNotification: {
+            enabled: boolean
+            unit: 'minutes' | 'hours'
+            displayTime: number
+            millisecond: number
+        }
+
+        systemIdle: {
+            enabled: boolean
+            unit: 'minutes' | 'hours'
+            displayTime: number
+            second: number
+        }
     }
     workHoursPerWeek: ConfigurationTimeTrackingOptions['workingHoursPerDay']
     issueIdsSearchParams: {
@@ -41,17 +53,29 @@ export const useGlobalState = createStore<UseGlobalState>(
     (set, get) => ({
         filterId: '',
         jql: '',
+        isSystemIdle: false,
         workHoursPerWeek: 8,
         openSettings: false,
         settings: {
-            timeLoggingIntervalUnit: 'minutes',
-            timeLoggingIntervalMillisecond: 60000,
-            timeLoggingIntervalSecond: 60,
-            timeLoggingIntervalValue: 1,
-            sendInactiveNotificationDisabled: false,
-            sendInactiveNotificationUnit: 'minutes',
-            sendInactiveNotificationValue: 30,
-            sendInactiveNotificationMillisecond: 1800000,
+            timeLoggingInterval: {
+                unit: 'minutes',
+                displayTime: 1,
+                second: 60,
+            },
+
+            sendInactiveNotification: {
+                enabled: false,
+                unit: 'minutes',
+                displayTime: 30,
+                millisecond: 1800000,
+            },
+
+            systemIdle: {
+                enabled: true,
+                unit: 'minutes',
+                displayTime: 1,
+                second: 60,
+            },
         },
         issueIdsSearchParams: {
             type: null,
@@ -95,7 +119,7 @@ export const useGlobalState = createStore<UseGlobalState>(
             try {
                 const setting = JSON.parse(string)
                 set((state) => {
-                    state.settings = { ...state.settings, ...setting }
+                    state.settings = deepmerge(state.settings, setting)
                 })
             } catch (e) {}
         },

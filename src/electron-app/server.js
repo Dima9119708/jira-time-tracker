@@ -390,7 +390,7 @@ const server = (successCallback, errorCallback) => {
                 const response = await axios.post(
                     `${req.headers.jirasubdomain}/rest/api/3/issue/${req.body.taskId}/worklog`,
                     {
-                        timeSpent: req.body.timeSpent,
+                        timeSpentSeconds: req.body.timeSpentSeconds,
                     },
                     {
                         headers: {
@@ -418,7 +418,7 @@ const server = (successCallback, errorCallback) => {
                 const response = await axios.put(
                     `${req.headers.jirasubdomain}/rest/api/3/issue/${req.body.taskId}/worklog/${req.body.id}`,
                     {
-                        timeSpent: req.body.timeSpent,
+                        timeSpentSeconds: req.body.timeSpentSeconds,
                     },
                     {
                         headers: {

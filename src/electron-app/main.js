@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, Notification } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor } = require('electron')
 const path = require('path')
 const chokidar = require('chokidar')
 const server = require('./server')
@@ -21,7 +21,11 @@ const createWindow = () => {
         },
     })
 
-    ipcMain.on('notification', (_, { title, body }) => {
+    ipcMain.on('GET-SYSTEM-IDLE-TIME', (event, args) => {
+        event.reply('SYSTEM-IDLE-TIME-RESPONSE', powerMonitor.getSystemIdleTime())
+    })
+
+    ipcMain.on('NOTIFICATION', (_, { title, body }) => {
         const notification = new Notification({
             title: title,
             body: body,
@@ -34,11 +38,11 @@ const createWindow = () => {
     })
 
     mainWindow.on('focus', () => {
-        mainWindow.webContents.send('focus')
+        mainWindow.webContents.send('FOCUS')
     })
 
     mainWindow.on('blur', () => {
-        mainWindow.webContents.send('blur')
+        mainWindow.webContents.send('BLUR')
     })
 
     if (process.env.NODE_ENV === 'production') {
@@ -47,8 +51,7 @@ const createWindow = () => {
         const watcher = chokidar.watch(__dirname, { ignored: /node_modules|[\/\\]\./ })
 
         watcher.on('change', () => {
-            app.quit()
-            app.relaunch()
+            mainWindow.reload()
         })
 
         mainWindow.loadURL(`http://localhost:3000`)

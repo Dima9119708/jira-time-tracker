@@ -16,7 +16,7 @@ const IssueTracking = (props: TaskProps) => {
     const queryClient = useQueryClient()
     const [isLoading, setLoading] = useState(false)
 
-    useWorklogQuery({
+    const timerRef = useWorklogQuery({
         taskId: id,
     })
 
@@ -46,7 +46,7 @@ const IssueTracking = (props: TaskProps) => {
             mb="sm"
             withBorder
         >
-            <Timer />
+            <Timer ref={timerRef} />
             <Group
                 mb={10}
                 justify="space-between"

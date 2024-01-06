@@ -1,24 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { axiosInstance } from '../../../shared/config/api/api'
 import dayjs from 'dayjs'
 import { secondsToJiraFormat } from './dateHelper'
 import { produce } from 'immer'
-import { MySelfResponse, IssuesTrackingResponse, UseWorklogQuery, WorklogResponse, WorklogIssueMutation } from '../types/types'
+import { IssuesTrackingResponse, MySelfResponse, UseWorklogQuery, WorklogIssueMutation, WorklogResponse } from '../types/types'
 import { AxiosError, AxiosResponse } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'
 import { notifications } from '@mantine/notifications'
 import { NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import { TimerRef } from '../../../features/Timer/ui/Timer'
 
 export const useWorklogQuery = (props: UseWorklogQuery) => {
     const { taskId } = props
-    const [enabled, setEnabled] = useState(false)
 
     const queryClient = useQueryClient()
 
-    const second = useGlobalState((state) => state.settings.timeLoggingIntervalSecond)
-    const millisecond = useGlobalState((state) => state.settings.timeLoggingIntervalMillisecond)
+    const timerRef = useRef<TimerRef>(null)
+
+    const settingTimeSecond = useGlobalState((state) => state.settings.timeLoggingInterval.second)
+    const isSystemIdle = useGlobalState((state) => state.isSystemIdle)
 
     const mutation = useMutation<AxiosResponse<WorklogIssueMutation>, AxiosError<ErrorType>, WorklogIssueMutation>({
         mutationFn: (variables) => {
@@ -31,7 +33,7 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
                     const task = draft.find((issue) => issue.id === taskId)
 
                     if (task) {
-                        task.fields.timespent += second
+                        task.fields.timespent += settingTimeSecond
                     }
                 })
             })
@@ -58,38 +60,40 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
 
                 const worklogSecond = myFirstWorklogToday?.timeSpentSeconds ?? 0
 
-                const timeSpent = secondsToJiraFormat(worklogSecond + second)
+                const timeSpentSeconds = worklogSecond + settingTimeSecond
 
                 if (myFirstWorklogToday) {
                     mutation.mutate({
                         taskId,
-                        timeSpent,
+                        timeSpentSeconds,
                         id: myFirstWorklogToday.id,
                     })
                 } else {
                     mutation.mutate({
                         taskId,
-                        timeSpent,
+                        timeSpentSeconds,
                     })
                 }
             }
 
             return true
         },
-        refetchInterval: millisecond,
-        refetchOnWindowFocus: false,
         gcTime: 0,
-        enabled: enabled,
+        enabled: false,
         notifyOnChangeProps: ['error'],
     })
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setEnabled(true)
-        }, millisecond)
+        return timerRef.current?.setIntervalTrigger(settingTimeSecond, worklogQuery.refetch)!
+    }, [settingTimeSecond])
 
-        return () => clearTimeout(timer)
-    }, [millisecond])
+    useEffect(() => {
+        if (isSystemIdle) {
+            timerRef.current?.pause()
+        } else {
+            timerRef.current?.play()
+        }
+    }, [isSystemIdle])
 
     useEffect(() => {
         if (worklogQuery.error) {
@@ -110,4 +114,6 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
             })
         }
     }, [mutation.error])
+
+    return timerRef
 }

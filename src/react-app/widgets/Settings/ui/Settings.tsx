@@ -11,10 +11,7 @@ import { notifications } from '@mantine/notifications'
 import { NOTIFICATION_AUTO_CLOSE, NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
 import { IconCheck } from '@tabler/icons-react'
 
-export type FormValues = Omit<
-    UseGlobalState['settings'],
-    'sendInactiveNotificationMillisecond' | 'timeLoggingIntervalSecond' | 'timeLoggingIntervalMillisecond'
->
+export type FormValues = UseGlobalState['settings']
 
 const Settings = () => {
     const opened = useGlobalState((state) => state.openSettings)
@@ -24,7 +21,8 @@ const Settings = () => {
         defaultValues: useGlobalState.getState().settings,
     })
 
-    const sendInactiveNotificationDisabled = !watch('sendInactiveNotificationDisabled')
+    const sendInactiveNotificationEnabled = !watch('sendInactiveNotification.enabled')
+    const systemIdleEnabled = !watch('systemIdle.enabled')
 
     const { mutate, isPending } = useMutation<
         AxiosResponse<FilterDetails>,
@@ -81,24 +79,32 @@ const Settings = () => {
 
     const onSave: SubmitHandler<FormValues> = (data) => {
         const newSettings: UseGlobalState['settings'] = {
-            timeLoggingIntervalUnit: data.timeLoggingIntervalUnit,
-            timeLoggingIntervalValue: data.timeLoggingIntervalValue,
-            timeLoggingIntervalSecond:
-                data.timeLoggingIntervalUnit === 'minutes'
-                    ? dayjs.duration(data.timeLoggingIntervalValue, 'minutes').asSeconds()
-                    : dayjs.duration(data.timeLoggingIntervalValue, 'hours').asSeconds(),
-            timeLoggingIntervalMillisecond:
-                data.timeLoggingIntervalUnit === 'minutes'
-                    ? dayjs.duration(data.timeLoggingIntervalValue, 'minutes').asMilliseconds()
-                    : dayjs.duration(data.timeLoggingIntervalValue, 'hours').asMilliseconds(),
-
-            sendInactiveNotificationDisabled: data.sendInactiveNotificationDisabled,
-            sendInactiveNotificationValue: data.sendInactiveNotificationValue,
-            sendInactiveNotificationUnit: data.sendInactiveNotificationUnit,
-            sendInactiveNotificationMillisecond:
-                data.timeLoggingIntervalUnit === 'minutes'
-                    ? dayjs.duration(data.sendInactiveNotificationValue, 'minutes').asMilliseconds()
-                    : dayjs.duration(data.sendInactiveNotificationValue, 'hours').asMilliseconds(),
+            timeLoggingInterval: {
+                unit: data.timeLoggingInterval.unit,
+                displayTime: data.timeLoggingInterval.displayTime,
+                second:
+                    data.timeLoggingInterval.unit === 'minutes'
+                        ? dayjs.duration(data.timeLoggingInterval.displayTime, 'minutes').asSeconds()
+                        : dayjs.duration(data.timeLoggingInterval.displayTime, 'hours').asSeconds(),
+            },
+            sendInactiveNotification: {
+                unit: data.sendInactiveNotification.unit,
+                displayTime: data.sendInactiveNotification.displayTime,
+                enabled: data.sendInactiveNotification.enabled,
+                millisecond:
+                    data.sendInactiveNotification.unit === 'minutes'
+                        ? dayjs.duration(data.sendInactiveNotification.displayTime, 'minutes').asMilliseconds()
+                        : dayjs.duration(data.sendInactiveNotification.displayTime, 'hours').asMilliseconds(),
+            },
+            systemIdle: {
+                unit: data.systemIdle.unit,
+                displayTime: data.systemIdle.displayTime,
+                enabled: data.systemIdle.enabled,
+                second:
+                    data.systemIdle.unit === 'minutes'
+                        ? dayjs.duration(data.systemIdle.displayTime, 'minutes').asSeconds()
+                        : dayjs.duration(data.systemIdle.displayTime, 'hours').asSeconds(),
+            },
         }
 
         useGlobalState.getState().setSettings(newSettings)
@@ -132,7 +138,7 @@ const Settings = () => {
 
                 <Group>
                     <Controller
-                        name="timeLoggingIntervalValue"
+                        name="timeLoggingInterval.displayTime"
                         control={control}
                         rules={{ required: 'Required' }}
                         render={({ field, fieldState }) => {
@@ -150,7 +156,7 @@ const Settings = () => {
                     />
 
                     <Controller
-                        name="timeLoggingIntervalUnit"
+                        name="timeLoggingInterval.unit"
                         control={control}
                         render={({ field, fieldState }) => {
                             return (
@@ -187,7 +193,7 @@ const Settings = () => {
 
                 <Group wrap="nowrap">
                     <Controller
-                        name="sendInactiveNotificationDisabled"
+                        name="sendInactiveNotification.enabled"
                         control={control}
                         render={({ field }) => {
                             return (
@@ -201,7 +207,7 @@ const Settings = () => {
                     />
 
                     <Controller
-                        name="sendInactiveNotificationValue"
+                        name="sendInactiveNotification.displayTime"
                         control={control}
                         rules={{ required: 'Required' }}
                         render={({ field, fieldState }) => {
@@ -213,14 +219,14 @@ const Settings = () => {
                                     w={60}
                                     type="number"
                                     error={fieldState.error?.message}
-                                    disabled={sendInactiveNotificationDisabled}
+                                    disabled={sendInactiveNotificationEnabled}
                                 />
                             )
                         }}
                     />
 
                     <Controller
-                        name="sendInactiveNotificationUnit"
+                        name="sendInactiveNotification.unit"
                         control={control}
                         render={({ field, fieldState }) => {
                             return (
@@ -235,7 +241,75 @@ const Settings = () => {
                                         { label: 'Hour', value: 'hours' },
                                     ]}
                                     error={fieldState.error?.message}
-                                    disabled={sendInactiveNotificationDisabled}
+                                    disabled={sendInactiveNotificationEnabled}
+                                />
+                            )
+                        }}
+                    />
+                </Group>
+            </Group>
+
+            <Divider
+                mt={20}
+                mb={20}
+            />
+
+            <Group
+                justify="space-between"
+                wrap="nowrap"
+            >
+                <Text size="sm">To stop logging the time when the system is in a waiting state.</Text>
+                <Group wrap="nowrap">
+                    <Controller
+                        name="systemIdle.enabled"
+                        control={control}
+                        render={({ field }) => {
+                            return (
+                                <Switch
+                                    checked={field.value}
+                                    onChange={field.onChange}
+                                    size="xs"
+                                />
+                            )
+                        }}
+                    />
+
+                    <Controller
+                        name="systemIdle.displayTime"
+                        control={control}
+                        rules={{ required: 'Required' }}
+                        render={({ field, fieldState }) => {
+                            return (
+                                <Input
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    onBlur={field.onBlur}
+                                    w={60}
+                                    type="number"
+                                    error={fieldState.error?.message}
+                                    disabled={systemIdleEnabled}
+                                />
+                            )
+                        }}
+                    />
+
+                    <Controller
+                        name="systemIdle.unit"
+                        control={control}
+                        render={({ field, fieldState }) => {
+                            return (
+                                <Select
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    onBlur={field.onBlur}
+                                    w={100}
+                                    placeholder="Unit"
+                                    data={[
+                                        { label: 'Minute', value: 'minutes' },
+                                        { label: 'Hour', value: 'hours' },
+                                    ]}
+                                    error={fieldState.error?.message}
+                                    disabled={systemIdleEnabled}
                                 />
                             )
                         }}

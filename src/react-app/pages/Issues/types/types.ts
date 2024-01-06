@@ -100,4 +100,4 @@ export interface MySelfResponse {
     id: string
 }
 
-export type WorklogIssueMutation = { taskId: string; timeSpent: string; id?: string }
+export type WorklogIssueMutation = { taskId: string; timeSpentSeconds: number; id?: string }
