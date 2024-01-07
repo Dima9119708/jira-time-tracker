@@ -17,14 +17,18 @@ const DetectedSystemIdle = () => {
                 const settingsSecond = useGlobalState.getState().settings.systemIdle.second
 
                 if (seconds >= settingsSecond) {
-                    useGlobalState.setState((state) => {
-                        state.isSystemIdle = true
-                    })
+                    useGlobalState.getState().setSystemIdle(true)
                 } else {
-                    useGlobalState.setState((state) => {
-                        state.isSystemIdle = false
-                    })
+                    useGlobalState.getState().setSystemIdle(false)
                 }
+            })
+
+            ipcRenderer.on('SUSPEND', () => {
+                useGlobalState.getState().setSystemIdle(true)
+            })
+
+            ipcRenderer.on('RESUME', () => {
+                useGlobalState.getState().setSystemIdle(false)
             })
         })
 

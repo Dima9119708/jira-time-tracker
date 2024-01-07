@@ -1,6 +1,8 @@
 let instanceElectron: typeof Electron.CrossProcessExports
 
-export const electron = (callback: (methods: typeof Electron.CrossProcessExports) => void) => {
+type Callback = (methods: typeof Electron.CrossProcessExports) => void
+
+export const electron = (callback: Callback) => {
     if (window.require) {
         if (instanceElectron) {
             return callback(instanceElectron)

@@ -10,15 +10,27 @@ if (!process.env.NODE_ENV) {
 const createWindow = () => {
     const mainWindow = new BrowserWindow({
         width: 1920,
-        minWidth: 600,
-        icon: path.join(__dirname, 'clock-play.png'),
         height: 1080,
+        icon: path.join(__dirname, 'clock-play.png'),
         useContentSize: true,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
             enableRemoteModule: true,
         },
+        ...(process.env.NODE_ENV === 'production' && {
+            minWidth: 600,
+            height: 800,
+            width: undefined,
+        }),
+    })
+
+    powerMonitor.on('suspend', () => {
+        mainWindow.webContents.send('SUSPEND')
+    })
+
+    powerMonitor.on('resume', () => {
+        mainWindow.webContents.send('RESUME')
     })
 
     ipcMain.on('GET-SYSTEM-IDLE-TIME', (event, args) => {
@@ -43,6 +55,10 @@ const createWindow = () => {
 
     mainWindow.on('blur', () => {
         mainWindow.webContents.send('BLUR')
+    })
+
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow.setTitle('Time Tracking')
     })
 
     if (process.env.NODE_ENV === 'production') {

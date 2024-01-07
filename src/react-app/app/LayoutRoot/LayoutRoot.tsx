@@ -1,4 +1,4 @@
-import { AppShell, Drawer, Group, Input, Modal, Select, Text, Title } from '@mantine/core'
+import { AppShell, Group } from '@mantine/core'
 import { IconSettings, IconTransferOut } from '@tabler/icons-react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { Breadcrumbs } from '../../shared/ui/Breadcrumbs'

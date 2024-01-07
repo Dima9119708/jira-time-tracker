@@ -43,6 +43,7 @@ export interface UseGlobalState {
         value: UseGlobalState['issueIdsSearchParams']['value']
     ) => Promise<void>
     getIssueIdsSearchParams: () => string
+    setSystemIdle: (bool: boolean) => void
     onOpenSettings: () => void
     onCloseSettings: () => void
     setSettings: (settings: UseGlobalState['settings']) => void
@@ -73,8 +74,8 @@ export const useGlobalState = createStore<UseGlobalState>(
             systemIdle: {
                 enabled: true,
                 unit: 'minutes',
-                displayTime: 1,
-                second: 60,
+                displayTime: 5,
+                second: 300,
             },
         },
         issueIdsSearchParams: {
@@ -95,6 +96,11 @@ export const useGlobalState = createStore<UseGlobalState>(
         setSettings: (settings) => {
             set((draft) => {
                 draft.settings = settings
+            })
+        },
+        setSystemIdle: (bool) => {
+            set((draft) => {
+                draft.isSystemIdle = bool
             })
         },
         setFilterId: (id) => {
