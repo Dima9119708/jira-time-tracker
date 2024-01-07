@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { electron } from '../../shared/lib/electron/electron'
-import { useGlobalState } from '../../shared/lib/hooks/useGlobalState'
+import { electron } from '../../../shared/lib/electron/electron'
+import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 
 const Notifications = () => {
     useEffect(() => {

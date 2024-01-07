@@ -1,6 +1,6 @@
 import { useSearchParams, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
-import { useGlobalState } from '../../shared/lib/hooks/useGlobalState'
+import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 
 const GlobalStateUrlSync = () => {
     const [, setSearchParams] = useSearchParams()

@@ -79,6 +79,7 @@ const Settings = () => {
 
     const onSave: SubmitHandler<FormValues> = (data) => {
         const newSettings: UseGlobalState['settings'] = {
+            autoStart: data.autoStart,
             timeLoggingInterval: {
                 unit: data.timeLoggingInterval.unit,
                 displayTime: data.timeLoggingInterval.displayTime,
@@ -130,6 +131,34 @@ const Settings = () => {
                 blur: 3,
             }}
         >
+            <Group
+                justify="space-between"
+                wrap="nowrap"
+            >
+                <Text size="sm">Auto-start application</Text>
+
+                <Group>
+                    <Controller
+                        name="autoStart"
+                        control={control}
+                        render={({ field }) => {
+                            return (
+                                <Switch
+                                    checked={field.value}
+                                    onChange={field.onChange}
+                                    size="xs"
+                                />
+                            )
+                        }}
+                    />
+                </Group>
+            </Group>
+
+            <Divider
+                mt={20}
+                mb={20}
+            />
+
             <Group
                 justify="space-between"
                 wrap="nowrap"

@@ -4,11 +4,11 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { Breadcrumbs } from '../../shared/ui/Breadcrumbs'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { Logo } from '../../shared/components/Logo'
-import GlobalStateUrlSync from '../GlobalStateUrlSync/GlobalStateUrlSync'
+import GlobalStateUrlSync from '../GlobalComponents/GlobalStateUrlSync/GlobalStateUrlSync'
 import Settings from '../../widgets/Settings/ui/Settings'
 import { useGlobalState } from '../../shared/lib/hooks/useGlobalState'
-import Notifications from '../Notifications/Notifications'
-import DetectedSystemIdle from '../DetectedSystemIdle/DetectedSystemIdle'
+import Notifications from '../GlobalComponents/Notifications/Notifications'
+import DetectedSystemIdle from '../GlobalComponents/DetectedSystemIdle/DetectedSystemIdle'
 
 const LayoutRoot = () => {
     const navigate = useNavigate()

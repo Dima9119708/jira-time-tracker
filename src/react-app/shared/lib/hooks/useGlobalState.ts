@@ -8,6 +8,7 @@ export interface UseGlobalState {
     openSettings: boolean
     isSystemIdle: boolean
     settings: {
+        autoStart: boolean
         timeLoggingInterval: {
             unit: 'minutes' | 'hours'
             displayTime: number
@@ -58,6 +59,7 @@ export const useGlobalState = createStore<UseGlobalState>(
         workHoursPerWeek: 8,
         openSettings: false,
         settings: {
+            autoStart: true,
             timeLoggingInterval: {
                 unit: 'minutes',
                 displayTime: 1,

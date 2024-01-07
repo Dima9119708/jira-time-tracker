@@ -33,6 +33,12 @@ const createWindow = () => {
         mainWindow.webContents.send('RESUME')
     })
 
+    ipcMain.on('AUTO-START', (event, autoStart) => {
+        app.setLoginItemSettings({
+            openAtLogin: autoStart,
+        })
+    })
+
     ipcMain.on('GET-SYSTEM-IDLE-TIME', (event, args) => {
         event.reply('SYSTEM-IDLE-TIME-RESPONSE', powerMonitor.getSystemIdleTime())
     })
