@@ -12,7 +12,7 @@
     "build:package:electron": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder -l -w",
     "static:build:dev:browser": "webpack --env mode=development",
     "static:build:prod:browser": "webpack --env mode=production baseRoute=/jira-time-tracker buildEnv=browser baseURL=https://jiratimetracker1-ic6pybtf.b4a.run",
-    "static:build:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron baseURL=http://localhost:49850",
+    "static:build:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron baseURL=http://localhost:44333",
     "lint:ts": "../node_modules/.bin/eslint \\\"**/*.{ts,tsx,js,jsx}\\\"",
     "lint:ts:fix": "../node_modules/.bin/eslint \\\"**/*.{ts,tsx,js,jsx}\\\" --fix",
     "lint:css": "yarn ../node_modules/.bin/stylelint \\\"src/**/*.css\\\"",

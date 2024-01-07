@@ -27,7 +27,7 @@ export default (env: IBuildEnv) => {
     const isProd = !isDev
     const baseRoute = env.baseRoute || '/'
     const buildEnv = env.buildEnv || 'browser'
-    const baseURL = env.baseURL || 'http://localhost:49850'
+    const baseURL = env.baseURL || 'http://localhost:44333'
 
     const devServer: DevServerConfiguration = {
         open: true,

@@ -4,7 +4,7 @@ const cookieParser = require('cookie-parser')
 const axios = require('axios')
 
 const app = express()
-const port = 49850
+const port = 44333
 
 const server = (successCallback, errorCallback) => {
     try {
@@ -479,4 +479,4 @@ const server = (successCallback, errorCallback) => {
     }
 }
 
-module.exports = server
+module.exports = { server, port }

@@ -1,7 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor } = require('electron')
 const path = require('path')
 const chokidar = require('chokidar')
-const server = require('./server')
+const { server, port } = require('./server')
 const tcpPortUsed = require('tcp-port-used')
 const { killPortProcess } = require('kill-port-process')
 
@@ -85,13 +85,13 @@ const createWindow = () => {
 }
 
 app.whenReady()
-    .then(() => tcpPortUsed.check(49850))
+    .then(() => tcpPortUsed.check(port))
     .then((inUse) => {
         if (inUse) {
-            return killPortProcess(49850)
+            return killPortProcess(port)
         }
     })
-    .then(() => tcpPortUsed.waitUntilFree(49850))
+    .then(() => tcpPortUsed.waitUntilFree(port))
     .then(() => {
         server(
             () => {
