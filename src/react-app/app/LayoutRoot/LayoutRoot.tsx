@@ -9,6 +9,7 @@ import Settings from '../../widgets/Settings/ui/Settings'
 import { useGlobalState } from '../../shared/lib/hooks/useGlobalState'
 import Notifications from '../GlobalComponents/Notifications/Notifications'
 import DetectedSystemIdle from '../GlobalComponents/DetectedSystemIdle/DetectedSystemIdle'
+import AutoStart from '../GlobalComponents/AutoStart/AutoStart'
 
 const LayoutRoot = () => {
     const navigate = useNavigate()
@@ -23,6 +24,7 @@ const LayoutRoot = () => {
             <GlobalStateUrlSync />
             <Notifications />
             <DetectedSystemIdle />
+            <AutoStart />
             <AppShell
                 bg="gray.2"
                 header={{ height: 60 }}
