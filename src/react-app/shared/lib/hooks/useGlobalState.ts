@@ -127,7 +127,7 @@ export const useGlobalState = createStore<UseGlobalState>(
             try {
                 const setting = JSON.parse(string)
                 set((state) => {
-                    state.settings = deepmerge(state.settings, setting)
+                    state.settings = deepmerge(get().settings, setting)
                 })
             } catch (e) {}
         },
