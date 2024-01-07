@@ -2,6 +2,8 @@ const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor } = requ
 const path = require('path')
 const chokidar = require('chokidar')
 const server = require('./server')
+const tcpPortUsed = require('tcp-port-used')
+const { killPortProcess } = require('kill-port-process')
 
 if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production'
@@ -82,32 +84,40 @@ const createWindow = () => {
     }
 }
 
-app.whenReady().then(() => {
-    server(
-        () => {
-            createWindow()
-
-            app.on('activate', () => {
-                if (BrowserWindow.getAllWindows().length === 0) {
-                    createWindow()
-                }
-            })
-        },
-        (error) => {
-            dialog
-                .showMessageBox({
-                    type: 'error',
-                    title: 'Server error',
-                    message: error,
-                    buttons: ['Reload'],
-                })
-                .then(() => {
-                    app.quit()
-                    app.relaunch()
-                })
+app.whenReady()
+    .then(() => tcpPortUsed.check(49850))
+    .then((inUse) => {
+        if (inUse) {
+            return killPortProcess(49850)
         }
-    )
-})
+    })
+    .then(() => tcpPortUsed.waitUntilFree(49850))
+    .then(() => {
+        server(
+            () => {
+                createWindow()
+
+                app.on('activate', () => {
+                    if (BrowserWindow.getAllWindows().length === 0) {
+                        createWindow()
+                    }
+                })
+            },
+            (error) => {
+                dialog
+                    .showMessageBox({
+                        type: 'error',
+                        title: 'Server error',
+                        message: error,
+                        buttons: ['Reload'],
+                    })
+                    .then(() => {
+                        app.quit()
+                        app.relaunch()
+                    })
+            }
+        )
+    })
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
