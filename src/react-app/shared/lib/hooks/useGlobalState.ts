@@ -67,7 +67,7 @@ export const useGlobalState = createStore<UseGlobalState>(
             },
 
             sendInactiveNotification: {
-                enabled: false,
+                enabled: true,
                 unit: 'minutes',
                 displayTime: 30,
                 millisecond: 1800000,

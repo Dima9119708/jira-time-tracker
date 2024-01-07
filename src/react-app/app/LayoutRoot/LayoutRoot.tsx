@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { AppShell, Group } from '@mantine/core'
 import { IconSettings, IconTransferOut } from '@tabler/icons-react'
 import { Outlet, useNavigate } from 'react-router-dom'
@@ -5,11 +6,13 @@ import { Breadcrumbs } from '../../shared/ui/Breadcrumbs'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { Logo } from '../../shared/components/Logo'
 import GlobalStateUrlSync from '../GlobalComponents/GlobalStateUrlSync/GlobalStateUrlSync'
-import Settings from '../../widgets/Settings/ui/Settings'
 import { useGlobalState } from '../../shared/lib/hooks/useGlobalState'
 import Notifications from '../GlobalComponents/Notifications/Notifications'
 import DetectedSystemIdle from '../GlobalComponents/DetectedSystemIdle/DetectedSystemIdle'
 import AutoStart from '../GlobalComponents/AutoStart/AutoStart'
+import { OpenSettings } from '../../widgets/Settings'
+
+const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
 
 const LayoutRoot = () => {
     const navigate = useNavigate()
@@ -60,7 +63,16 @@ const LayoutRoot = () => {
                 <AppShell.Main>
                     <Breadcrumbs mb={20} />
                     <Outlet />
-                    <Settings />
+
+                    <OpenSettings>
+                        {({ open }) =>
+                            open && (
+                                <Suspense>
+                                    <Settings />
+                                </Suspense>
+                            )
+                        }
+                    </OpenSettings>
                 </AppShell.Main>
             </AppShell>
         </>
