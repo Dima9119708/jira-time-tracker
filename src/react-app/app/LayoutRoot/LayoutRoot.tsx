@@ -20,6 +20,7 @@ const LayoutRoot = () => {
     const onLogout = () => {
         navigate('/auth')
         queryClient.removeQueries()
+        localStorage.clear()
     }
 
     return (

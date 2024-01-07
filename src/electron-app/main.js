@@ -11,7 +11,7 @@ const createWindow = () => {
     const mainWindow = new BrowserWindow({
         width: 1920,
         height: 1080,
-        icon: path.join(__dirname, 'clock-play.png'),
+        icon: path.join(__dirname, 'build', 'icons', '512x512.png'),
         useContentSize: true,
         webPreferences: {
             nodeIntegration: true,
@@ -36,6 +36,7 @@ const createWindow = () => {
     ipcMain.on('AUTO-START', (event, autoStart) => {
         app.setLoginItemSettings({
             openAtLogin: autoStart,
+            path: app.getPath('exe'),
         })
     })
 
@@ -47,7 +48,7 @@ const createWindow = () => {
         const notification = new Notification({
             title: title,
             body: body,
-            icon: path.join(__dirname, 'clock-play.png'),
+            icon: path.join(__dirname, 'build', 'icons', '512x512.png'),
         })
 
         notification.show()

@@ -9,7 +9,7 @@
     "react:server:dev": "webpack serve --no-open --env port=3000",
     "electron:server:dev": "NODE_ENV=development electron .",
     "electron:server:prod": "NODE_ENV=production electron .",
-    "build:electron": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder",
+    "build:package:electron": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder -l -w",
     "static:build:dev:browser": "webpack --env mode=development",
     "static:build:prod:browser": "webpack --env mode=production baseRoute=/jira-time-tracker buildEnv=browser baseURL=https://jiratimetracker1-ic6pybtf.b4a.run",
     "static:build:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron baseURL=http://localhost:49850",
@@ -26,7 +26,16 @@
       "target": [
         "AppImage",
         "deb"
-      ]
+      ],
+      "icon": "build/icons/"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icons/",
+      "publisherName": "Dima Viron vivo@gmail.com"
     }
   },
   "browserslist": {
@@ -76,7 +85,7 @@
     "css-loader": "^6.8.1",
     "css-minimizer-webpack-plugin": "^5.0.1",
     "dotenv-webpack": "^8.0.1",
-    "electron": "^27.1.2",
+    "electron": "^28.1.1",
     "electron-builder": "^24.9.1",
     "eslint": "^8.45.0",
     "eslint-config-airbnb": "^19.0.4",
