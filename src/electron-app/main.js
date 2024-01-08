@@ -1,15 +1,16 @@
 const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor } = require('electron')
 const path = require('path')
 const chokidar = require('chokidar')
-const { server, port } = require('./server')
-const tcpPortUsed = require('tcp-port-used')
-const { killPortProcess } = require('kill-port-process')
+const { server } = require('./server')
+const portfinder = require('portfinder')
 
 if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production'
 }
 
-const createWindow = () => {
+const isProd = process.env.NODE_ENV === 'production'
+
+const createWindow = (port) => {
     const mainWindow = new BrowserWindow({
         width: 1920,
         height: 1080,
@@ -20,11 +21,15 @@ const createWindow = () => {
             contextIsolation: false,
             enableRemoteModule: true,
         },
-        ...(process.env.NODE_ENV === 'production' && {
+        ...(isProd && {
             minWidth: 600,
             height: 800,
             width: undefined,
         }),
+    })
+
+    ipcMain.on('PORT', (event) => {
+        event.returnValue = port
     })
 
     powerMonitor.on('suspend', () => {
@@ -70,7 +75,7 @@ const createWindow = () => {
         mainWindow.setTitle('Time Tracking')
     })
 
-    if (process.env.NODE_ENV === 'production') {
+    if (isProd) {
         mainWindow.loadFile(path.join(__dirname, 'build/index.html'))
     } else {
         const watcher = chokidar.watch(__dirname, { ignored: /node_modules|[\/\\]\./ })
@@ -85,38 +90,33 @@ const createWindow = () => {
 }
 
 app.whenReady()
-    .then(() => tcpPortUsed.check(port))
-    .then((inUse) => {
-        if (inUse) {
-            return killPortProcess(port)
-        }
-    })
-    .then(() => tcpPortUsed.waitUntilFree(port))
     .then(() => {
-        server(
-            () => {
-                createWindow()
-
-                app.on('activate', () => {
-                    if (BrowserWindow.getAllWindows().length === 0) {
-                        createWindow()
-                    }
+        portfinder.setBasePort(10000)
+        return portfinder.getPortPromise()
+    })
+    .then((port) =>
+        server(port, (error) => {
+            dialog
+                .showMessageBox({
+                    type: 'error',
+                    title: 'Server error',
+                    message: error,
+                    buttons: ['Reload'],
                 })
-            },
-            (error) => {
-                dialog
-                    .showMessageBox({
-                        type: 'error',
-                        title: 'Server error',
-                        message: error,
-                        buttons: ['Reload'],
-                    })
-                    .then(() => {
-                        app.quit()
-                        app.relaunch()
-                    })
+                .then(() => {
+                    app.quit()
+                    app.relaunch()
+                })
+        })
+    )
+    .then((port) => {
+        createWindow(port)
+
+        app.on('activate', () => {
+            if (BrowserWindow.getAllWindows().length === 0) {
+                createWindow(port)
             }
-        )
+        })
     })
 
 app.on('window-all-closed', () => {

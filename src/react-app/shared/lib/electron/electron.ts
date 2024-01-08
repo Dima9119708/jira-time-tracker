@@ -1,8 +1,8 @@
 let instanceElectron: typeof Electron.CrossProcessExports
 
-type Callback = (methods: typeof Electron.CrossProcessExports) => void
+type Callback<ReturnValue> = (methods: typeof Electron.CrossProcessExports) => ReturnValue
 
-export const electron = (callback: Callback) => {
+export const electron = <ReturnValue>(callback: Callback<ReturnValue>) => {
     if (window.require) {
         if (instanceElectron) {
             return callback(instanceElectron)
@@ -10,6 +10,6 @@ export const electron = (callback: Callback) => {
 
         instanceElectron = window.require('electron')
 
-        callback(instanceElectron)
+        return callback(instanceElectron)
     }
 }

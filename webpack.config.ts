@@ -17,7 +17,6 @@ interface IBuildEnv {
     apiURL: string
     baseRoute: string
     buildEnv: 'browser' | 'electron'
-    baseURL: string
 }
 
 export default (env: IBuildEnv) => {
@@ -27,7 +26,6 @@ export default (env: IBuildEnv) => {
     const isProd = !isDev
     const baseRoute = env.baseRoute || '/'
     const buildEnv = env.buildEnv || 'browser'
-    const baseURL = env.baseURL || 'http://localhost:44333'
 
     const devServer: DevServerConfiguration = {
         open: true,
@@ -93,7 +91,6 @@ export default (env: IBuildEnv) => {
             new webpack.DefinePlugin({
                 __BASE_APP_ROUTE__: JSON.stringify(baseRoute),
                 __BUILD_ENV__: JSON.stringify(buildEnv),
-                __BASE_URL__: JSON.stringify(baseURL),
             }),
             new webpack.ProvidePlugin({
                 Buffer: ['buffer', 'Buffer'],
