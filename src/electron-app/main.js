@@ -3,12 +3,88 @@ const path = require('path')
 const chokidar = require('chokidar')
 const { server } = require('./server')
 const portfinder = require('portfinder')
+const url = require('url')
 
 if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production'
 }
 
 const isProd = process.env.NODE_ENV === 'production'
+
+const createChangePort = () => {
+    return new Promise((resolve) => {
+        const mainWindow = new BrowserWindow({
+            width: 1200,
+            height: 800,
+            icon: path.join(__dirname, 'build', 'icons', '512x512.png'),
+            useContentSize: true,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
+            ...(isProd && {
+                width: 400,
+                height: 500,
+                resizable: false,
+            }),
+        })
+
+        ipcMain.on('CHANGE-PORT-OK', async (event, newPort) => {
+            try {
+                mainWindow.webContents.send('CHANGE-PORT-LOADING', true)
+
+                const _newPort = +newPort
+
+                const tcpPortUsed = require('tcp-port-used')
+                const { killPortProcess } = require('kill-port-process')
+
+                const inUse = await tcpPortUsed.check(_newPort)
+                if (inUse) {
+                    await killPortProcess(_newPort)
+                    await tcpPortUsed.waitUntilFree(_newPort)
+                }
+
+                mainWindow.webContents.send('CHANGE-PORT-LOADING', false)
+
+                resolve(newPort)
+
+                mainWindow.close()
+            } catch (e) {
+                mainWindow.webContents.send('CHANGE-PORT-LOADING', false)
+
+                mainWindow.webContents.send('CHANGE-PORT-ERROR', e.message)
+            }
+        })
+
+        ipcMain.on('CHANGE-PORT-CANCEL', () => {
+            mainWindow.close()
+            app.quit()
+        })
+
+        mainWindow.webContents.on('did-finish-load', () => {
+            mainWindow.setTitle('Time Tracking')
+        })
+
+        if (isProd) {
+            mainWindow.webContents.loadURL(
+                url.format({
+                    pathname: path.join(__dirname, 'build/index.html'),
+                    hash: '/component-change-port',
+                    protocol: 'file',
+                })
+            )
+        } else {
+            const watcher = chokidar.watch(__dirname, { ignored: /node_modules|[\/\\]\./ })
+
+            watcher.on('change', () => {
+                mainWindow.reload()
+            })
+
+            mainWindow.loadURL(`http://localhost:3000/component-change-port`)
+            mainWindow.webContents.openDevTools()
+        }
+    })
+}
 
 const createWindow = (port) => {
     const mainWindow = new BrowserWindow({
@@ -90,9 +166,13 @@ const createWindow = (port) => {
 }
 
 app.whenReady()
-    .then(() => {
-        portfinder.setBasePort(10000)
-        return portfinder.getPortPromise()
+    .then(async () => {
+        try {
+            portfinder.setBasePort(10000)
+            return await portfinder.getPortPromise()
+        } catch (e) {
+            return createChangePort()
+        }
     })
     .then((port) =>
         server(port, (error) => {

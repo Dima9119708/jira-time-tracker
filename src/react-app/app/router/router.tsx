@@ -3,6 +3,7 @@ import AuthPage from '../../pages/Auth/ui/AuthPage'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { loaderAuth } from '../../features/AuthByEmailAndToken'
 import LayoutRoot from '../LayoutRoot/LayoutRoot'
+import { ChangePort } from '../../pages/ChangePort'
 
 const createRouter = (routes: RouteObject[]) => {
     return __BUILD_ENV__ === 'browser'
@@ -44,6 +45,10 @@ export const router = createRouter([
     {
         path: `auth`,
         Component: AuthPage,
+    },
+    {
+        path: `component-change-port`,
+        Component: ChangePort,
     },
     {
         path: '*',
