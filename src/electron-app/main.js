@@ -1,13 +1,19 @@
 const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor } = require('electron')
 const path = require('path')
 const chokidar = require('chokidar')
-const { server } = require('./server')
 const portfinder = require('portfinder')
 const url = require('url')
+const OAuth2Window = require('./auth/OAuth2')
+const BasicAuth = require('./auth/BasicAuth')
+const ControllerAuth = require('./auth/ControllerAuth')
 
-if (!process.env.NODE_ENV) {
-    process.env.NODE_ENV = 'production'
-}
+require('dotenv').config({
+    path: app.isPackaged ? path.join(process.resourcesPath, '.env.production') : path.resolve(process.cwd(), '.env'),
+})
+
+const { server } = require('./server')
+const keytar = require('keytar')
+const { NAME_PROJECT, AUTH_DATA } = require('./constans')
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -86,7 +92,7 @@ const createChangePort = () => {
     })
 }
 
-const createWindow = (port) => {
+const createMainWindow = (port) => {
     const mainWindow = new BrowserWindow({
         width: 1920,
         height: 1080,
@@ -163,6 +169,8 @@ const createWindow = (port) => {
         mainWindow.loadURL(`http://localhost:3000`)
         mainWindow.webContents.openDevTools()
     }
+
+    return mainWindow
 }
 
 app.whenReady()
@@ -190,11 +198,15 @@ app.whenReady()
         })
     )
     .then((port) => {
-        createWindow(port)
+        const mainWindow = createMainWindow(port)
+
+        ControllerAuth()
+        OAuth2Window(mainWindow)
+        BasicAuth()
 
         app.on('activate', () => {
             if (BrowserWindow.getAllWindows().length === 0) {
-                createWindow(port)
+                createMainWindow(port)
             }
         })
     })

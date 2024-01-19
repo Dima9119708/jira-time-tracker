@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { axiosInstance } from '../../../shared/config/api/api'
 import dayjs from 'dayjs'
-import { secondsToJiraFormat } from './dateHelper'
 import { produce } from 'immer'
 import { IssuesTrackingResponse, MySelfResponse, UseWorklogQuery, WorklogIssueMutation, WorklogResponse } from '../types/types'
 import { AxiosError, AxiosResponse } from 'axios'
@@ -22,7 +21,12 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
     const settingTimeSecond = useGlobalState((state) => state.settings.timeLoggingInterval.second)
     const isSystemIdle = useGlobalState((state) => state.isSystemIdle)
 
-    const mutation = useMutation<AxiosResponse<WorklogIssueMutation>, AxiosError<ErrorType>, WorklogIssueMutation>({
+    const mutation = useMutation<
+        AxiosResponse<WorklogIssueMutation>,
+        AxiosError<ErrorType>,
+        WorklogIssueMutation,
+        { oldState: IssuesTrackingResponse | undefined }
+    >({
         mutationFn: (variables) => {
             if (variables.id) return axiosInstance.put<WorklogIssueMutation>('/worklog-task', variables)
             else return axiosInstance.post<WorklogIssueMutation>('/worklog-task', variables)
@@ -36,6 +40,19 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
                         task.fields.timespent += settingTimeSecond
                     }
                 })
+            })
+
+            return {
+                oldState: queryClient.getQueryData(['tasks tracking']),
+            }
+        },
+        onError: (error, variables, context) => {
+            queryClient.setQueryData(['tasks tracking'], context!.oldState)
+
+            notifications.show({
+                title: `Error worklog issue`,
+                message: error.response?.data?.errorMessages?.join(', '),
+                ...NOTIFICATION_VARIANT.ERROR,
             })
         },
     })
@@ -99,21 +116,11 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
         if (worklogQuery.error) {
             notifications.show({
                 title: `Error worklog issue`,
-                message: worklogQuery.error.response?.data.errorMessages.join(', '),
+                message: worklogQuery.error.response?.data?.errorMessages?.join(', '),
                 ...NOTIFICATION_VARIANT.ERROR,
             })
         }
     }, [worklogQuery])
-
-    useEffect(() => {
-        if (mutation.error) {
-            notifications.show({
-                title: `Error worklog issue`,
-                message: mutation.error.response?.data.errorMessages.join(', '),
-                ...NOTIFICATION_VARIANT.ERROR,
-            })
-        }
-    }, [mutation.error])
 
     return timerRef
 }

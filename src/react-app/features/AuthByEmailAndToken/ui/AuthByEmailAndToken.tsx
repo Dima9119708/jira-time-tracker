@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { BaseAuthFormFields } from '../types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
+import { electron } from '../../../shared/lib/electron/electron'
 
 const AuthByEmailAndToken = () => {
     const navigate = useNavigate()
@@ -23,16 +24,14 @@ const AuthByEmailAndToken = () => {
     const queryClient = useQueryClient()
 
     const { isPending, mutate } = useMutation({
-        mutationFn: (variables: { jiraSubDomain: string; encodedAuth: string }) => {
-            return axiosInstance.post('/login', {
-                encodedauth: variables.encodedAuth,
-                jirasubdomain: variables.jiraSubDomain,
+        mutationFn: async (variables: { jiraSubDomain: string; encodedAuth: string }) => {
+            await electron(({ ipcRenderer }) => {
+                return ipcRenderer.invoke('POST_BASIC_AUTH', { apiToken: variables.encodedAuth, jiraSubDomain: variables.jiraSubDomain })
             })
-        },
-        onSuccess: (data, variables) => {
-            localStorage.setItem('encodedAuth', variables.encodedAuth)
-            localStorage.setItem('jiraSubDomain', variables.jiraSubDomain)
 
+            return axiosInstance.get('/login')
+        },
+        onSuccess: (data) => {
             queryClient.setQueryData(['login'], data)
             navigate('/issues')
         },

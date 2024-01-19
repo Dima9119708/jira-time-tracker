@@ -1,7 +1,9 @@
 import React from 'react'
-import { Container, Title, Paper, Box } from '@mantine/core'
+import { Container, Title, Paper, Box, Button } from '@mantine/core'
 import { AuthByEmailAndToken } from '../../../features/AuthByEmailAndToken'
 import { Logo } from '../../../shared/components/Logo'
+import JiraLogo from '../../../shared/assets/images/jira_logo.svg'
+import { OAuth2 } from '../../../features/OAuth2'
 
 const AuthPage = () => {
     return (
@@ -29,10 +31,12 @@ const AuthPage = () => {
                         c="indigo.9"
                         className="flex-center"
                     >
-                        Jira
+                        <JiraLogo />
                     </Title>
 
                     <AuthByEmailAndToken />
+
+                    <OAuth2 className="mt-[2rem]" />
                 </Paper>
             </Container>
         </Box>

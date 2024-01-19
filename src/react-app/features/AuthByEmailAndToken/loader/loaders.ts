@@ -3,24 +3,23 @@ import { QueryClient } from '@tanstack/react-query'
 import { redirect } from 'react-router-dom'
 import { notifications } from '@mantine/notifications'
 import { AxiosError } from 'axios'
+import { electron } from '../../../shared/lib/electron/electron'
 
 export const loaderAuth = (queryClient: QueryClient) => async () => {
     try {
-        const value = await queryClient.fetchQuery({
-            queryKey: ['login'],
-            queryFn: async () => {
-                if (localStorage.getItem('jiraSubDomain') && localStorage.getItem('encodedAuth')) {
-                    const response = await axiosInstance.post('/login', {})
+        const authData = await electron((methods) => methods.ipcRenderer.invoke('GET_AUTH_DATA'))
+
+        if (authData) {
+            await queryClient.fetchQuery({
+                queryKey: ['login'],
+                queryFn: async () => {
+                    const response = await axiosInstance.get('/login', {})
 
                     return response.data
-                }
-
-                return false
-            },
-            gcTime: Infinity,
-        })
-
-        if (!value) {
+                },
+                gcTime: Infinity,
+            })
+        } else {
             throw new Error()
         }
 

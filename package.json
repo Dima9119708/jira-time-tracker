@@ -7,9 +7,9 @@
   "author": "Dima Viron vivo@gmail.com",
   "scripts": {
     "react:server:dev": "webpack serve --no-open --env port=3000",
-    "electron:server:dev": "NODE_ENV=development electron .",
+    "electron:server:dev": "cross-env NODE_ENV=development electron .",
     "electron:server:prod": "NODE_ENV=production electron .",
-    "build:package:electron": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder -l -w",
+    "build:package:electron": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder -l",
     "static:build:dev:browser": "webpack --env mode=development",
     "static:build:prod:browser": "webpack --env mode=production baseRoute=/jira-time-tracker buildEnv=browser",
     "static:build:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron",
@@ -21,6 +21,9 @@
   },
   "build": {
     "appId": "com.example.jiratimetracker",
+    "extraResources": [
+      ".env.production"
+    ],
     "linux": {
       "maintainer": "Dima Viron vivo@gmail.com",
       "target": [
@@ -142,9 +145,12 @@
     "concurrently": "^8.2.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dayjs": "^1.11.10",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "immer": "^10.0.3",
+    "keytar": "^7.9.0",
     "kill-port-process": "^3.2.1",
     "path-browserify": "^1.0.1",
     "portfinder": "^1.0.32",
