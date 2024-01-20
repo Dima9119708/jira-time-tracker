@@ -11,6 +11,8 @@ import Notifications from '../GlobalComponents/Notifications/Notifications'
 import DetectedSystemIdle from '../GlobalComponents/DetectedSystemIdle/DetectedSystemIdle'
 import AutoStart from '../GlobalComponents/AutoStart/AutoStart'
 import { OpenSettings } from '../../widgets/Settings'
+import { electron } from '../../shared/lib/electron/electron'
+import { notifications } from '@mantine/notifications'
 
 const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
 
@@ -18,9 +20,11 @@ const LayoutRoot = () => {
     const navigate = useNavigate()
 
     const onLogout = () => {
-        navigate('/auth')
         queryClient.removeQueries()
-        localStorage.clear()
+        notifications.clean()
+        electron(({ ipcRenderer }) => ipcRenderer.invoke('DELETE_AUTH_DATA'))
+
+        navigate('/auth')
     }
 
     return (

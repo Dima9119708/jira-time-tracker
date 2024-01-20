@@ -19,6 +19,7 @@ const AuthPage = () => {
                 />
 
                 <Paper
+                    className="relative"
                     withBorder
                     shadow="md"
                     p={30}

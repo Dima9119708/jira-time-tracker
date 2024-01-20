@@ -51,7 +51,7 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
 
             notifications.show({
                 title: `Error worklog issue`,
-                message: error.response?.data?.errorMessages?.join(', '),
+                message: JSON.stringify(error.response?.data),
                 ...NOTIFICATION_VARIANT.ERROR,
             })
         },
@@ -111,16 +111,6 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
             timerRef.current?.play()
         }
     }, [isSystemIdle])
-
-    useEffect(() => {
-        if (worklogQuery.error) {
-            notifications.show({
-                title: `Error worklog issue`,
-                message: worklogQuery.error.response?.data?.errorMessages?.join(', '),
-                ...NOTIFICATION_VARIANT.ERROR,
-            })
-        }
-    }, [worklogQuery])
 
     return timerRef
 }

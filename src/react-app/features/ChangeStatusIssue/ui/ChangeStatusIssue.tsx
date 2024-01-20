@@ -78,7 +78,7 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
 
             notifications.show({
                 title: `Error issue ${issueName}`,
-                message: error.response?.data.errorMessages.join(', '),
+                message: JSON.stringify(error.response?.data),
                 ...NOTIFICATION_VARIANT.ERROR,
             })
 

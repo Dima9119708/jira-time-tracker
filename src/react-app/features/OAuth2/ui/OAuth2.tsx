@@ -1,52 +1,76 @@
-import { Button } from '@mantine/core'
+import { Button, LoadingOverlay } from '@mantine/core'
 import IconAtlassianJira from '../../../shared/assets/images/atlassian_jira.svg'
 import { electron } from '../../../shared/lib/electron/electron'
-import { useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { useNavigate } from 'react-router-dom'
-
-interface OAuth2Props {
-    className?: string
-}
+import { OAuth2Props } from '../types/types'
 
 const OAuth2 = (props: OAuth2Props) => {
     const { className } = props
+    const [loading, setLoading] = useState(false)
+
     const navigate = useNavigate()
-
-    const { refetch, isFetching, isSuccess } = useQuery({
-        queryKey: ['login'],
-        queryFn: async () => {
-            const res = await axiosInstance.get('/login')
-            return res.data
-        },
-        enabled: false,
-    })
+    const queryClient = useQueryClient()
 
     useEffect(() => {
-        if (isSuccess) {
-            navigate('/issues')
-        }
-    }, [isSuccess])
+        const unsubscribe = electron((methods) => {
+            const listenerOAuth2 = async (_: Electron.IpcRendererEvent, code: string) => {
+                try {
+                    setLoading(true)
 
-    useEffect(() => {
-        electron((methods) => {
-            methods.ipcRenderer.on('REFETCH_LOGIN', () => refetch())
+                    const resOAuthToken = await axiosInstance.post('/oauth-token', { code })
+                    const resAccessibleResources = await axiosInstance.get('/oauth-token-accessible-resources', {
+                        headers: {
+                            access_token: resOAuthToken.data.access_token,
+                        },
+                    })
+
+                    const client_id = resAccessibleResources.data[0].id
+
+                    await methods.ipcRenderer.invoke('SAVE_DATA_OAuth2', {
+                        access_token: resOAuthToken.data.access_token,
+                        refresh_token: resOAuthToken.data.refresh_token,
+                        client_id,
+                    })
+
+                    const resLogin = await axiosInstance.get('/login')
+
+                    queryClient.setQueryData(['login'], resLogin.data)
+
+                    navigate('/issues')
+
+                    setLoading(false)
+                } catch (e) {
+                    setLoading(false)
+                }
+            }
+
+            methods.ipcRenderer.on('ACCEPT_OAuth2', listenerOAuth2)
+
+            return () => {
+                methods.ipcRenderer.removeListener('ACCEPT_OAuth2', listenerOAuth2)
+            }
         })
+
+        return () => unsubscribe()
     }, [])
 
     return (
-        <Button
-            onClick={() => {
-                electron((methods) => methods.ipcRenderer.send('OPEN_OAuth2'))
-            }}
-            className={className}
-            fullWidth
-            variant="outline"
-            loading={isFetching}
-        >
-            <IconAtlassianJira />
-        </Button>
+        <>
+            <LoadingOverlay visible={loading} />
+            <Button
+                onClick={() => {
+                    electron((methods) => methods.ipcRenderer.send('OPEN_OAuth2'))
+                }}
+                className={className}
+                fullWidth
+                variant="outline"
+            >
+                <IconAtlassianJira />
+            </Button>
+        </>
     )
 }
 

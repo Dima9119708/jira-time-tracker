@@ -6,7 +6,12 @@ const { NAME_PROJECT, AUTH_DATA, BASIC_AUTH, OAUTH2 } = require('./constans')
 
 const getParsedAuth = async () => {
     const authData = await keytar.getPassword(NAME_PROJECT, AUTH_DATA)
-    return JSON.parse(authData)
+
+    try {
+        return JSON.parse(authData)
+    } catch (e) {
+        throw new TypeError('The authorization credentials are corrupted')
+    }
 }
 
 const server = (port, errorCallback) => {
@@ -21,7 +26,7 @@ const server = (port, errorCallback) => {
             app.get('/login', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
-
+                    console.log('authParsed =>', authParsed)
                     if (authParsed.type === BASIC_AUTH) {
                         const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/2/myself`, {
                             headers: {
@@ -212,7 +217,8 @@ const server = (port, errorCallback) => {
 
                     if (authParsed.type === OAUTH2) {
                         const response = await axios.put(
-                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/user/assignable/search?issueKey=${req.query.id}`,
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/issue/${req.query.id}/assignee`,
+                            req.body,
                             {
                                 headers: {
                                     Authorization: `Bearer ${authParsed.access_token}`,
@@ -380,7 +386,7 @@ const server = (port, errorCallback) => {
                     const authParsed = await getParsedAuth()
 
                     if (authParsed.type === BASIC_AUTH) {
-                        const response = await axios.put(`${authParsed.jiraSubDomain}/rest/api/3/filter`, req.body, {
+                        const response = await axios.put(`${authParsed.jiraSubDomain}/rest/api/3/filter/${req.query.id}`, req.body, {
                             headers: {
                                 Authorization: `Basic ${authParsed.apiToken}`,
                             },
@@ -391,7 +397,7 @@ const server = (port, errorCallback) => {
 
                     if (authParsed.type === OAUTH2) {
                         const response = await axios.put(
-                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/filter`,
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/filter/${req.query.id}`,
                             req.body,
                             {
                                 headers: {
@@ -675,6 +681,76 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
+            app.post('/refresh-token', async (req, res) => {
+                try {
+                    const authParsed = await getParsedAuth()
+
+                    const response = await axios.post(`https://auth.atlassian.com/oauth/token`, {
+                        grant_type: 'refresh_token',
+                        client_id: process.env.CLIENT_ID,
+                        client_secret: process.env.CLIENT_SECRET,
+                        refresh_token: authParsed.refresh_token,
+                    })
+
+                    await keytar.setPassword(
+                        NAME_PROJECT,
+                        AUTH_DATA,
+                        JSON.stringify({
+                            access_token: response.data.access_token,
+                            refresh_token: response.data.refresh_token,
+                            client_id: authParsed.client_id,
+                            type: OAUTH2,
+                        })
+                    )
+
+                    res.send(response.data)
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
+            app.post('/oauth-token', async (req, res) => {
+                try {
+                    const response = await axios.post(`https://auth.atlassian.com/oauth/token`, {
+                        grant_type: 'authorization_code',
+                        client_id: process.env.CLIENT_ID,
+                        client_secret: process.env.CLIENT_SECRET,
+                        code: req.body.code,
+                        redirect_uri: process.env.REDIRECT_URL,
+                    })
+
+                    res.send(response.data)
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
+            app.get('/oauth-token-accessible-resources', async (req, res) => {
+                try {
+                    const response = await axios.get('https://api.atlassian.com/oauth/token/accessible-resources', {
+                        headers: {
+                            Authorization: `Bearer ${req.headers.access_token}`,
+                        },
+                    })
+
+                    res.send(response.data)
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)

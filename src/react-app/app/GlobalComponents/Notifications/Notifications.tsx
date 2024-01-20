@@ -6,12 +6,12 @@ const Notifications = () => {
     useEffect(() => {
         let interval: NodeJS.Timeout
 
-        electron(({ ipcRenderer }) => {
-            ipcRenderer.on('FOCUS', () => {
+        const unsubscribe = electron(({ ipcRenderer }) => {
+            const listenerFocus = () => {
                 clearInterval(interval)
-            })
+            }
 
-            ipcRenderer.on('BLUR', () => {
+            const listenerBlur = () => {
                 const sendInactiveNotificationSwitch = !useGlobalState.getState().settings.sendInactiveNotification.enabled
                 const isIds = !!useGlobalState.getState().issueIdsSearchParams.currentParams
 
@@ -26,8 +26,18 @@ const Notifications = () => {
                         body: 'The application is running in the background, but no task has been taken into work.',
                     })
                 }, useGlobalState.getState().settings.sendInactiveNotification.millisecond)
-            })
+            }
+
+            ipcRenderer.on('FOCUS', listenerFocus)
+            ipcRenderer.on('BLUR', listenerBlur)
+
+            return () => {
+                ipcRenderer.removeListener('FOCUS', listenerFocus)
+                ipcRenderer.removeListener('BLUR', listenerBlur)
+            }
         })
+
+        return () => unsubscribe()
     }, [])
 
     return null

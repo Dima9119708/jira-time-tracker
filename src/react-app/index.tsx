@@ -23,7 +23,8 @@ root.render(
         <ThemeProvider>
             <Notifications
                 autoClose={1.8e6}
-                position="top-right"
+                position="bottom-left"
+                limit={3}
             />
             <RouterProvider
                 router={router}

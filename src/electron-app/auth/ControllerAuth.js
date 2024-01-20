@@ -8,7 +8,13 @@ const controllerAuth = () => {
         return true
     })
     ipcMain.handle('GET_AUTH_DATA', async () => {
-        return await keytar.getPassword(NAME_PROJECT, AUTH_DATA)
+        const authData = await keytar.getPassword(NAME_PROJECT, AUTH_DATA)
+
+        try {
+            return JSON.parse(authData)
+        } catch (e) {
+            return ''
+        }
     })
 }
 

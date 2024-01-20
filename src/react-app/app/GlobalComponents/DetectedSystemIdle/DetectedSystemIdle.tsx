@@ -6,14 +6,22 @@ const DetectedSystemIdle = () => {
     useEffect(() => {
         let interval: NodeJS.Timeout
 
-        electron(({ ipcRenderer }) => {
+        const unsubscribe = electron(({ ipcRenderer }) => {
             interval = setInterval(() => {
                 if (!useGlobalState.getState().settings.systemIdle.enabled) return
 
                 ipcRenderer.send('GET-SYSTEM-IDLE-TIME')
             }, 1000)
 
-            ipcRenderer.on('SYSTEM-IDLE-TIME-RESPONSE', (event, seconds) => {
+            const onSuspend = () => {
+                useGlobalState.getState().setSystemIdle(true)
+            }
+
+            const onResume = () => {
+                useGlobalState.getState().setSystemIdle(false)
+            }
+
+            const onSystemIdleTimeResponse = (event: Electron.IpcRendererEvent, seconds: number) => {
                 const settingsSecond = useGlobalState.getState().settings.systemIdle.second
 
                 if (seconds >= settingsSecond) {
@@ -21,19 +29,22 @@ const DetectedSystemIdle = () => {
                 } else {
                     useGlobalState.getState().setSystemIdle(false)
                 }
-            })
+            }
 
-            ipcRenderer.on('SUSPEND', () => {
-                useGlobalState.getState().setSystemIdle(true)
-            })
+            ipcRenderer.on('SYSTEM-IDLE-TIME-RESPONSE', onSystemIdleTimeResponse)
+            ipcRenderer.on('SUSPEND', onSuspend)
+            ipcRenderer.on('RESUME', onResume)
 
-            ipcRenderer.on('RESUME', () => {
-                useGlobalState.getState().setSystemIdle(false)
-            })
+            return () => {
+                ipcRenderer.removeListener('SUSPEND', onSuspend)
+                ipcRenderer.removeListener('RESUME', onResume)
+                ipcRenderer.removeListener('SYSTEM-IDLE-TIME-RESPONSE', onSystemIdleTimeResponse)
+            }
         })
 
         return () => {
             clearInterval(interval)
+            unsubscribe()
         }
     }, [])
 

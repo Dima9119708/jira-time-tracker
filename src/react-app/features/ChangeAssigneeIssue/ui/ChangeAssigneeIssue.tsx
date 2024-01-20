@@ -74,7 +74,7 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
 
             notifications.show({
                 title: `Error issue "${issueName}"`,
-                message: error.response?.data.errorMessages.join(', '),
+                message: JSON.stringify(error.response?.data),
                 ...NOTIFICATION_VARIANT.ERROR,
             })
 

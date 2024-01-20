@@ -13,7 +13,7 @@ export const loaderAuth = (queryClient: QueryClient) => async () => {
             await queryClient.fetchQuery({
                 queryKey: ['login'],
                 queryFn: async () => {
-                    const response = await axiosInstance.get('/login', {})
+                    const response = await axiosInstance.get('/login')
 
                     return response.data
                 },
@@ -25,14 +25,6 @@ export const loaderAuth = (queryClient: QueryClient) => async () => {
 
         return null
     } catch (error) {
-        if (error instanceof AxiosError) {
-            notifications.show({
-                title: error.message,
-                message: '',
-                color: 'red',
-            })
-        }
-
         return redirect('auth')
     }
 }

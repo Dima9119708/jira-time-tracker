@@ -12,7 +12,7 @@ const Issues = () => {
         if (error) {
             notifications.show({
                 title: `Error loading task`,
-                message: error.response?.data.errorMessages.join(', '),
+                message: JSON.stringify(error.response?.data),
                 ...NOTIFICATION_VARIANT.ERROR,
             })
         }

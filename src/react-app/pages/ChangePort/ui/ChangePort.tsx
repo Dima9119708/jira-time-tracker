@@ -25,15 +25,27 @@ const ChangePort = () => {
     })
 
     useEffect(() => {
-        electron((methods) => {
-            methods.ipcRenderer.on('CHANGE-PORT-LOADING', (_, isLoading) => {
+        const unsubscribe = electron((methods) => {
+            const onChangePortLoading = (_: Electron.IpcRendererEvent, isLoading: boolean) => {
                 setLoading(isLoading)
-            })
-
-            methods.ipcRenderer.on('CHANGE-PORT-ERROR', (_, errorMessage) => {
+            }
+            const onChangePortError = (_: Electron.IpcRendererEvent, errorMessage: string) => {
                 setError(errorMessage)
-            })
+            }
+
+            methods.ipcRenderer.on('CHANGE-PORT-LOADING', onChangePortLoading)
+
+            methods.ipcRenderer.on('CHANGE-PORT-ERROR', onChangePortError)
+
+            return () => {
+                methods.ipcRenderer.removeListener('CHANGE-PORT-LOADING', onChangePortLoading)
+                methods.ipcRenderer.removeListener('CHANGE-PORT-ERROR', onChangePortError)
+            }
         })
+
+        return () => {
+            unsubscribe()
+        }
     }, [])
 
     const onSubmit: SubmitHandler<FormValues> = (data) => {

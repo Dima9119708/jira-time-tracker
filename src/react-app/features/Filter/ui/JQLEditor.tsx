@@ -59,7 +59,7 @@ const JQLEditor = (props: FilterProps) => {
         onError: (error) => {
             notifications.show({
                 title: `Error loading issue`,
-                message: error.response?.data.errorMessages.join(', '),
+                message: JSON.stringify(error.response?.data),
                 ...NOTIFICATION_VARIANT.ERROR,
             })
         },

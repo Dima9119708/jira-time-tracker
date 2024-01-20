@@ -3,17 +3,16 @@ const path = require('path')
 const chokidar = require('chokidar')
 const portfinder = require('portfinder')
 const url = require('url')
-const OAuth2Window = require('./auth/OAuth2')
-const BasicAuth = require('./auth/BasicAuth')
-const ControllerAuth = require('./auth/ControllerAuth')
 
 require('dotenv').config({
     path: app.isPackaged ? path.join(process.resourcesPath, '.env.production') : path.resolve(process.cwd(), '.env'),
 })
 
+const OAuth2Window = require('./auth/oAuth2/OAuth2')
+const BasicAuth = require('./auth/BasicAuth')
+const ControllerAuth = require('./auth/ControllerAuth')
+
 const { server } = require('./server')
-const keytar = require('keytar')
-const { NAME_PROJECT, AUTH_DATA } = require('./constans')
 
 const isProd = process.env.NODE_ENV === 'production'
 
