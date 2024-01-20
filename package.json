@@ -1,6 +1,6 @@
 {
   "name": "jira-time-tracker",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "main": "src/electron-app/main.js",
   "homepage": "https://github.com/Dima9119708/jira-time-tracker",
@@ -9,7 +9,7 @@
     "react:server:dev": "webpack serve --no-open --env port=3000",
     "electron:server:dev": "cross-env NODE_ENV=development electron .",
     "electron:server:prod": "NODE_ENV=production electron .",
-    "build:package:electron": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder -l",
+    "build:package:electron": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder -l -w",
     "static:build:dev:browser": "webpack --env mode=development",
     "static:build:prod:browser": "webpack --env mode=production baseRoute=/jira-time-tracker buildEnv=browser",
     "static:build:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron",
