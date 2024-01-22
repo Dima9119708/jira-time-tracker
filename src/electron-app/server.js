@@ -1,14 +1,12 @@
 const express = require('express')
 const cors = require('cors')
 const axios = require('axios')
-const keytar = require('keytar')
-const { NAME_PROJECT, AUTH_DATA, BASIC_AUTH, OAUTH2 } = require('./constans')
-const { decrypt } = require('./auth/encryption')
+const { AUTH_DATA, BASIC_AUTH, OAUTH2 } = require('./constans')
+const { AuthStorage } = require('./auth/keyService')
 
 const getParsedAuth = async () => {
     try {
-        const encryptData = await keytar.getPassword(NAME_PROJECT, AUTH_DATA)
-        const authData = decrypt(encryptData)
+        const authData = AuthStorage.get(AUTH_DATA)
         return JSON.parse(authData)
     } catch (e) {
         throw new TypeError('The authorization credentials are corrupted')
@@ -702,8 +700,7 @@ const server = (port, errorCallback) => {
                         refresh_token: authParsed.refresh_token,
                     })
 
-                    await keytar.setPassword(
-                        NAME_PROJECT,
+                    AuthStorage.set(
                         AUTH_DATA,
                         JSON.stringify({
                             access_token: response.data.access_token,

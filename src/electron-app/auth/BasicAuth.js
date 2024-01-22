@@ -1,27 +1,22 @@
 const { ipcMain } = require('electron')
-const keytar = require('keytar')
-const { NAME_PROJECT, AUTH_DATA, BASIC_AUTH, AUTH_REMEMBER_DATA } = require('../constans')
-const { encrypt, decrypt } = require('./encryption')
+const { AUTH_DATA, BASIC_AUTH, AUTH_REMEMBER_DATA } = require('../constans')
+const { AuthStorage } = require('./keyService')
 
 const basicAuth = () => {
-    ipcMain.handle('SAVE_DATA_BASIC_AUTH', async (event, { apiToken, jiraSubDomain }) => {
-        await keytar.setPassword(
-            NAME_PROJECT,
+    ipcMain.handle('SAVE_DATA_BASIC_AUTH', (event, { apiToken, jiraSubDomain }) => {
+        AuthStorage.set(
             AUTH_DATA,
-            encrypt(
-                JSON.stringify({
-                    apiToken: apiToken,
-                    jiraSubDomain: jiraSubDomain,
-                    type: BASIC_AUTH,
-                })
-            )
+            JSON.stringify({
+                apiToken: apiToken,
+                jiraSubDomain: jiraSubDomain,
+                type: BASIC_AUTH,
+            })
         )
     })
 
     ipcMain.handle('GET_REMEMBER_DATA_BASIC_AUTH', async () => {
         try {
-            const encryptData = await keytar.getPassword(NAME_PROJECT, AUTH_REMEMBER_DATA)
-            const authRememberData = decrypt(encryptData)
+            const authRememberData = AuthStorage.get(AUTH_REMEMBER_DATA)
             return JSON.parse(authRememberData)
         } catch (e) {
             return null
@@ -29,11 +24,11 @@ const basicAuth = () => {
     })
 
     ipcMain.handle('SAVE_REMEMBER_DATA_BASIC_AUTH', async (_, authRememberData) => {
-        await keytar.setPassword(NAME_PROJECT, AUTH_REMEMBER_DATA, encrypt(JSON.stringify(authRememberData)))
+        AuthStorage.set(AUTH_REMEMBER_DATA, JSON.stringify(authRememberData))
     })
 
     ipcMain.handle('DELETE_REMEMBER_DATA_BASIC_AUTH', async () => {
-        await keytar.deletePassword(NAME_PROJECT, AUTH_REMEMBER_DATA)
+        AuthStorage.delete(AUTH_REMEMBER_DATA)
     })
 }
 
