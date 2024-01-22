@@ -13,6 +13,8 @@ const BasicAuth = require('./auth/BasicAuth')
 const ControllerAuth = require('./auth/ControllerAuth')
 
 const { server } = require('./server')
+const keytar = require('keytar')
+const { NAME_PROJECT, AUTH_REMEMBER_DATA, AUTH_DATA } = require('./constans')
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -190,7 +192,9 @@ app.whenReady()
                     message: error,
                     buttons: ['Reload'],
                 })
-                .then(() => {
+                .then(async () => {
+                    await keytar.deletePassword(NAME_PROJECT, AUTH_REMEMBER_DATA)
+                    await keytar.deletePassword(NAME_PROJECT, AUTH_DATA)
                     app.quit()
                     app.relaunch()
                 })
@@ -208,6 +212,10 @@ app.whenReady()
                 createMainWindow(port)
             }
         })
+    })
+    .catch(async () => {
+        await keytar.deletePassword(NAME_PROJECT, AUTH_REMEMBER_DATA)
+        await keytar.deletePassword(NAME_PROJECT, AUTH_DATA)
     })
 
 app.on('window-all-closed', () => {

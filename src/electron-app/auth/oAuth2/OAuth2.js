@@ -4,18 +4,21 @@ const url = require('url')
 const keytar = require('keytar')
 const { NAME_PROJECT, AUTH_DATA, OAUTH2 } = require('../../constans')
 const atlassianURL = require('./createAtlassianURL')
+const { encrypt } = require('../encryption')
 
 const OAuth2Window = (mainWindow) => {
     ipcMain.handle('SAVE_DATA_OAuth2', async (event, { access_token, refresh_token, client_id }) => {
         await keytar.setPassword(
             NAME_PROJECT,
             AUTH_DATA,
-            JSON.stringify({
-                access_token: access_token,
-                refresh_token: refresh_token,
-                client_id,
-                type: OAUTH2,
-            })
+            encrypt(
+                JSON.stringify({
+                    access_token: access_token,
+                    refresh_token: refresh_token,
+                    client_id,
+                    type: OAUTH2,
+                })
+            )
         )
 
         return true

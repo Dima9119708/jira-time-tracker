@@ -3,11 +3,12 @@ const cors = require('cors')
 const axios = require('axios')
 const keytar = require('keytar')
 const { NAME_PROJECT, AUTH_DATA, BASIC_AUTH, OAUTH2 } = require('./constans')
+const { decrypt } = require('./auth/encryption')
 
 const getParsedAuth = async () => {
-    const authData = await keytar.getPassword(NAME_PROJECT, AUTH_DATA)
-
     try {
+        const encryptData = await keytar.getPassword(NAME_PROJECT, AUTH_DATA)
+        const authData = decrypt(encryptData)
         return JSON.parse(authData)
     } catch (e) {
         throw new TypeError('The authorization credentials are corrupted')
@@ -26,7 +27,7 @@ const server = (port, errorCallback) => {
             app.get('/login', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
-                    console.log('authParsed =>', authParsed)
+
                     if (authParsed.type === BASIC_AUTH) {
                         const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/2/myself`, {
                             headers: {
