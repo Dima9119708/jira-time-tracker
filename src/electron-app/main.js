@@ -1,6 +1,5 @@
 const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor } = require('electron')
 const path = require('path')
-const chokidar = require('chokidar')
 const portfinder = require('portfinder')
 const url = require('url')
 
@@ -81,12 +80,6 @@ const createChangePort = () => {
                 })
             )
         } else {
-            const watcher = chokidar.watch(__dirname, { ignored: /node_modules|[\/\\]\./ })
-
-            watcher.on('change', () => {
-                mainWindow.reload()
-            })
-
             mainWindow.loadURL(`http://localhost:3000/component-change-port`)
             mainWindow.webContents.openDevTools()
         }
@@ -161,12 +154,6 @@ const createMainWindow = (port) => {
     if (isProd) {
         mainWindow.loadFile(path.join(__dirname, 'build/index.html'))
     } else {
-        const watcher = chokidar.watch(__dirname, { ignored: /node_modules|[\/\\]\./ })
-
-        watcher.on('change', () => {
-            mainWindow.reload()
-        })
-
         mainWindow.loadURL(`http://localhost:3000`)
         mainWindow.webContents.openDevTools()
     }
