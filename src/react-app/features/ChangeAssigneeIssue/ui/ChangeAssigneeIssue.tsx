@@ -5,23 +5,22 @@ import { Assignee, IssueResponse, IssuesTrackingResponse } from '../../../pages/
 import { AxiosError, AxiosResponse } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'
 import { InfiniteData } from '@tanstack/react-query/build/modern/index'
-import { notifications } from '@mantine/notifications'
-import { NOTIFICATION_AUTO_CLOSE, NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
 import { produce } from 'immer'
 import { ChangeAssigneeProps } from '../types/types'
-import { IconCheck } from '@tabler/icons-react'
-import { rem } from '@mantine/core'
+import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 
 const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
-    const { issueKey, idxIssue, issueName, idxPage, assignee, children, queryKey, position = 'bottom-start' } = props
+    const { issueKey, idxIssue, issueName, idxPage, assignee, queryKey, position = 'bottom-start' } = props
 
     const queryClient = useQueryClient()
+
+    const notify = useNotifications()
 
     const { mutate } = useMutation<
         AxiosResponse<Assignee>,
         AxiosError<ErrorType>,
         Assignee,
-        { notificationId: string; oldState: InfiniteData<IssueResponse> | IssuesTrackingResponse | undefined; notificationMessage: string }
+        { dismissFn: Function; oldState: InfiniteData<IssueResponse> | IssuesTrackingResponse | undefined; notificationMessage: string }
     >({
         mutationFn: (variables) =>
             axiosInstance.put<Assignee>('/issue-assignee', { accountId: variables.accountId }, { params: { id: issueKey } }),
@@ -45,37 +44,33 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
 
             const notificationMessage = `from ${assignee?.displayName ?? 'Unassigned'} to ${variables.displayName}`
 
-            const notificationId = notifications.show({
+            const dismissFn = notify.loading({
                 title: 'Assignee changes',
-                message: notificationMessage,
-                loading: true,
+                description: notificationMessage,
             })
 
             return {
                 oldState: queryClient.getQueryData<InfiniteData<IssueResponse> | IssuesTrackingResponse>([queryKey]),
-                notificationId,
+                dismissFn,
                 notificationMessage,
             }
         },
         onSuccess: (data, variables, context) => {
-            notifications.update({
-                id: context!.notificationId,
-                autoClose: NOTIFICATION_AUTO_CLOSE,
-                loading: false,
-                icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
-                message: context!.notificationMessage,
+            context!.dismissFn()
+            notify.success({
+                title: 'Assignee changes',
+                description: context!.notificationMessage,
             })
 
             //  TODO ????
             // queryClient.invalidateQueries({ queryKey: [queryKey] })
         },
         onError: (error, variables, context) => {
-            notifications.hide(context!.notificationId)
+            context!.dismissFn()
 
-            notifications.show({
-                title: `Error issue "${issueName}"`,
-                message: JSON.stringify(error.response?.data),
-                ...NOTIFICATION_VARIANT.ERROR,
+            notify.error({
+                title: 'Assignee changes',
+                description: JSON.stringify(error.response?.data),
             })
 
             queryClient.setQueryData([queryKey], context!.oldState)
@@ -88,7 +83,6 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
             issueKey={issueKey}
             onChange={mutate}
             position={position}
-            children={children}
         />
     )
 }

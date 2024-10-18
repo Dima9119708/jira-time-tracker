@@ -1,5 +1,6 @@
 build
-../.idea
+.idea
+.erb
 package-lock.json
 yarn.lock
 

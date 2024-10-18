@@ -1,27 +1,46 @@
 import { lazy, Suspense } from 'react'
-import { AppShell, Group } from '@mantine/core'
-import { IconSettings, IconTransferOut } from '@tabler/icons-react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { Breadcrumbs } from '../../shared/ui/Breadcrumbs'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { Logo } from '../../shared/components/Logo'
 import GlobalStateUrlSync from '../GlobalComponents/GlobalStateUrlSync/GlobalStateUrlSync'
-import { useGlobalState } from '../../shared/lib/hooks/useGlobalState'
 import Notifications from '../GlobalComponents/Notifications/Notifications'
 import DetectedSystemIdle from '../GlobalComponents/DetectedSystemIdle/DetectedSystemIdle'
 import AutoStart from '../GlobalComponents/AutoStart/AutoStart'
-import { OpenSettings } from '../../widgets/Settings'
 import { electron } from '../../shared/lib/electron/electron'
-import { notifications } from '@mantine/notifications'
-
+import { Box, Flex, xcss } from '@atlaskit/primitives'
+import SettingsIcon from '@atlaskit/icon/glyph/settings'
+import { IconButton } from '@atlaskit/button/new'
+import SignOutIcon from '@atlaskit/icon/glyph/sign-out'
+import { TOP_PANEL_HEIGHT } from 'react-app/widgets/TopPanel/ui/TopPanel'
+import { WatchController } from 'use-global-boolean'
 const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
+import { ModalTransition } from '@atlaskit/modal-dialog'
+
+const styles = {
+    app_wrap: xcss({}),
+    header: xcss({
+        position: 'sticky',
+        top: TOP_PANEL_HEIGHT,
+        left: '0',
+        justifyContent: 'space-between',
+        padding: 'space.150',
+        borderBottomWidth: '1px',
+        borderBottomStyle: 'solid',
+        borderColor: 'color.border.accent.gray',
+        backgroundColor: 'color.background.input',
+        zIndex: 'blanket',
+        marginBottom: 'space.200',
+    }),
+    main: xcss({
+        padding: 'space.150',
+    }),
+}
 
 const LayoutRoot = () => {
     const navigate = useNavigate()
 
     const onLogout = () => {
         queryClient.removeQueries()
-        notifications.clean()
         electron(({ ipcRenderer }) => ipcRenderer.invoke('DELETE_AUTH_DATA'))
 
         navigate('/auth')
@@ -33,53 +52,55 @@ const LayoutRoot = () => {
             <Notifications />
             <DetectedSystemIdle />
             <AutoStart />
-            <AppShell
-                bg="gray.2"
-                header={{ height: 60 }}
-                padding="lg"
-            >
-                <AppShell.Header
-                    bg="gray.2"
-                    px="lg"
-                >
-                    <Group
-                        justify="space-between"
-                        h="100%"
-                    >
-                        <Logo
-                            size={2}
-                            onClick={() => navigate('/issues')}
-                            className="cursor-pointer"
+
+            <Box xcss={styles.app_wrap}>
+                <Flex xcss={styles.header}>
+                    <Logo
+                        size={2}
+                        onClick={() => navigate('/issues')}
+                    />
+
+                    <Flex columnGap="space.100">
+                        <WatchController>
+                            {({ globalMethods }) => {
+                                return (
+                                    <IconButton
+                                        icon={SettingsIcon}
+                                        label="Settings"
+                                        onClick={() => globalMethods.setTrue('user settings')}
+                                    />
+                                )
+                            }}
+                        </WatchController>
+
+                        <IconButton
+                            icon={SignOutIcon}
+                            label="Sign out"
+                            onClick={onLogout}
                         />
+                    </Flex>
+                </Flex>
 
-                        <Group>
-                            <IconSettings
-                                onClick={useGlobalState.getState().onOpenSettings}
-                                cursor="pointer"
-                            />
-                            <IconTransferOut
-                                onClick={onLogout}
-                                cursor="pointer"
-                            />
-                        </Group>
-                    </Group>
-                </AppShell.Header>
-
-                <AppShell.Main>
-                    <Breadcrumbs mb={20} />
+                <Box xcss={styles.main}>
                     <Outlet />
+                </Box>
+            </Box>
 
-                    <OpenSettings>
-                        {({ open }) =>
-                            open && (
+            <WatchController name="user settings">
+                {({ localState }) => {
+                    const [open] = localState
+
+                    return (
+                        <ModalTransition>
+                            {open && (
                                 <Suspense>
                                     <Settings />
                                 </Suspense>
-                            )
-                        }
-                    </OpenSettings>
-                </AppShell.Main>
-            </AppShell>
+                            )}
+                        </ModalTransition>
+                    )
+                }}
+            </WatchController>
         </>
     )
 }

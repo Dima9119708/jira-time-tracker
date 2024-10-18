@@ -2,18 +2,18 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { queryGetIssues } from '../model/queryOptions'
 import Task from './Issue'
 import { useEffect } from 'react'
-import { notifications } from '@mantine/notifications'
-import { NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
+import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 
 const Issues = () => {
     const { data, error } = useInfiniteQuery(queryGetIssues())
 
+    const notify = useNotifications()
+
     useEffect(() => {
         if (error) {
-            notifications.show({
+            notify.error({
                 title: `Error loading task`,
-                message: JSON.stringify(error.response?.data),
-                ...NOTIFICATION_VARIANT.ERROR,
+                description: JSON.stringify(error.response?.data),
             })
         }
     }, [error])

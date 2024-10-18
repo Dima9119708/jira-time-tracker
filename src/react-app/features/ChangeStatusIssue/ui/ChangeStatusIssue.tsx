@@ -5,22 +5,21 @@ import { produce } from 'immer'
 import { IssueResponse, IssuesTrackingResponse } from '../../../pages/Issues/types/types'
 import { AxiosError, AxiosResponse } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'
-import { notifications } from '@mantine/notifications'
-import { NOTIFICATION_AUTO_CLOSE, NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
 import { ChangeStatusTaskProps } from '../types/types'
-import { IconCheck } from '@tabler/icons-react'
-import { rem } from '@mantine/core'
+import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 
 const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
-    const { issueId, queryKey, children, status, issueName, position, disabled, idxPage, idxIssue, onChange } = props
+    const { issueId, queryKey, status, issueName, position, disabled, idxPage, idxIssue, trigger, onChange } = props
 
     const queryClient = useQueryClient()
+
+    const notify = useNotifications()
 
     const { mutate } = useMutation<
         AxiosResponse<TStatusTask>,
         AxiosError<ErrorType>,
         TStatusTask,
-        { notificationId: string; oldState: InfiniteData<IssueResponse> | IssuesTrackingResponse | undefined; notificationMessage: string }
+        { dismissFn: Function; oldState: InfiniteData<IssueResponse> | IssuesTrackingResponse | undefined; notificationMessage: string }
     >({
         mutationFn: (variables) =>
             axiosInstance.post('/change-status-task', {
@@ -49,37 +48,33 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 onChange()
             }
             const notificationMessage = `from ${status.name} to ${variables.name}`
-            const notificationId = notifications.show({
+            const dismissFn = notify.loading({
                 title: 'Status changes',
-                message: notificationMessage,
-                loading: true,
+                description: notificationMessage,
             })
 
             return {
-                notificationId,
+                dismissFn,
                 notificationMessage,
                 oldState: queryClient.getQueryData<InfiniteData<IssueResponse> | IssuesTrackingResponse>([queryKey]),
             }
         },
         onSuccess: (data, variables, context) => {
-            notifications.update({
-                id: context!.notificationId,
-                autoClose: NOTIFICATION_AUTO_CLOSE,
-                loading: false,
-                icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
-                message: context!.notificationMessage,
+            context?.dismissFn()
+            notify.success({
+                title: 'Status changes',
+                description: context!.notificationMessage,
             })
 
             // TODO => ???
             // queryClient.invalidateQueries({ queryKey: [queryKey] })
         },
         onError: (error, variables, context) => {
-            notifications.hide(context!.notificationId)
+            context?.dismissFn()
 
-            notifications.show({
+            notify.error({
                 title: `Error issue ${issueName}`,
-                message: JSON.stringify(error.response?.data),
-                ...NOTIFICATION_VARIANT.ERROR,
+                description: JSON.stringify(error.response?.data),
             })
 
             queryClient.setQueryData([queryKey], context!.oldState)
@@ -93,9 +88,8 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
             position={position}
             disabled={disabled}
             onChange={(status) => mutate(status)}
-        >
-            {children}
-        </StatusesIssue>
+            trigger={trigger}
+        />
     )
 }
 

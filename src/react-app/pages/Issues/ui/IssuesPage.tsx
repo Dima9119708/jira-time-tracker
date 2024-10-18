@@ -1,18 +1,16 @@
-import { Title } from '@mantine/core'
 import LoadMore from './LoadMore'
 import { Filter } from '../../../features/Filter'
 import IssuesTracking from './IssuesTracking'
 import Issues from './Issues'
+import { Box, xcss } from '@atlaskit/primitives'
+import Heading from '@atlaskit/heading'
 
 const IssuesPage = () => {
     return (
         <>
-            <Title
-                mb={10}
-                order={2}
-            >
-                Issues
-            </Title>
+            <Box xcss={xcss({ marginBottom: 'space.100' })}>
+                <Heading size="xlarge">Issues</Heading>
+            </Box>
 
             <Filter />
 

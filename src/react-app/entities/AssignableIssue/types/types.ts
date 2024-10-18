@@ -1,10 +1,9 @@
-import { MenuProps } from '@mantine/core'
-import { FunctionComponent, ReactNode } from 'react'
 import { Assignee } from '../../../pages/Issues/types/types'
+import { DropdownMenuProps } from '@atlaskit/dropdown-menu'
 
-export interface AssignableIssueProps extends Pick<MenuProps, 'position' | 'disabled'> {
+export interface AssignableIssueProps {
     assignee: Assignee | null
     issueKey: string
     onChange: (assignee: Assignee) => void
-    children: FunctionComponent<{ ImageComponent: ReactNode; name: string }>
+    position?: DropdownMenuProps['placement']
 }

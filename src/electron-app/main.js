@@ -13,7 +13,7 @@ const ControllerAuth = require('./auth/ControllerAuth')
 
 const { server } = require('./server')
 const { AUTH_DATA } = require('./constans')
-const { AuthStorage } = require('./auth/keyService')
+const { AuthStorage, ThemeStorage } = require('./auth/keyService')
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -97,6 +97,7 @@ const createMainWindow = (port) => {
             contextIsolation: false,
             enableRemoteModule: true,
         },
+        resizable: true,
         ...(isProd && {
             minWidth: 600,
             height: 800,
@@ -121,6 +122,14 @@ const createMainWindow = (port) => {
             openAtLogin: autoStart,
             path: app.getPath('exe'),
         })
+    })
+
+    ipcMain.on('SET_THEME', (event, theme) => {
+        ThemeStorage.set(theme)
+    })
+
+    ipcMain.on('GET_THEME', (event) => {
+        event.returnValue = ThemeStorage.get()
     })
 
     ipcMain.on('GET-SYSTEM-IDLE-TIME', (event, args) => {

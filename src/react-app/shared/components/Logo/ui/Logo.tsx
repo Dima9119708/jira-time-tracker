@@ -1,31 +1,29 @@
-import { Text } from '@mantine/core'
-import { cn } from '../../../lib/classNames '
+import { Box, xcss } from '@atlaskit/primitives'
 
 interface LogoProps {
     size: 1 | 2
-    className?: string
     onClick?: () => void
 }
 
+const styles = {
+    logo: xcss({
+        font: 'font.heading.xxlarge',
+        margin: 'space.400',
+        fontWeight: 'font.weight.bold',
+    }),
+}
+
 const Logo = (props: LogoProps) => {
-    const { size, className, onClick } = props
+    const { size, onClick } = props
 
     return (
-        <Text
+        <Box
+            as="h1"
             onClick={onClick}
-            fw={900}
-            variant="gradient"
-            className={cn(
-                {
-                    'text-[3rem]': size === 1,
-                    'text-[2rem]': size === 2,
-                },
-                className
-            )}
-            gradient={{ from: 'indigo', to: 'teal', deg: 90 }}
+            xcss={{ ...styles.logo, ...xcss({ fontSize: size === 1 ? 'font.heading.xlarge' : 'font.heading.xxlarge' }) }}
         >
             Time Tracking
-        </Text>
+        </Box>
     )
 }
 

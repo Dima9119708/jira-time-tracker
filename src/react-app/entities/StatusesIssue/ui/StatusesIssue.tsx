@@ -1,12 +1,14 @@
-import { Menu, Skeleton } from '@mantine/core'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { StatusesTaskResponse, StatusesTaskProps } from '../types/types'
-import { cn } from '../../../shared/lib/classNames '
+import Lozenge from '@atlaskit/lozenge'
+import DropdownMenu, { DropdownItem, DropdownItemGroup } from '@atlaskit/dropdown-menu'
+import { Box, xcss } from '@atlaskit/primitives'
+import { token } from '@atlaskit/tokens'
 
 const StatusesIssue = (props: StatusesTaskProps) => {
-    const { issueId, onChange, children, status, position = 'bottom-start', disabled } = props
+    const { issueId, onChange, trigger, status, position = 'bottom-start', disabled } = props
     const [open, setOpen] = useState(false)
 
     const { data, isLoading } = useQuery({
@@ -16,41 +18,75 @@ const StatusesIssue = (props: StatusesTaskProps) => {
         enabled: open,
     })
 
-    return (
-        <Menu
-            shadow="md"
-            onChange={disabled ? undefined : setOpen}
-            position={position}
-            disabled={disabled}
-        >
-            <Menu.Target>{children}</Menu.Target>
+    const styles = useMemo(() => {
+        const colorNew = status.statusCategory.key === 'new' && 'default'
+        const colorIndeterminate = status.statusCategory.key === 'indeterminate' && 'primary'
+        const colorDone = status.statusCategory.key === 'done' && 'subtle'
 
-            <Menu.Dropdown>
-                {isLoading &&
-                    Array.from({ length: 5 }, (_, idx) => (
-                        <Menu.Item key={idx}>
-                            <Skeleton
-                                w={100}
-                                h={20}
-                                bg="cyan.6"
-                            />
-                        </Menu.Item>
-                    ))}
-                {!isLoading &&
-                    data?.transitions.map((transition) => (
-                        <Menu.Item
-                            onClick={() => onChange(transition)}
-                            key={transition.id}
-                            value={transition.name}
-                            className={cn({
-                                'bg-[var(--mantine-color-dark-light)]': status.id === transition.to.id,
-                            })}
-                        >
-                            {transition.name}
-                        </Menu.Item>
-                    ))}
-            </Menu.Dropdown>
-        </Menu>
+        return xcss({
+            // @ts-ignore
+            '& > button': {
+                fontWeight: token('font.weight.semibold'),
+                ...(colorNew && {
+                    backgroundColor: token('color.background.neutral'),
+                    color: token('color.text'),
+                }),
+                ...(colorIndeterminate && {
+                    backgroundColor: token('color.background.information.bold'),
+                    color: token('color.text.inverse'),
+                }),
+                ...(colorDone && {
+                    backgroundColor: token('color.chart.success.bold'),
+                    color: token('color.text.inverse'),
+                }),
+            },
+            '& > button:hover': {
+                ...(colorNew && {
+                    backgroundColor: token('color.background.neutral.hovered'),
+                    color: token('color.text'),
+                }),
+                ...(colorIndeterminate && {
+                    backgroundColor: token('color.background.information.bold.hovered'),
+                    color: token('color.text.inverse'),
+                }),
+                ...(colorDone && {
+                    backgroundColor: token('color.chart.success.bold.hovered'),
+                    color: token('color.text.inverse'),
+                }),
+            },
+        })
+    }, [status.name])
+
+    return (
+        <Box xcss={styles}>
+            <DropdownMenu
+                isLoading={isLoading}
+                isOpen={disabled === true ? false : open}
+                onOpenChange={() => setOpen(!open)}
+                placement={position}
+                trigger={trigger}
+            >
+                <DropdownItemGroup>
+                    {!isLoading &&
+                        data?.transitions.map((transition) => {
+                            const colorNew = transition.to.statusCategory.key === 'new' && 'default'
+                            const colorIndeterminate = transition.to.statusCategory.key === 'indeterminate' && 'inprogress'
+                            const colorDone = transition.to.statusCategory.key === 'done' && 'success'
+                            const appearance = colorNew || colorIndeterminate || colorDone || 'default'
+
+                            return (
+                                <DropdownItem
+                                    onClick={() => onChange(transition)}
+                                    key={transition.id}
+                                    isSelected={status.id === transition.to.id}
+                                >
+                                    <Lozenge appearance={appearance}>{transition.name}</Lozenge>
+                                </DropdownItem>
+                            )
+                        })}
+                </DropdownItemGroup>
+            </DropdownMenu>
+        </Box>
     )
 }
 

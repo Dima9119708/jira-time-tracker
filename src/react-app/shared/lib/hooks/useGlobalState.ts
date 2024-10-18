@@ -2,29 +2,30 @@ import { createStore } from '../../config/store/store'
 import { ConfigurationTimeTrackingOptions } from '../../../pages/Issues/types/types'
 import deepmerge from '../utils/deepMerge'
 
+type Unit = { label: 'Minutes' | 'Hours'; value: 'minutes' | 'hours' }
+
 export interface UseGlobalState {
     filterId: string
     jql: string
-    openSettings: boolean
     isSystemIdle: boolean
     settings: {
         autoStart: boolean
         timeLoggingInterval: {
-            unit: 'minutes' | 'hours'
+            unit: Unit
             displayTime: number
             second: number
         }
 
         sendInactiveNotification: {
             enabled: boolean
-            unit: 'minutes' | 'hours'
+            unit: Unit
             displayTime: number
             millisecond: number
         }
 
         systemIdle: {
             enabled: boolean
-            unit: 'minutes' | 'hours'
+            unit: Unit
             displayTime: number
             second: number
         }
@@ -45,11 +46,14 @@ export interface UseGlobalState {
     ) => Promise<void>
     getIssueIdsSearchParams: () => string
     setSystemIdle: (bool: boolean) => void
-    onOpenSettings: () => void
-    onCloseSettings: () => void
     setSettings: (settings: UseGlobalState['settings']) => void
     setIssueIdsSearchParams: (ids: string) => void
 }
+
+export const TIME_OPTIONS: Unit[] = [
+    { label: 'Minutes', value: 'minutes' },
+    { label: 'Hours', value: 'hours' },
+]
 
 export const useGlobalState = createStore<UseGlobalState>(
     (set, get) => ({
@@ -61,21 +65,21 @@ export const useGlobalState = createStore<UseGlobalState>(
         settings: {
             autoStart: true,
             timeLoggingInterval: {
-                unit: 'minutes',
+                unit: TIME_OPTIONS[0],
                 displayTime: 1,
                 second: 60,
             },
 
             sendInactiveNotification: {
                 enabled: true,
-                unit: 'minutes',
+                unit: TIME_OPTIONS[0],
                 displayTime: 30,
                 millisecond: 1800000,
             },
 
             systemIdle: {
                 enabled: true,
-                unit: 'minutes',
+                unit: TIME_OPTIONS[0],
                 displayTime: 5,
                 second: 300,
             },
@@ -84,16 +88,6 @@ export const useGlobalState = createStore<UseGlobalState>(
             type: null,
             value: '',
             currentParams: '',
-        },
-        onOpenSettings: () => {
-            set((draft) => {
-                draft.openSettings = true
-            })
-        },
-        onCloseSettings: () => {
-            set((draft) => {
-                draft.openSettings = false
-            })
         },
         setSettings: (settings) => {
             set((draft) => {

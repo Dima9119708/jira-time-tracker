@@ -1,6 +1,4 @@
-import { ActionIcon, Alert, Badge, Button, Card as Mantine_Card, Group, Image, Loader, Title } from '@mantine/core'
 import React, { memo, useState } from 'react'
-import { IconAlertTriangle, IconPlayerPauseFilled } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../lib/dateHelper'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
@@ -10,6 +8,13 @@ import { produce } from 'immer'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { useWorklogQuery } from '../lib/useWorklogQuery'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
+import { IconButton } from '@atlaskit/button/new'
+import VidPauseIcon from '@atlaskit/icon/glyph/vid-pause'
+import { Box, Flex, Text, xcss } from '@atlaskit/primitives'
+import Badge from '@atlaskit/badge'
+import Heading from '@atlaskit/heading'
+import SectionMessage from '@atlaskit/section-message'
+import Image from '@atlaskit/image'
 
 const IssueTracking = (props: TaskProps) => {
     const { fields, id, idxIssue, issueKey } = props
@@ -38,114 +43,135 @@ const IssueTracking = (props: TaskProps) => {
     }
 
     return (
-        <Mantine_Card
-            key={id}
-            shadow="sm"
-            radius="md"
-            bg="teal.0"
-            mb="sm"
-            withBorder
-        >
-            <Timer ref={timerRef} />
-            <Group
-                mb={10}
-                justify="space-between"
+        <>
+            <Box
+                xcss={xcss({
+                    display: 'flex',
+                    flexDirection: 'column',
+                    rowGap: 'space.200',
+                    padding: 'space.200',
+                    borderRadius: 'border.radius.200',
+                    boxShadow: 'elevation.shadow.overflow',
+                    backgroundColor: 'color.background.accent.blue.subtlest',
+                })}
             >
+                <Timer ref={timerRef} />
+
                 {!isLoading && fields.status.statusCategory.key !== 'indeterminate' && (
-                    <Alert
-                        className="w-[100%]"
-                        variant="light"
-                        color="red"
-                        title={'Warning!'}
-                        icon={<IconAlertTriangle />}
+                    <SectionMessage
+                        title={`Warning!`}
+                        appearance="warning"
                     >
                         This task is not in the "In progress" status please change its status. However, time continues to be logged for it.
-                    </Alert>
+                    </SectionMessage>
                 )}
-                <Title order={5}>{fields.summary}</Title>
 
-                <Badge
-                    color="blue"
-                    className="flex-row"
-                >
-                    <span className="mr-[0.5rem]">{secondsToUIFormat(fields.timespent)}</span>
-                    <span className="mr-[0.5rem]">/</span>
-                    <span>{secondsToUIFormat(fields.timeoriginalestimate)}</span>
-                </Badge>
-            </Group>
+                <Flex justifyContent="space-between">
+                    <Heading size="medium">{fields.summary}</Heading>
 
-            <Group mb={10}>
-                <Badge
-                    size="md"
-                    variant="light"
-                    leftSection={
-                        <Image
-                            height={18}
-                            width={18}
-                            loading="lazy"
-                            className="rounded"
-                            src={fields.project.avatarUrls['32x32']}
-                        />
-                    }
-                >
-                    Project: {fields.project.name}
-                </Badge>
-                <Badge
-                    variant="light"
-                    leftSection={
-                        <Image
-                            height={18}
-                            width={18}
-                            loading="lazy"
-                            className="rounded"
-                            src={fields.priority.iconUrl}
-                        />
-                    }
-                >
-                    priority: {fields.priority.name}
-                </Badge>
-                <Badge variant="light">key: {issueKey}</Badge>
-            </Group>
-
-            <Group justify="space-between">
-                <Group>
-                    <ChangeStatusIssue
-                        issueId={id}
-                        issueName={fields.summary}
-                        status={fields.status}
-                        idxIssue={idxIssue}
-                        queryKey="tasks tracking"
-                    >
-                        <Button
-                            variant="outline"
-                            size="xs"
+                    <Badge appearance="primary">
+                        <Box
+                            as="span"
+                            xcss={xcss({ padding: 'space.050' })}
                         >
-                            {fields.status.name}
-                        </Button>
-                    </ChangeStatusIssue>
-
-                    <ChangeAssigneeIssue
-                        assignee={fields.assignee}
-                        issueName={fields.summary}
-                        issueKey={issueKey}
-                        idxIssue={idxIssue}
-                        queryKey="tasks tracking"
-                    >
-                        {({ name, ImageComponent }) => (
-                            <Button
-                                variant="outline"
-                                size="xs"
-                                leftSection={ImageComponent}
+                            <Box
+                                as="span"
+                                xcss={xcss({ marginRight: 'space.075' })}
                             >
-                                {name}
-                            </Button>
-                        )}
-                    </ChangeAssigneeIssue>
-                </Group>
+                                <Text weight="bold">{secondsToUIFormat(fields.timespent)}</Text>
+                            </Box>
+                            <Box
+                                as="span"
+                                xcss={xcss({ marginRight: 'space.075' })}
+                            >
+                                <Text weight="bold">/</Text>
+                            </Box>
+                            <Box as="span">
+                                <Text weight="bold">{secondsToUIFormat(fields.timeoriginalestimate)}</Text>
+                            </Box>
+                        </Box>
+                    </Badge>
+                </Flex>
 
-                {isLoading ? (
-                    <Loader size="sm" />
-                ) : (
+                <Flex
+                    gap="space.100"
+                    alignItems="center"
+                    wrap="wrap"
+                >
+                    <Badge appearance="default">
+                        <Flex
+                            xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', alignItems: 'center', columnGap: 'space.075' })}
+                        >
+                            <Image
+                                src={fields.project.avatarUrls['32x32']}
+                                height="15px"
+                                width="15px"
+                            />
+                            <Text
+                                weight="bold"
+                                size="small"
+                            >
+                                Project: {fields.project.name}
+                            </Text>
+                        </Flex>
+                    </Badge>
+
+                    <Badge appearance="default">
+                        <Flex
+                            xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}
+                        >
+                            <Image
+                                src={fields.priority.iconUrl}
+                                height="15px"
+                                width="15px"
+                            />
+                            <Text
+                                weight="bold"
+                                size="small"
+                            >
+                                priority: {fields.priority.name}
+                            </Text>
+                        </Flex>
+                    </Badge>
+
+                    <Badge appearance="default">
+                        <Flex
+                            xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}
+                        >
+                            <Text
+                                weight="bold"
+                                size="small"
+                            >
+                                key: {issueKey}
+                            </Text>
+                        </Flex>
+                    </Badge>
+                </Flex>
+
+                <Flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    columnGap="space.100"
+                >
+                    <Flex columnGap="space.200">
+                        <ChangeStatusIssue
+                            issueId={id}
+                            issueName={fields.summary}
+                            status={fields.status}
+                            idxIssue={idxIssue}
+                            queryKey="tasks tracking"
+                            trigger={fields.status.name}
+                        />
+
+                        <ChangeAssigneeIssue
+                            assignee={fields.assignee}
+                            issueName={fields.summary}
+                            issueKey={issueKey}
+                            idxIssue={idxIssue}
+                            queryKey="tasks tracking"
+                        />
+                    </Flex>
+
                     <ChangeStatusIssue
                         issueId={id}
                         issueName={fields.summary}
@@ -154,17 +180,31 @@ const IssueTracking = (props: TaskProps) => {
                         queryKey="tasks tracking"
                         onChange={onStopTracking}
                         disabled={fields.status.statusCategory.key === 'done'}
-                    >
-                        <ActionIcon
-                            variant="light"
-                            {...(fields.status.statusCategory.key === 'done' && { onClick: onStopTracking })}
-                        >
-                            <IconPlayerPauseFilled className="cursor-pointer [&_path]:fill-[var(--mantine-color-violet-5)]" />
-                        </ActionIcon>
-                    </ChangeStatusIssue>
-                )}
-            </Group>
-        </Mantine_Card>
+                        trigger={(triggerButtonProps) => (
+                            <IconButton
+                                {...triggerButtonProps}
+                                ref={triggerButtonProps.triggerRef}
+                                isLoading={isLoading}
+                                icon={VidPauseIcon}
+                                label="Stop tracking"
+                                {...(fields.status.statusCategory.key === 'done' && { onClick: onStopTracking })}
+                            />
+                        )}
+                    />
+                </Flex>
+            </Box>
+
+            <Box
+                xcss={xcss({
+                    height: '5px',
+                    width: '100%',
+                    backgroundColor: 'color.background.inverse.subtle.hovered',
+                    marginTop: 'space.300',
+                    marginBottom: 'space.300',
+                    borderRadius: 'border.radius.200',
+                })}
+            />
+        </>
     )
 }
 

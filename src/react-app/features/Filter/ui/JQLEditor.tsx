@@ -1,7 +1,6 @@
 import { JQLEditorAsync } from '@atlassianlabs/jql-editor'
 import { useAutocompleteProvider } from '@atlassianlabs/jql-editor-autocomplete-rest'
 import { getInitialData, getSuggestions } from '../service/service'
-import { cn } from '../../../shared/lib/classNames '
 import { FilterProps } from '../types/types'
 import { memo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -10,15 +9,14 @@ import { FilterDetails } from '../../../pages/Issues/types/types'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { AxiosError, AxiosResponse } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'
-import { notifications } from '@mantine/notifications'
-import { NOTIFICATION_AUTO_CLOSE, NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
-import { IconCheck } from '@tabler/icons-react'
-import { rem } from '@mantine/core'
+import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 
 const JQLEditor = (props: FilterProps) => {
     const { className } = props
     const queryClient = useQueryClient()
     const query = useGlobalState((state) => state.jql)
+
+    const notify = useNotifications()
 
     const { mutate, isPending } = useMutation<AxiosResponse<FilterDetails>, AxiosError<ErrorType>>({
         mutationFn: () =>
@@ -34,33 +32,19 @@ const JQLEditor = (props: FilterProps) => {
                 }
             ),
         onMutate: () => {
-            const id = notifications.show({
+            const dismissFn = notify.loading({
                 title: 'Searching',
-                message: '',
-                loading: true,
             })
 
             queryClient
                 .invalidateQueries({ queryKey: ['tasks'] })
-                .then(() => {
-                    notifications.update({
-                        id,
-                        title: 'Searching',
-                        message: '',
-                        icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
-                        loading: false,
-                        autoClose: NOTIFICATION_AUTO_CLOSE,
-                    })
-                })
-                .catch(() => {
-                    notifications.hide(id)
-                })
+                .then(dismissFn)
+                .catch(dismissFn)
         },
         onError: (error) => {
-            notifications.show({
+            notify.error({
                 title: `Error loading issue`,
-                message: JSON.stringify(error.response?.data),
-                ...NOTIFICATION_VARIANT.ERROR,
+                description: JSON.stringify(error.response?.data),
             })
         },
     })
@@ -68,21 +52,19 @@ const JQLEditor = (props: FilterProps) => {
     const autocompleteProvider = useAutocompleteProvider('autocomplete', getInitialData, getSuggestions)
 
     return (
-        <div className={cn('mb-[1.5rem] [&_div_div:nth-child(1)]:bg-[var(--mantine-color-default)]', className)}>
-            <JQLEditorAsync
-                isSearching={isPending}
-                analyticsSource={'autocomplete'}
-                query={query}
-                onSearch={(jql, jast) => {
-                    if (jast.errors.length === 0 && jast.represents !== useGlobalState.getState().jql) {
-                        useGlobalState.getState().updateJQL(jql)
-                        mutate()
-                    }
-                }}
-                autocompleteProvider={autocompleteProvider}
-                locale={'en'}
-            />
-        </div>
+        <JQLEditorAsync
+            isSearching={isPending}
+            analyticsSource={'autocomplete'}
+            query={query}
+            onSearch={(jql, jast) => {
+                if (jast.errors.length === 0 && jast.represents !== useGlobalState.getState().jql) {
+                    useGlobalState.getState().updateJQL(jql)
+                    mutate()
+                }
+            }}
+            autocompleteProvider={autocompleteProvider}
+            locale={'en'}
+        />
     )
 }
 

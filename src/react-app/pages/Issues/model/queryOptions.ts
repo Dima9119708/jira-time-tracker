@@ -2,12 +2,10 @@ import { queryOptions, infiniteQueryOptions, InfiniteData, QueryKey } from '@tan
 import { axiosInstance } from '../../../shared/config/api/api'
 import { Issue, IssueResponse, IssuesTrackingResponse } from '../types/types'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
-import { notifications } from '@mantine/notifications'
 import { AxiosError } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'
-import { NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
 
-export const queryGetIssuesTracking = () =>
+export const queryGetIssuesTracking = (args: { onReject?: (reject: AxiosError<ErrorType>) => void }) =>
     queryOptions<IssuesTrackingResponse>({
         queryKey: ['tasks tracking'],
         queryFn: async (context) => {
@@ -28,11 +26,9 @@ export const queryGetIssuesTracking = () =>
 
                         useGlobalState.getState().changeIssueIdsSearchParams('delete', response.reason.config.params.id)
 
-                        notifications.show({
-                            title: `Issue ${reject.config?.params.id}`,
-                            message: reject.response?.data.errorMessages.join(', '),
-                            ...NOTIFICATION_VARIANT.ERROR,
-                        })
+                        if (args.onReject) {
+                            args.onReject(reject)
+                        }
                     }
 
                     return acc

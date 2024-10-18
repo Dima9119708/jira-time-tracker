@@ -1,4 +1,3 @@
-import { Button, Divider, Group, Input, Modal, rem, Select, Switch, Text } from '@mantine/core'
 import { useForm, Controller, SubmitHandler } from 'react-hook-form'
 import dayjs from 'dayjs'
 import { useMutation } from '@tanstack/react-query'
@@ -6,15 +5,46 @@ import { AxiosError, AxiosResponse } from 'axios'
 import { FilterDetails } from '../../../pages/Issues/types/types'
 import { ErrorType } from '../../../shared/types/jiraTypes'
 import { axiosInstance } from '../../../shared/config/api/api'
-import { UseGlobalState, useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
-import { notifications } from '@mantine/notifications'
-import { NOTIFICATION_AUTO_CLOSE, NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
-import { IconCheck } from '@tabler/icons-react'
+import { TIME_OPTIONS, UseGlobalState, useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog'
+import Button, { IconButton } from '@atlaskit/button/new'
+import CrossIcon from '@atlaskit/icon/glyph/cross'
+import { Flex, xcss, Box } from '@atlaskit/primitives'
+import Toggle from '@atlaskit/toggle'
+import Textfield from '@atlaskit/textfield'
+import Select from '@atlaskit/select'
+import Heading from '@atlaskit/heading'
+import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { ErrorMessage } from '@atlaskit/form'
+import { useGlobalBoolean } from 'use-global-boolean'
 
 export type FormValues = UseGlobalState['settings']
 
+const styles = {
+    divider: xcss({
+        paddingBottom: 'space.100',
+        marginBottom: 'space.100',
+        borderBottomWidth: '5px',
+        borderBottomColor: 'color.border.input',
+        borderBottomStyle: 'solid',
+    }),
+    inputWarp: xcss({
+        width: '80px',
+    }),
+    selectWarp: xcss({
+        width: '110px',
+    }),
+    toggleWarp: xcss({
+        width: '40px',
+    }),
+}
+
 const Settings = () => {
-    const opened = useGlobalState((state) => state.openSettings)
+    const { watchBoolean, setFalse } = useGlobalBoolean()
+
+    const opened = watchBoolean('user settings')
+
+    const notify = useNotifications()
 
     const { control, handleSubmit, watch } = useForm<FormValues>({
         mode: 'onBlur',
@@ -28,7 +58,7 @@ const Settings = () => {
         AxiosResponse<FilterDetails>,
         AxiosError<ErrorType>,
         string,
-        { notificationId: string; title: string }
+        { dismissFn: Function; title: string }
     >({
         mutationFn: (variables) =>
             axiosInstance.put<FilterDetails>(
@@ -45,34 +75,28 @@ const Settings = () => {
         onMutate: () => {
             const title = 'Update settings'
 
-            const id = notifications.show({
+            const dismissFn = notify.loading({
                 title: title,
-                message: '',
-                loading: true,
             })
 
             return {
-                notificationId: id,
+                dismissFn,
                 title,
             }
         },
         onSuccess: (data, variables, context) => {
-            notifications.update({
-                id: context!.notificationId,
-                autoClose: NOTIFICATION_AUTO_CLOSE,
-                loading: false,
-                icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
+            context?.dismissFn()
+
+            notify.success({
                 title: context!.title,
-                message: '',
             })
 
-            useGlobalState.getState().onCloseSettings()
+            setFalse('user settings')
         },
         onError: (error) => {
-            notifications.show({
+            notify.error({
                 title: `Error loading issue`,
-                message: JSON.stringify(error.response?.data),
-                ...NOTIFICATION_VARIANT.ERROR,
+                description: JSON.stringify(error.response?.data),
             })
         },
     })
@@ -84,7 +108,7 @@ const Settings = () => {
                 unit: data.timeLoggingInterval.unit,
                 displayTime: data.timeLoggingInterval.displayTime,
                 second:
-                    data.timeLoggingInterval.unit === 'minutes'
+                    data.timeLoggingInterval.unit.value === 'minutes'
                         ? dayjs.duration(data.timeLoggingInterval.displayTime, 'minutes').asSeconds()
                         : dayjs.duration(data.timeLoggingInterval.displayTime, 'hours').asSeconds(),
             },
@@ -93,7 +117,7 @@ const Settings = () => {
                 displayTime: data.sendInactiveNotification.displayTime,
                 enabled: data.sendInactiveNotification.enabled,
                 millisecond:
-                    data.sendInactiveNotification.unit === 'minutes'
+                    data.sendInactiveNotification.unit.value === 'minutes'
                         ? dayjs.duration(data.sendInactiveNotification.displayTime, 'minutes').asMilliseconds()
                         : dayjs.duration(data.sendInactiveNotification.displayTime, 'hours').asMilliseconds(),
             },
@@ -102,7 +126,7 @@ const Settings = () => {
                 displayTime: data.systemIdle.displayTime,
                 enabled: data.systemIdle.enabled,
                 second:
-                    data.systemIdle.unit === 'minutes'
+                    data.systemIdle.unit.value === 'minutes'
                         ? dayjs.duration(data.systemIdle.displayTime, 'minutes').asSeconds()
                         : dayjs.duration(data.systemIdle.displayTime, 'hours').asSeconds(),
             },
@@ -113,257 +137,258 @@ const Settings = () => {
     }
 
     return (
-        <Modal
-            opened={opened}
-            onClose={useGlobalState.getState().onCloseSettings}
-            centered
-            title={
-                <Text
-                    size="xl"
-                    fw="bold"
-                >
-                    Settings
-                </Text>
-            }
-            transitionProps={{ transition: 'fade', duration: 200 }}
-            overlayProps={{
-                backgroundOpacity: 0.55,
-                blur: 3,
-            }}
-        >
-            <Group
-                justify="space-between"
-                wrap="nowrap"
-            >
-                <Text size="sm">Auto-start application</Text>
+        <>
+            {opened && (
+                <Modal onClose={() => setFalse('user settings')}>
+                    <ModalHeader>
+                        <ModalTitle>Settings</ModalTitle>
+                        <IconButton
+                            appearance="subtle"
+                            icon={CrossIcon}
+                            label="Close Modal"
+                            onClick={() => setFalse('user settings')}
+                        />
+                    </ModalHeader>
+                    <ModalBody>
+                        <Flex
+                            justifyContent="space-between"
+                            alignItems="center"
+                            xcss={styles.divider}
+                        >
+                            <Heading size="small">Auto-start application</Heading>
+                            <Controller
+                                name="autoStart"
+                                control={control}
+                                render={({ field }) => {
+                                    return (
+                                        <Toggle
+                                            isChecked={field.value}
+                                            onChange={field.onChange}
+                                        />
+                                    )
+                                }}
+                            />
+                        </Flex>
 
-                <Group>
-                    <Controller
-                        name="autoStart"
-                        control={control}
-                        render={({ field }) => {
-                            return (
-                                <Switch
-                                    checked={field.value}
-                                    onChange={field.onChange}
-                                    size="xs"
+                        <Flex
+                            justifyContent="space-between"
+                            alignItems="center"
+                            xcss={styles.divider}
+                        >
+                            <Heading size="small">Time logging interval</Heading>
+
+                            <Flex columnGap="space.100">
+                                <Controller
+                                    name="timeLoggingInterval.displayTime"
+                                    control={control}
+                                    rules={{ required: 'Required' }}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box xcss={styles.inputWarp}>
+                                                <Textfield
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                    type="number"
+                                                />
+
+                                                {fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                                            </Box>
+                                        )
+                                    }}
                                 />
-                            )
-                        }}
-                    />
-                </Group>
-            </Group>
 
-            <Divider
-                mt={20}
-                mb={20}
-            />
-
-            <Group
-                justify="space-between"
-                wrap="nowrap"
-            >
-                <Text size="sm">Time logging interval</Text>
-
-                <Group>
-                    <Controller
-                        name="timeLoggingInterval.displayTime"
-                        control={control}
-                        rules={{ required: 'Required' }}
-                        render={({ field, fieldState }) => {
-                            return (
-                                <Input
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    w={60}
-                                    type="number"
-                                    error={fieldState.error?.message}
+                                <Controller
+                                    name="timeLoggingInterval.unit"
+                                    control={control}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box xcss={styles.selectWarp}>
+                                                <Select
+                                                    value={field.value}
+                                                    onChange={(newValue, actionMeta) => {
+                                                        field.onChange(newValue, actionMeta)
+                                                    }}
+                                                    onBlur={field.onBlur}
+                                                    placeholder="Unit"
+                                                    styles={{
+                                                        menuPortal: (base) => ({ ...base, zIndex: 1000 }),
+                                                    }}
+                                                    options={TIME_OPTIONS}
+                                                    error={fieldState.error?.message}
+                                                />
+                                            </Box>
+                                        )
+                                    }}
                                 />
-                            )
-                        }}
-                    />
+                            </Flex>
+                        </Flex>
 
-                    <Controller
-                        name="timeLoggingInterval.unit"
-                        control={control}
-                        render={({ field, fieldState }) => {
-                            return (
-                                <Select
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    w={100}
-                                    placeholder="Unit"
-                                    data={[
-                                        { label: 'Minute', value: 'minutes' },
-                                        { label: 'Hour', value: 'hours' },
-                                    ]}
-                                    error={fieldState.error?.message}
+                        <Flex
+                            xcss={styles.divider}
+                            justifyContent="space-between"
+                        >
+                            <Heading size="small">
+                                Should send a notification when the application is open but not in use, and none of the tasks have been
+                                taken into work.
+                            </Heading>
+
+                            <Flex
+                                wrap="nowrap"
+                                alignItems="center"
+                                columnGap="space.100"
+                            >
+                                <Controller
+                                    name="sendInactiveNotification.enabled"
+                                    control={control}
+                                    render={({ field }) => {
+                                        return (
+                                            <Box xcss={styles.toggleWarp}>
+                                                <Toggle
+                                                    isChecked={field.value}
+                                                    onChange={field.onChange}
+                                                />
+                                            </Box>
+                                        )
+                                    }}
                                 />
-                            )
-                        }}
-                    />
-                </Group>
-            </Group>
 
-            <Divider
-                mt={20}
-                mb={20}
-            />
+                                <Controller
+                                    name="sendInactiveNotification.displayTime"
+                                    control={control}
+                                    rules={{ required: 'Required' }}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box xcss={styles.inputWarp}>
+                                                <Textfield
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                    type="number"
+                                                />
 
-            <Group
-                justify="space-between"
-                wrap="nowrap"
-            >
-                <Text size="sm">
-                    Should send a notification when the application is open but not in use, and none of the tasks have been taken into work.
-                </Text>
-
-                <Group wrap="nowrap">
-                    <Controller
-                        name="sendInactiveNotification.enabled"
-                        control={control}
-                        render={({ field }) => {
-                            return (
-                                <Switch
-                                    checked={field.value}
-                                    onChange={field.onChange}
-                                    size="xs"
+                                                {fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                                            </Box>
+                                        )
+                                    }}
                                 />
-                            )
-                        }}
-                    />
 
-                    <Controller
-                        name="sendInactiveNotification.displayTime"
-                        control={control}
-                        rules={{ required: 'Required' }}
-                        render={({ field, fieldState }) => {
-                            return (
-                                <Input
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    w={60}
-                                    type="number"
-                                    error={fieldState.error?.message}
-                                    disabled={sendInactiveNotificationEnabled}
+                                <Controller
+                                    name="sendInactiveNotification.unit"
+                                    control={control}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box xcss={styles.selectWarp}>
+                                                <Select
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                    placeholder="Unit"
+                                                    styles={{
+                                                        menuPortal: (base) => ({ ...base, zIndex: 1000 }),
+                                                    }}
+                                                    options={TIME_OPTIONS}
+                                                    error={fieldState.error?.message}
+                                                    disabled={sendInactiveNotificationEnabled}
+                                                />
+                                            </Box>
+                                        )
+                                    }}
                                 />
-                            )
-                        }}
-                    />
+                            </Flex>
+                        </Flex>
 
-                    <Controller
-                        name="sendInactiveNotification.unit"
-                        control={control}
-                        render={({ field, fieldState }) => {
-                            return (
-                                <Select
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    w={100}
-                                    placeholder="Unit"
-                                    data={[
-                                        { label: 'Minute', value: 'minutes' },
-                                        { label: 'Hour', value: 'hours' },
-                                    ]}
-                                    error={fieldState.error?.message}
-                                    disabled={sendInactiveNotificationEnabled}
+                        <Flex
+                            xcss={styles.divider}
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
+                            <Heading size="small">To stop logging the time when the system is in a waiting state.</Heading>
+
+                            <Flex
+                                wrap="nowrap"
+                                alignItems="center"
+                                columnGap="space.100"
+                            >
+                                <Controller
+                                    name="systemIdle.enabled"
+                                    control={control}
+                                    render={({ field }) => {
+                                        return (
+                                            <Box xcss={styles.toggleWarp}>
+                                                <Toggle
+                                                    isChecked={field.value}
+                                                    onChange={field.onChange}
+                                                />
+                                            </Box>
+                                        )
+                                    }}
                                 />
-                            )
-                        }}
-                    />
-                </Group>
-            </Group>
 
-            <Divider
-                mt={20}
-                mb={20}
-            />
+                                <Controller
+                                    name="systemIdle.displayTime"
+                                    control={control}
+                                    rules={{ required: 'Required' }}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box xcss={styles.inputWarp}>
+                                                <Textfield
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                    type="number"
+                                                />
 
-            <Group
-                justify="space-between"
-                wrap="nowrap"
-            >
-                <Text size="sm">To stop logging the time when the system is in a waiting state.</Text>
-                <Group wrap="nowrap">
-                    <Controller
-                        name="systemIdle.enabled"
-                        control={control}
-                        render={({ field }) => {
-                            return (
-                                <Switch
-                                    checked={field.value}
-                                    onChange={field.onChange}
-                                    size="xs"
+                                                {fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                                            </Box>
+                                        )
+                                    }}
                                 />
-                            )
-                        }}
-                    />
 
-                    <Controller
-                        name="systemIdle.displayTime"
-                        control={control}
-                        rules={{ required: 'Required' }}
-                        render={({ field, fieldState }) => {
-                            return (
-                                <Input
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    w={60}
-                                    type="number"
-                                    error={fieldState.error?.message}
-                                    disabled={systemIdleEnabled}
+                                <Controller
+                                    name="systemIdle.unit"
+                                    control={control}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box xcss={styles.selectWarp}>
+                                                <Select
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                    placeholder="Unit"
+                                                    menuPortalTarget={document.body}
+                                                    styles={{
+                                                        menuPortal: (base) => ({ ...base, zIndex: 1000 }),
+                                                    }}
+                                                    options={TIME_OPTIONS}
+                                                    error={fieldState.error?.message}
+                                                    disabled={systemIdleEnabled}
+                                                />
+                                            </Box>
+                                        )
+                                    }}
                                 />
-                            )
-                        }}
-                    />
-
-                    <Controller
-                        name="systemIdle.unit"
-                        control={control}
-                        render={({ field, fieldState }) => {
-                            return (
-                                <Select
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    w={100}
-                                    placeholder="Unit"
-                                    data={[
-                                        { label: 'Minute', value: 'minutes' },
-                                        { label: 'Hour', value: 'hours' },
-                                    ]}
-                                    error={fieldState.error?.message}
-                                    disabled={systemIdleEnabled}
-                                />
-                            )
-                        }}
-                    />
-                </Group>
-            </Group>
-
-            <Group
-                mt={20}
-                justify="end"
-            >
-                <Button
-                    onClick={useGlobalState.getState().onCloseSettings}
-                    color="gray"
-                >
-                    Cancel
-                </Button>
-                <Button
-                    disabled={isPending}
-                    onClick={handleSubmit(onSave)}
-                >
-                    Save
-                </Button>
-            </Group>
-        </Modal>
+                            </Flex>
+                        </Flex>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            appearance="default"
+                            onClick={() => setFalse('user settings')}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            appearance="primary"
+                            isLoading={isPending}
+                            onClick={handleSubmit(onSave)}
+                        >
+                            Save
+                        </Button>
+                    </ModalFooter>
+                </Modal>
+            )}
+        </>
     )
 }
 

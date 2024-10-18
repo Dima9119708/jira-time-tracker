@@ -1,23 +1,18 @@
 import { useRouteError } from 'react-router-dom'
 import { AxiosError } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'
-import { Alert } from '@mantine/core'
-import { IconInfoCircle } from '@tabler/icons-react'
+import SectionMessage from '@atlaskit/section-message'
 
 const ErrorBoundary = () => {
     const error = useRouteError() as AxiosError<ErrorType>
 
     return (
-        <div className="h-[100%] flex items-center justify-center">
-            <Alert
-                variant="light"
-                color="red"
-                title={`Status error - ${error.response?.status}`}
-                icon={<IconInfoCircle />}
-            >
-                {error.response?.data?.errorMessages?.join(', ') ?? JSON.stringify(error.response?.data)}
-            </Alert>
-        </div>
+        <SectionMessage
+            title="An error occurred within the application"
+            appearance="error"
+        >
+            {error.response?.data?.errorMessages?.join(', ') ?? JSON.stringify(error.response?.data)}
+        </SectionMessage>
     )
 }
 
