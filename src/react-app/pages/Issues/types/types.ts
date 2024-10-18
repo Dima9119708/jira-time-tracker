@@ -56,6 +56,10 @@ export interface IssueResponse {
                 iconUrl: string
                 name: string
             }
+            issuetype: {
+                iconUrl: string
+                name: string
+            }
             assignee: Assignee | null
             timeoriginalestimate: number
             timespent: number

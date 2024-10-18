@@ -1,6 +1,6 @@
-import { Badge } from '@mantine/core'
 import { forwardRef, Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import dayjs from 'dayjs'
+import { Box, xcss } from '@atlaskit/primitives'
 
 export interface TimerRef {
     pause: () => void
@@ -56,14 +56,18 @@ const Timer = (props: any, ref: Ref<TimerRef>) => {
     }))
 
     return (
-        <Badge
-            mb={10}
-            size="xl"
-            radius="sm"
-            variant="filled"
+        <Box
+            xcss={xcss({
+                backgroundColor: 'color.background.neutral',
+                borderRadius: 'border.radius.200',
+                textAlign: 'center',
+                font: 'font.heading.xlarge',
+                fontWeight: 'font.weight.bold',
+                color: 'color.text.accent.blue.bolder',
+            })}
         >
             {formattedDate}
-        </Badge>
+        </Box>
     )
 }
 

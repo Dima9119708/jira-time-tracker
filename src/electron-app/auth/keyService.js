@@ -36,4 +36,15 @@ module.exports = {
             })
         },
     },
+    ThemeStorage: {
+        set: (value) => {
+            initStore()
+
+            store.set('theme', value)
+        },
+        get: () => {
+            initStore()
+            return store.get('theme') || 'auto'
+        },
+    },
 }

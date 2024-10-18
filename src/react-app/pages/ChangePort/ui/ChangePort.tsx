@@ -1,12 +1,33 @@
-import { Alert, Box, Divider, Group, Input, Text, Title } from '@mantine/core'
-import { Button } from '@mantine/core'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { electron } from '../../../shared/lib/electron/electron'
 import { useEffect, useState } from 'react'
-import { IconInfoCircle } from '@tabler/icons-react'
+import { Box, Flex, Text, xcss } from '@atlaskit/primitives'
+import Heading from '@atlaskit/heading'
+import SectionMessage from '@atlaskit/section-message'
+import Textfield from '@atlaskit/textfield'
+import { ErrorMessage } from '@atlaskit/form'
+import Button from '@atlaskit/button/new'
+import { TOP_PANEL_HEIGHT } from 'react-app/widgets/TopPanel/ui/TopPanel'
 
 interface FormValues {
     post: number
+}
+
+const styles = {
+    wrap: xcss({
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: `calc(100vh - ${TOP_PANEL_HEIGHT})`,
+    }),
+    inner: xcss({
+        display: 'grid',
+        gap: 'space.150',
+        padding: 'space.200',
+        borderRadius: 'border.radius.200',
+        boxShadow: 'elevation.shadow.overflow',
+    }),
 }
 
 const ChangePort = () => {
@@ -61,67 +82,72 @@ const ChangePort = () => {
     }
 
     return (
-        <Box p={20}>
-            <Title
-                order={2}
-                mb={10}
-            >
-                Change port
-            </Title>
+        <Box xcss={styles.wrap}>
+            <Box xcss={styles.inner}>
+                <Heading size="xlarge">Change port</Heading>
 
-            <Divider my={10} />
+                {!!error && (
+                    <SectionMessage
+                        title="Error"
+                        appearance="error"
+                    >
+                        {error}
+                    </SectionMessage>
+                )}
 
-            {!!error && (
-                <Alert
-                    mb={10}
-                    variant="light"
-                    color="red"
+                <SectionMessage
                     title="Error"
-                    icon={<IconInfoCircle />}
+                    appearance="error"
                 >
                     {error}
-                </Alert>
-            )}
+                </SectionMessage>
 
-            <Group
-                mb={10}
-                wrap="nowrap"
-            >
-                <Text size="md">Set the port from 1025 to 65535</Text>
-                <Input
-                    type="number"
-                    required
-                    {...register('post', {
-                        required: 'Required',
-                        min: {
-                            message: 'Min 1025',
-                            value: 1025,
-                        },
-                        max: {
-                            message: 'Max 1025',
-                            value: 65535,
-                        },
-                    })}
-                    error={errors.post?.message}
-                />
-            </Group>
-
-            <Divider my={10} />
-
-            <Group justify="end">
-                <Button
-                    onClick={onCancel}
-                    color="gray"
+                <Flex
+                    alignItems="center"
+                    columnGap="space.100"
                 >
-                    Cancel
-                </Button>
-                <Button
-                    loading={loading}
-                    onClick={handleSubmit(onSubmit)}
+                    <Text
+                        size="large"
+                        weight="bold"
+                    >
+                        Set the port from 1025 to 65535
+                    </Text>
+
+                    <Box>
+                        <Textfield
+                            type="number"
+                            {...register('post', {
+                                required: 'Required',
+                                min: {
+                                    message: 'Min 1025',
+                                    value: 1025,
+                                },
+                                max: {
+                                    message: 'Max 1025',
+                                    value: 65535,
+                                },
+                            })}
+                            min={1025}
+                            max={65535}
+                        />
+                        {errors.post?.message && <ErrorMessage>{errors.post?.message}</ErrorMessage>}
+                    </Box>
+                </Flex>
+
+                <Flex
+                    columnGap="space.100"
+                    justifyContent="end"
                 >
-                    OK
-                </Button>
-            </Group>
+                    <Button onClick={onCancel}>Cancel</Button>
+                    <Button
+                        isLoading={loading}
+                        appearance="primary"
+                        onClick={handleSubmit(onSubmit)}
+                    >
+                        Save
+                    </Button>
+                </Flex>
+            </Box>
         </Box>
     )
 }

@@ -1,9 +1,9 @@
 import { useInView } from 'react-intersection-observer'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Button } from '@mantine/core'
 import { memo, useEffect } from 'react'
-import { cn } from '../../../shared/lib/classNames '
 import { queryGetIssues } from '../model/queryOptions'
+import Button from '@atlaskit/button/new'
+import { Box, xcss } from '@atlaskit/primitives'
 
 const LoadMore = () => {
     const { ref, inView } = useInView()
@@ -17,20 +17,21 @@ const LoadMore = () => {
 
     return (
         !isLoading && (
-            <Button
-                variant="light"
-                color="blue"
-                onClick={() => fetchNextPage()}
-                fullWidth
-            >
-                {isFetchingNextPage ? 'Loading more...' : hasNextPage ? 'Load More' : 'Nothing more to load'}
-                <span
-                    ref={ref}
-                    className={cn('invisible', {
-                        hidden: isFetchingNextPage,
-                    })}
-                />
-            </Button>
+            <Box xcss={xcss({ marginTop: 'space.400' })}>
+                <Button
+                    appearance={isFetchingNextPage ? 'default' : hasNextPage ? 'primary' : 'default'}
+                    onClick={() => fetchNextPage()}
+                    shouldFitContainer
+                >
+                    {isFetchingNextPage ? 'Loading more...' : hasNextPage ? 'Load More' : 'Nothing more to load'}
+                    <Box
+                        ref={ref}
+                        xcss={xcss({
+                            display: isFetchingNextPage ? 'none' : 'block',
+                        })}
+                    />
+                </Button>
+            </Box>
         )
     )
 }

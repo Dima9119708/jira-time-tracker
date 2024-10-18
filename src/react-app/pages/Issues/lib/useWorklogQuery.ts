@@ -6,10 +6,9 @@ import { produce } from 'immer'
 import { IssuesTrackingResponse, MySelfResponse, UseWorklogQuery, WorklogIssueMutation, WorklogResponse } from '../types/types'
 import { AxiosError, AxiosResponse } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'
-import { notifications } from '@mantine/notifications'
-import { NOTIFICATION_VARIANT } from '../../../shared/const/notifications'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { TimerRef } from '../../../features/Timer/ui/Timer'
+import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 
 export const useWorklogQuery = (props: UseWorklogQuery) => {
     const { taskId } = props
@@ -17,6 +16,8 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
     const queryClient = useQueryClient()
 
     const timerRef = useRef<TimerRef>(null)
+
+    const notify = useNotifications()
 
     const settingTimeSecond = useGlobalState((state) => state.settings.timeLoggingInterval.second)
     const isSystemIdle = useGlobalState((state) => state.isSystemIdle)
@@ -49,10 +50,9 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
         onError: (error, variables, context) => {
             queryClient.setQueryData(['tasks tracking'], context!.oldState)
 
-            notifications.show({
+            notify.error({
                 title: `Error worklog issue`,
-                message: JSON.stringify(error.response?.data),
-                ...NOTIFICATION_VARIANT.ERROR,
+                description: JSON.stringify(error.response?.data),
             })
         },
     })

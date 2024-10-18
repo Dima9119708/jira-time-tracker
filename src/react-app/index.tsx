@@ -1,44 +1,54 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
+
+import '@atlaskit/css-reset'
+
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import isToday from 'dayjs/plugin/isToday'
-import './app/styles/index.css'
 import QueryClientProvide from './app/QueryClientProvide/QueryClientProvide'
-import ThemeProvider from './app/Theme/Theme'
 import { RouterProvider } from 'react-router-dom'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import './app/AxiosInterceptorsGlobal/axiosInterceptorsGlobal'
 import { router } from './app/router/router'
-import { Loader } from '@mantine/core'
-import { Notifications } from '@mantine/notifications'
+
+import AppProvider from '@atlaskit/app-provider'
+import { FlagsProvider } from '@atlaskit/flag'
+import { electron } from 'react-app/shared/lib/electron/electron'
+import Spinner from '@atlaskit/spinner'
+import { Box, xcss } from '@atlaskit/primitives'
 
 dayjs.extend(duration)
 dayjs.extend(isToday)
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
+const DEFAULT_COLOR_MODE = electron((methods) => methods.ipcRenderer.sendSync('GET_THEME'))
+
 root.render(
     <QueryClientProvide>
-        <ThemeProvider>
-            <Notifications
-                autoClose={1.8e6}
-                position="bottom-left"
-                limit={3}
-            />
-            <RouterProvider
-                router={router}
-                fallbackElement={
-                    <div className="h-[100vh] flex-center">
-                        <Loader />
-                    </div>
-                }
-            />
-        </ThemeProvider>
+        <AppProvider defaultColorMode={DEFAULT_COLOR_MODE}>
+            <FlagsProvider>
+                <RouterProvider
+                    router={router}
+                    fallbackElement={
+                        <Box
+                            xcss={xcss({
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                height: '100vh',
+                            })}
+                        >
+                            <Spinner />
+                        </Box>
+                    }
+                />
 
-        <ReactQueryDevtools
-            initialIsOpen={false}
-            buttonPosition={'bottom-left'}
-        />
+                <ReactQueryDevtools
+                    initialIsOpen={false}
+                    buttonPosition={'bottom-left'}
+                />
+            </FlagsProvider>
+        </AppProvider>
     </QueryClientProvide>
 )

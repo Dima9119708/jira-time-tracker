@@ -4,6 +4,7 @@ import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { loaderAuth } from '../../features/AuthByEmailAndToken'
 import LayoutRoot from '../LayoutRoot/LayoutRoot'
 import { ChangePort } from '../../pages/ChangePort'
+import { TopPanel } from 'react-app/widgets/TopPanel'
 
 const createRouter = (routes: RouteObject[]) => {
     return __BUILD_ENV__ === 'browser'
@@ -14,44 +15,50 @@ const createRouter = (routes: RouteObject[]) => {
 export const router = createRouter([
     {
         path: '/',
-        Component: LayoutRoot,
-        loader: loaderAuth(queryClient),
-        shouldRevalidate: () => false,
+        Component: TopPanel,
         children: [
             {
-                index: true,
-                path: 'issues',
+                path: '/',
+                Component: LayoutRoot,
+                loader: loaderAuth(queryClient),
                 shouldRevalidate: () => false,
-                lazy: async () => {
-                    const { loaderIssues, IssuesPage, ErrorBoundary } = await import('../../pages/Issues')
+                children: [
+                    {
+                        index: true,
+                        path: 'issues',
+                        shouldRevalidate: () => false,
+                        lazy: async () => {
+                            const { loaderIssues, IssuesPage, ErrorBoundary } = await import('../../pages/Issues')
 
-                    return {
-                        loader: loaderIssues,
-                        Component: IssuesPage,
-                        errorElement: <ErrorBoundary />,
-                    }
-                },
+                            return {
+                                loader: loaderIssues,
+                                Component: IssuesPage,
+                                errorElement: <ErrorBoundary />,
+                            }
+                        },
+                    },
+                    {
+                        path: '/',
+                        element: <Navigate to="issues" />,
+                    },
+                    {
+                        path: '*',
+                        element: <Navigate to="issues" />,
+                    },
+                ],
             },
             {
-                path: '/',
-                element: <Navigate to="issues" />,
+                path: `auth`,
+                Component: AuthPage,
+            },
+            {
+                path: `component-change-port`,
+                Component: ChangePort,
             },
             {
                 path: '*',
-                element: <Navigate to="issues" />,
+                element: <div>Not Found</div>,
             },
         ],
-    },
-    {
-        path: `auth`,
-        Component: AuthPage,
-    },
-    {
-        path: `component-change-port`,
-        Component: ChangePort,
-    },
-    {
-        path: '*',
-        element: <div>Not Found</div>,
     },
 ])

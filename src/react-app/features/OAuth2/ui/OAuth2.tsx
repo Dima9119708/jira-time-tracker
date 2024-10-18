@@ -1,14 +1,41 @@
-import { Button, LoadingOverlay } from '@mantine/core'
-import IconAtlassianJira from '../../../shared/assets/images/atlassian_jira.svg'
 import { electron } from '../../../shared/lib/electron/electron'
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { useNavigate } from 'react-router-dom'
-import { OAuth2Props } from '../types/types'
+import Button, { IconButton } from '@atlaskit/button/new'
+import Spinner from '@atlaskit/spinner'
+import { Box, Flex, xcss, Text } from '@atlaskit/primitives'
 
-const OAuth2 = (props: OAuth2Props) => {
-    const { className } = props
+import { JiraLogo } from '@atlaskit/logo'
+
+const styles = {
+    wrap: xcss({
+        marginTop: 'space.200',
+        width: '100%',
+    }),
+    loading: xcss({
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        right: '0',
+        bottom: '0',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+    }),
+    loading_overlay: xcss({
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        right: '0',
+        bottom: '0',
+        backgroundColor: 'color.background.accent.gray.subtler',
+        opacity: 'opacity.loading',
+    }),
+}
+
+const OAuth2 = () => {
     const [loading, setLoading] = useState(false)
 
     const navigate = useNavigate()
@@ -58,19 +85,31 @@ const OAuth2 = (props: OAuth2Props) => {
     }, [])
 
     return (
-        <>
-            <LoadingOverlay visible={loading} />
+        <Box xcss={styles.wrap}>
+            {loading && (
+                <Box xcss={styles.loading}>
+                    <Box xcss={styles.loading_overlay} />
+                    <Spinner size="xlarge" />
+                </Box>
+            )}
             <Button
                 onClick={() => {
                     electron((methods) => methods.ipcRenderer.send('OPEN_OAuth2'))
                 }}
-                className={className}
-                fullWidth
-                variant="outline"
+                shouldFitContainer
             >
-                <IconAtlassianJira />
+                <Flex
+                    justifyContent="center"
+                    alignItems="center"
+                    columnGap="space.025"
+                >
+                    <JiraLogo
+                        appearance="brand"
+                        size="small"
+                    />
+                </Flex>
             </Button>
-        </>
+        </Box>
     )
 }
 

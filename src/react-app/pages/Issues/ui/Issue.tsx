@@ -1,6 +1,4 @@
-import { Badge, Button, Card as Mantine_Card, Group, Image, Title } from '@mantine/core'
 import React, { memo } from 'react'
-import { IconPlayerPlayFilled, IconUser, IconUserSquare } from '@tabler/icons-react'
 import { useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../lib/dateHelper'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
@@ -8,6 +6,12 @@ import { produce } from 'immer'
 import { TaskProps, IssueResponse, IssuesTrackingResponse } from '../types/types'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
+import { Box, Flex, xcss, Text } from '@atlaskit/primitives'
+import Heading from '@atlaskit/heading'
+import Badge from '@atlaskit/badge'
+import Image from '@atlaskit/image'
+import { IconButton } from '@atlaskit/button/new'
+import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
 
 const Issue = (props: TaskProps) => {
     const { fields, id, idxPage, idxIssue, issueKey } = props
@@ -34,64 +38,104 @@ const Issue = (props: TaskProps) => {
     }
 
     return (
-        <Mantine_Card
-            key={id}
-            shadow="sm"
-            radius="md"
-            mb="sm"
-            withBorder
+        <Box
+            xcss={xcss({
+                display: 'flex',
+                flexDirection: 'column',
+                rowGap: 'space.200',
+                padding: 'space.200',
+                borderRadius: 'border.radius.200',
+                boxShadow: 'elevation.shadow.overflow',
+                backgroundColor: 'color.background.input',
+                marginBottom: 'space.250',
+            })}
         >
-            <Group
-                mb={10}
-                justify="space-between"
+            <Flex justifyContent="space-between">
+                <Heading size="medium">{fields.summary}</Heading>
+
+                <Badge appearance="primary">
+                    <Box
+                        as="span"
+                        xcss={xcss({ padding: 'space.050' })}
+                    >
+                        <Box
+                            as="span"
+                            xcss={xcss({ marginRight: 'space.075' })}
+                        >
+                            <Text weight="bold">{secondsToUIFormat(fields.timespent)}</Text>
+                        </Box>
+                        <Box
+                            as="span"
+                            xcss={xcss({ marginRight: 'space.075' })}
+                        >
+                            <Text weight="bold">/</Text>
+                        </Box>
+                        <Box as="span">
+                            <Text weight="bold">{secondsToUIFormat(fields.timeoriginalestimate)}</Text>
+                        </Box>
+                    </Box>
+                </Badge>
+            </Flex>
+
+            <Flex
+                gap="space.100"
+                alignItems="center"
+                wrap="wrap"
             >
-                <Title order={5}>{fields.summary}</Title>
-
-                <Badge
-                    color="blue"
-                    className="flex-row"
-                >
-                    <span className="mr-[0.5rem]">{secondsToUIFormat(fields.timespent)}</span>
-                    <span className="mr-[0.5rem]">/</span>
-                    <span>{secondsToUIFormat(fields.timeoriginalestimate)}</span>
-                </Badge>
-            </Group>
-
-            <Group mb={10}>
-                <Badge
-                    size="md"
-                    variant="light"
-                    leftSection={
+                <Badge appearance="default">
+                    <Flex xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', alignItems: 'center', columnGap: 'space.075' })}>
                         <Image
-                            height={18}
-                            width={18}
-                            loading="lazy"
-                            className="rounded"
                             src={fields.project.avatarUrls['32x32']}
+                            height="15px"
+                            width="15px"
                         />
-                    }
-                >
-                    Project: {fields.project.name}
+                        <Text
+                            weight="bold"
+                            size="small"
+                        >
+                            Project: {fields.project.name}
+                        </Text>
+                    </Flex>
                 </Badge>
-                <Badge
-                    variant="light"
-                    leftSection={
-                        <Image
-                            height={18}
-                            width={18}
-                            loading="lazy"
-                            className="rounded"
-                            src={fields.priority.iconUrl}
-                        />
-                    }
-                >
-                    priority: {fields.priority.name}
-                </Badge>
-                <Badge variant="light">key: {issueKey}</Badge>
-            </Group>
 
-            <Group justify="space-between">
-                <Group>
+                <Badge appearance="default">
+                    <Flex xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}>
+                        <Image
+                            src={fields.priority.iconUrl}
+                            height="15px"
+                            width="15px"
+                        />
+                        <Text
+                            weight="bold"
+                            size="small"
+                        >
+                            priority: {fields.priority.name}
+                        </Text>
+                    </Flex>
+                </Badge>
+
+                <Badge appearance="default">
+                    <Flex xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}>
+                        <Image
+                            src={fields.issuetype.iconUrl}
+                            height="15px"
+                            width="15px"
+                        />
+                        <Text
+                            weight="bold"
+                            size="small"
+                        >
+                            {fields.issuetype.name} ({issueKey})
+                        </Text>
+                    </Flex>
+                </Badge>
+            </Flex>
+
+            <Flex
+                justifyContent="space-between"
+                columnGap="space.100"
+            >
+                <Flex columnGap="space.200">
                     <ChangeStatusIssue
                         issueId={id}
                         issueName={fields.summary}
@@ -99,14 +143,8 @@ const Issue = (props: TaskProps) => {
                         idxPage={idxPage}
                         idxIssue={idxIssue}
                         queryKey="tasks"
-                    >
-                        <Button
-                            variant="outline"
-                            size="xs"
-                        >
-                            {fields.status.name}
-                        </Button>
-                    </ChangeStatusIssue>
+                        trigger={fields.status.name}
+                    />
 
                     <ChangeAssigneeIssue
                         assignee={fields.assignee}
@@ -115,18 +153,8 @@ const Issue = (props: TaskProps) => {
                         idxPage={idxPage}
                         idxIssue={idxIssue}
                         queryKey="tasks"
-                    >
-                        {({ name, ImageComponent }) => (
-                            <Button
-                                variant="outline"
-                                size="xs"
-                                leftSection={ImageComponent}
-                            >
-                                {name}
-                            </Button>
-                        )}
-                    </ChangeAssigneeIssue>
-                </Group>
+                    />
+                </Flex>
 
                 <ChangeStatusIssue
                     issueId={id}
@@ -138,14 +166,18 @@ const Issue = (props: TaskProps) => {
                     position="left"
                     onChange={() => onPlayTracking()}
                     disabled={fields.status.statusCategory.key === 'indeterminate'}
-                >
-                    <IconPlayerPlayFilled
-                        className="cursor-pointer [&_path]:fill-[var(--mantine-color-violet-5)]"
-                        {...(fields.status.statusCategory.key === 'indeterminate' && { onClick: onPlayTracking })}
-                    />
-                </ChangeStatusIssue>
-            </Group>
-        </Mantine_Card>
+                    trigger={(triggerButtonProps) => (
+                        <IconButton
+                            {...triggerButtonProps}
+                            ref={triggerButtonProps.triggerRef}
+                            icon={VidPlayIcon}
+                            label="Play"
+                            {...(fields.status.statusCategory.key === 'indeterminate' && { onClick: onPlayTracking })}
+                        />
+                    )}
+                />
+            </Flex>
+        </Box>
     )
 }
 

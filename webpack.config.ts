@@ -95,6 +95,7 @@ export default (env: IBuildEnv) => {
             new webpack.ProvidePlugin({
                 Buffer: ['buffer', 'Buffer'],
             }),
+            // @ts-ignore
             new Dotenv({
                 path: isDev ? './.env' : './.env.production',
             }),

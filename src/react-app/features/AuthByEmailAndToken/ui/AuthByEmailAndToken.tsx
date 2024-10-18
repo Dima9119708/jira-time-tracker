@@ -1,13 +1,26 @@
-import { Button, Checkbox, PasswordInput, TextInput, Text, Group } from '@mantine/core'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { BaseAuthFormFields } from '../types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { electron } from '../../../shared/lib/electron/electron'
-import { IconHelp } from '@tabler/icons-react'
 import ModalHelp from './ModalHelp'
 import { useHelpModal } from '../lib/useHelpModal'
+import { Box, Stack, xcss } from '@atlaskit/primitives'
+import { Field } from '@atlaskit/form'
+import { Checkbox } from '@atlaskit/checkbox'
+import Textfield from '@atlaskit/textfield'
+import QuestionCircleIcon from '@atlaskit/icon/glyph/question-circle'
+import Button from '@atlaskit/button/new'
+
+const styles = {
+    wrap: xcss({
+        width: '100%',
+    }),
+    checkbox_wrap: xcss({
+        marginTop: 'space.050',
+    }),
+}
 
 const AuthByEmailAndToken = () => {
     const navigate = useNavigate()
@@ -68,66 +81,82 @@ const AuthByEmailAndToken = () => {
     }
 
     return (
-        <>
-            <TextInput
-                {...register('jiraSubDomain')}
+        <Box xcss={styles.wrap}>
+            <Field
                 label="Server URL"
-                rightSection={
-                    <IconHelp
-                        className="cursor-pointer"
-                        onClick={() => useHelpModal.getState().onOpen('your-domain')}
-                    />
-                }
-                placeholder="https://your-domain.atlassian.net/"
-                error={errors.jiraSubDomain?.message}
-                required
-                mb="xs"
-            />
-            <TextInput
-                {...register('email')}
-                rightSection={
-                    <IconHelp
-                        className="cursor-pointer"
-                        onClick={() => useHelpModal.getState().onOpen('email')}
-                    />
-                }
-                label="Email"
-                placeholder="Email"
-                error={errors.email?.message}
-                required
-                mb="xs"
-            />
-            <PasswordInput
-                {...register('apiToken')}
-                rightSection={
-                    <IconHelp
-                        className="cursor-pointer"
-                        onClick={() => useHelpModal.getState().onOpen('apiToken')}
-                    />
-                }
-                label="API token"
-                placeholder="Your API token"
-                error={errors.apiToken?.message}
-                required
-                mb="xs"
-            />
-
-            <Checkbox
-                {...register('remember')}
-                label="Remember"
-                mb="lg"
-            />
-
-            <Button
-                loading={isPending}
-                onClick={handleSubmit(onSubmit)}
-                fullWidth
+                isRequired
+                name="jiraSubDomain"
             >
-                Sign in
-            </Button>
+                {() => (
+                    <Textfield
+                        placeholder="https://your-domain.atlassian.net/"
+                        {...register('jiraSubDomain')}
+                        elemAfterInput={
+                            <div onClick={() => useHelpModal.getState().onOpen('your-domain')}>
+                                <QuestionCircleIcon label="help" />
+                            </div>
+                        }
+                    />
+                )}
+            </Field>
+
+            <Field
+                label="Email"
+                isRequired
+                name="email"
+            >
+                {() => (
+                    <Textfield
+                        placeholder="Email"
+                        {...register('email')}
+                        elemAfterInput={
+                            <div onClick={() => useHelpModal.getState().onOpen('email')}>
+                                <QuestionCircleIcon label="help" />
+                            </div>
+                        }
+                    />
+                )}
+            </Field>
+
+            <Field
+                label="API token"
+                isRequired
+                name="apiToken"
+            >
+                {() => (
+                    <Textfield
+                        placeholder="Your API token"
+                        {...register('apiToken')}
+                        elemAfterInput={
+                            <div onClick={() => useHelpModal.getState().onOpen('apiToken')}>
+                                <QuestionCircleIcon label="help" />
+                            </div>
+                        }
+                    />
+                )}
+            </Field>
+
+            <Stack space="space.200">
+                <Box xcss={styles.checkbox_wrap}>
+                    <Checkbox
+                        {...register('remember')}
+                        label="Remember"
+                        name="remember"
+                    />
+                </Box>
+
+                <Button
+                    appearance="primary"
+                    isLoading={isPending}
+                    onClick={handleSubmit(onSubmit)}
+                    shouldFitContainer
+                >
+                    Sign in
+                </Button>
+            </Stack>
 
             <ModalHelp />
-        </>
+        </Box>
     )
 }
 

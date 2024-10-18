@@ -1,8 +1,6 @@
 import { axiosInstance } from '../../../shared/config/api/api'
 import { QueryClient } from '@tanstack/react-query'
 import { redirect } from 'react-router-dom'
-import { notifications } from '@mantine/notifications'
-import { AxiosError } from 'axios'
 import { electron } from '../../../shared/lib/electron/electron'
 
 export const loaderAuth = (queryClient: QueryClient) => async () => {
