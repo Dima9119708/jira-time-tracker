@@ -138,11 +138,16 @@ const IssueTracking = (props: TaskProps) => {
                         <Flex
                             xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}
                         >
+                            <Image
+                                src={fields.issuetype.iconUrl}
+                                height="15px"
+                                width="15px"
+                            />
                             <Text
                                 weight="bold"
                                 size="small"
                             >
-                                key: {issueKey}
+                                {fields.issuetype.name} ({issueKey})
                             </Text>
                         </Flex>
                     </Badge>
