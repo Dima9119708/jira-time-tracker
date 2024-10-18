@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkjira_time_tracker=self.webpackChunkjira_time_tracker||[]).push([[550],{19746:(t,a,e)=>{e.r(a),e.d(a,{default:()=>d});const d='\nhtml[data-color-mode="light"][data-theme~="light:light"],\nhtml[data-color-mode="dark"][data-theme~="dark:light"] {\n  color-scheme: light;\n  --ds-background-disabled: #28311B;\n}\n'}}]);
