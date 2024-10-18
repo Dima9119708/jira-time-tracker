@@ -14,7 +14,9 @@ import SignOutIcon from '@atlaskit/icon/glyph/sign-out'
 import { TOP_PANEL_HEIGHT } from 'react-app/widgets/TopPanel/ui/TopPanel'
 import { WatchController } from 'use-global-boolean'
 const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
+const Timesheet = lazy(() => import('../../widgets/Timesheet'))
 import { ModalTransition } from '@atlaskit/modal-dialog'
+import RecentIcon from '@atlaskit/icon/glyph/recent'
 
 const styles = {
     app_wrap: xcss({}),
@@ -65,6 +67,17 @@ const LayoutRoot = () => {
                             {({ globalMethods }) => {
                                 return (
                                     <IconButton
+                                        icon={RecentIcon}
+                                        label="timesheet"
+                                        onClick={() => globalMethods.setTrue('timesheet')}
+                                    />
+                                )
+                            }}
+                        </WatchController>
+                        <WatchController>
+                            {({ globalMethods }) => {
+                                return (
+                                    <IconButton
                                         icon={SettingsIcon}
                                         label="Settings"
                                         onClick={() => globalMethods.setTrue('user settings')}
@@ -95,6 +108,24 @@ const LayoutRoot = () => {
                             {open && (
                                 <Suspense>
                                     <Settings />
+                                </Suspense>
+                            )}
+                        </ModalTransition>
+                    )
+                }}
+            </WatchController>
+            <WatchController
+                name="timesheet"
+                initialBoolean
+            >
+                {({ localState }) => {
+                    const [open] = localState
+
+                    return (
+                        <ModalTransition>
+                            {open && (
+                                <Suspense>
+                                    <Timesheet />
                                 </Suspense>
                             )}
                         </ModalTransition>

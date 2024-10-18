@@ -13,7 +13,7 @@ const ControllerAuth = require('./auth/ControllerAuth')
 
 const { server } = require('./server')
 const { AUTH_DATA } = require('./constans')
-const { AuthStorage, ThemeStorage } = require('./auth/keyService')
+const { AuthStorage, ThemeStorage, ZoomStorage } = require('./auth/keyService')
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -69,6 +69,8 @@ const createChangePort = () => {
 
         mainWindow.webContents.on('did-finish-load', () => {
             mainWindow.setTitle('Time Tracking')
+
+            mainWindow.webContents.setZoomFactor(3.0)
         })
 
         if (isProd) {
@@ -107,6 +109,15 @@ const createMainWindow = (port) => {
 
     ipcMain.on('PORT', (event) => {
         event.returnValue = port
+    })
+
+    ipcMain.on('GET_ZOOM', (event) => {
+        event.returnValue = ZoomStorage.get()
+    })
+
+    ipcMain.on('SET_ZOOM', (event, zoom) => {
+        ZoomStorage.set(zoom)
+        mainWindow.webContents.setZoomFactor(zoom)
     })
 
     powerMonitor.on('suspend', () => {
@@ -216,4 +227,10 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit()
     }
+})
+
+app.on('web-contents-created', (event, contents) => {
+    contents.on('did-finish-load', () => {
+        contents.setZoomFactor(ZoomStorage.get())
+    })
 })
