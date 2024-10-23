@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
-import AssignableIssue from '../../../entities/AssignableIssue/ui/AssignableIssue'
+import AssignableIssue from 'react-app/entities/UserSearch/ui/AssignableIssue'
 import { Assignee, IssueResponse, IssuesTrackingResponse } from '../../../pages/Issues/types/types'
 import { AxiosError, AxiosResponse } from 'axios'
 import { ErrorType } from '../../../shared/types/jiraTypes'

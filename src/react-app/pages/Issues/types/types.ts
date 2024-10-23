@@ -1,5 +1,6 @@
 export interface ConfigurationTimeTrackingOptions {
     workingHoursPerDay: number
+    workingDaysPerWeek: number
 }
 
 export interface Filters {
@@ -60,9 +61,11 @@ export interface IssueResponse {
                 iconUrl: string
                 name: string
             }
+            created: string
             assignee: Assignee | null
             timeoriginalestimate: number
             timespent: number
+            worklog: WorklogResponse
         }
     }>
     maxResults: number
@@ -80,6 +83,7 @@ export interface TaskProps {
     id: IssueResponse['issues'][number]['id']
     issueKey: IssueResponse['issues'][number]['key']
     fields: Issue['fields']
+
     idxPage?: number
     idxIssue: number
 }
@@ -88,14 +92,35 @@ export interface UseWorklogQuery {
     taskId: string
 }
 
+export interface WorklogComment {
+    comment?: {
+        type: 'doc'
+        version: 1
+        content: [
+            {
+                type: 'paragraph'
+                content: [
+                    {
+                        type: 'text'
+                        text: string
+                    },
+                ]
+            },
+        ]
+    }
+}
+
 export interface WorklogResponse {
     id: string
     worklogs: Array<{
         id: string
-        author: { accountId: string }
+        author: Assignee
         timeSpent: string
         timeSpentSeconds: number
         started: string
+        updated: string
+        updateAuthor: Assignee
+        comment?: WorklogComment['comment']
     }>
 }
 
@@ -104,4 +129,12 @@ export interface MySelfResponse {
     id: string
 }
 
-export type WorklogIssueMutation = { taskId: string; timeSpentSeconds: number; id?: string }
+export interface WorklogIssueMutation extends WorklogComment {
+    taskId: string
+    timeSpentSeconds?: number
+    id?: string
+    started?: string
+    timeSpent?: string
+}
+
+export interface WorklogIssueDelete extends Required<Pick<WorklogIssueMutation, 'id' | 'taskId'>> {}

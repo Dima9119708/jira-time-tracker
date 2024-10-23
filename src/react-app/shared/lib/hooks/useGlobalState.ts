@@ -1,6 +1,7 @@
 import { createStore } from '../../config/store/store'
 import { ConfigurationTimeTrackingOptions } from '../../../pages/Issues/types/types'
 import deepmerge from '../utils/deepMerge'
+import { JQLBasic } from 'react-app/widgets/JQLBuilderBasic/ui/JQLBuilderBasicForm'
 
 type Unit = { label: 'Minutes' | 'Hours'; value: 'minutes' | 'hours' }
 
@@ -9,6 +10,8 @@ export interface UseGlobalState {
     jql: string
     isSystemIdle: boolean
     settings: {
+        jqlUISearchModeSwitcher: 'basic' | 'jql'
+        jqlBasic?: JQLBasic
         autoStart: boolean
         timeLoggingInterval: {
             unit: Unit
@@ -30,7 +33,8 @@ export interface UseGlobalState {
             second: number
         }
     }
-    workHoursPerWeek: ConfigurationTimeTrackingOptions['workingHoursPerDay']
+    workingHoursPerDay: ConfigurationTimeTrackingOptions['workingHoursPerDay']
+    workingDaysPerWeek: ConfigurationTimeTrackingOptions['workingDaysPerWeek']
     issueIdsSearchParams: {
         type: 'add' | 'delete' | null
         value: string
@@ -38,7 +42,8 @@ export interface UseGlobalState {
     }
     setFilterId: (id: string) => void
     parseAndSaveSetting: (string: string) => void
-    setWorkHoursPerWeek: (hours: UseGlobalState['workHoursPerWeek']) => void
+    setWorkingHoursPerWeek: (hours: UseGlobalState['workingHoursPerDay']) => void
+    setWorkingDaysPerWeek: (hours: UseGlobalState['workingDaysPerWeek']) => void
     updateJQL: (jql: string) => void
     changeIssueIdsSearchParams: (
         type: UseGlobalState['issueIdsSearchParams']['type'],
@@ -46,8 +51,11 @@ export interface UseGlobalState {
     ) => Promise<void>
     getIssueIdsSearchParams: () => string
     setSystemIdle: (bool: boolean) => void
-    setSettings: (settings: UseGlobalState['settings']) => void
+    setSettings: (settings: Partial<UseGlobalState['settings']>) => void
     setIssueIdsSearchParams: (ids: string) => void
+    setSearchModeSwitcherBasic: () => void
+    setSearchModeSwitcherJQL: () => void
+    getSettingsString: () => string
 }
 
 export const TIME_OPTIONS: Unit[] = [
@@ -60,9 +68,19 @@ export const useGlobalState = createStore<UseGlobalState>(
         filterId: '',
         jql: '',
         isSystemIdle: false,
-        workHoursPerWeek: 8,
+        workingHoursPerDay: 8,
+        workingDaysPerWeek: 5,
         openSettings: false,
         settings: {
+            jqlUISearchModeSwitcher: 'basic',
+            jqlBasic: {
+                assignees: [],
+                projects: [],
+                statuses: [],
+                priority: [],
+                prioritySort: '',
+                createdSort: '',
+            },
             autoStart: true,
             timeLoggingInterval: {
                 unit: TIME_OPTIONS[0],
@@ -91,7 +109,7 @@ export const useGlobalState = createStore<UseGlobalState>(
         },
         setSettings: (settings) => {
             set((draft) => {
-                draft.settings = settings
+                draft.settings = deepmerge(get().settings, settings)
             })
         },
         setSystemIdle: (bool) => {
@@ -112,9 +130,14 @@ export const useGlobalState = createStore<UseGlobalState>(
         getIssueIdsSearchParams: () => {
             return get().issueIdsSearchParams.currentParams
         },
-        setWorkHoursPerWeek: (hours) => {
+        setWorkingHoursPerWeek: (hours) => {
             set((draft) => {
-                draft.workHoursPerWeek = hours
+                draft.workingHoursPerDay = hours
+            })
+        },
+        setWorkingDaysPerWeek: (hours) => {
+            set((draft) => {
+                draft.workingDaysPerWeek = hours
             })
         },
         parseAndSaveSetting: (string) => {
@@ -150,6 +173,17 @@ export const useGlobalState = createStore<UseGlobalState>(
                 state.jql = jql
             })
         },
+        setSearchModeSwitcherBasic: () => {
+            set((state) => {
+                state.settings.jqlUISearchModeSwitcher = 'basic'
+            })
+        },
+        setSearchModeSwitcherJQL: () => {
+            set((state) => {
+                state.settings.jqlUISearchModeSwitcher = 'jql'
+            })
+        },
+        getSettingsString: () => JSON.stringify(get().settings),
     }),
     { name: 'Global Store' }
 )

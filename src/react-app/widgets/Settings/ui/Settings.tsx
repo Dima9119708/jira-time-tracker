@@ -102,7 +102,7 @@ const Settings = () => {
     })
 
     const onSave: SubmitHandler<FormValues> = (data) => {
-        const newSettings: UseGlobalState['settings'] = {
+        const newSettings: Partial<UseGlobalState['settings']> = {
             autoStart: data.autoStart,
             timeLoggingInterval: {
                 unit: data.timeLoggingInterval.unit,
@@ -133,7 +133,7 @@ const Settings = () => {
         }
 
         useGlobalState.getState().setSettings(newSettings)
-        mutate(JSON.stringify(newSettings))
+        mutate(useGlobalState.getState().getSettingsString())
     }
 
     return (

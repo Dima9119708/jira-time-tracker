@@ -12,10 +12,17 @@ import Badge from '@atlaskit/badge'
 import Image from '@atlaskit/image'
 import { IconButton } from '@atlaskit/button/new'
 import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
+import { LogTimeButton, LogTimeDialog } from 'react-app/features/LogTime'
+import { WatchController } from 'use-global-boolean'
+import { ModalTransition } from '@atlaskit/modal-dialog'
+import dayjs from 'dayjs'
+import { DATE_FORMAT } from 'react-app/shared/const'
 
 const Issue = (props: TaskProps) => {
     const { fields, id, idxPage, idxIssue, issueKey } = props
     const queryClient = useQueryClient()
+
+    const uniqueNameBoolean = `log time issue ${id}`
 
     const onPlayTracking = () => {
         useGlobalState.getState().changeIssueIdsSearchParams('add', id)
@@ -129,6 +136,17 @@ const Issue = (props: TaskProps) => {
                         </Text>
                     </Flex>
                 </Badge>
+
+                <Badge appearance="default">
+                    <Flex xcss={xcss({ textTransform: 'uppercase' })}>
+                        <Text
+                            weight="bold"
+                            size="small"
+                        >
+                            created: {dayjs(fields.created).format(`${DATE_FORMAT} HH:mm:ss`)}
+                        </Text>
+                    </Flex>
+                </Badge>
             </Flex>
 
             <Flex
@@ -154,6 +172,11 @@ const Issue = (props: TaskProps) => {
                         idxIssue={idxIssue}
                         queryKey="tasks"
                     />
+
+                    <LogTimeButton
+                        uniqueNameBoolean={uniqueNameBoolean}
+                        issueId={id}
+                    />
                 </Flex>
 
                 <ChangeStatusIssue
@@ -177,6 +200,24 @@ const Issue = (props: TaskProps) => {
                     )}
                 />
             </Flex>
+
+            <WatchController name={uniqueNameBoolean}>
+                {({ localState }) => {
+                    const [open] = localState
+
+                    return (
+                        <ModalTransition>
+                            {open && (
+                                <LogTimeDialog
+                                    issueId={id}
+                                    uniqueNameBoolean={uniqueNameBoolean}
+                                    queryKey="tasks"
+                                />
+                            )}
+                        </ModalTransition>
+                    )
+                }}
+            </WatchController>
         </Box>
     )
 }

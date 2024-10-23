@@ -18,12 +18,13 @@ const JQLEditor = (props: FilterProps) => {
 
     const notify = useNotifications()
 
-    const { mutate, isPending } = useMutation<AxiosResponse<FilterDetails>, AxiosError<ErrorType>>({
+    const { mutate, isPending } = useMutation<AxiosResponse<FilterDetails>, AxiosError<ErrorType>, void, Function>({
         mutationFn: () =>
             axiosInstance.put<FilterDetails>(
                 '/filter-details',
                 {
                     jql: useGlobalState.getState().jql,
+                    description: useGlobalState.getState().getSettingsString(),
                 },
                 {
                     params: {
@@ -32,14 +33,12 @@ const JQLEditor = (props: FilterProps) => {
                 }
             ),
         onMutate: () => {
-            const dismissFn = notify.loading({
+            return notify.loading({
                 title: 'Searching',
             })
-
-            queryClient
-                .invalidateQueries({ queryKey: ['tasks'] })
-                .then(dismissFn)
-                .catch(dismissFn)
+        },
+        onSuccess: (data, variables, context) => {
+            context?.()
         },
         onError: (error) => {
             notify.error({

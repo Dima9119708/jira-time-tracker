@@ -2,17 +2,45 @@ import LoadMore from './LoadMore'
 import { Filter } from '../../../features/Filter'
 import IssuesTracking from './IssuesTracking'
 import Issues from './Issues'
-import { Box, xcss } from '@atlaskit/primitives'
+import { Flex, xcss } from '@atlaskit/primitives'
 import Heading from '@atlaskit/heading'
+import { JQLBuilderBasicForm } from 'react-app/widgets/JQLBuilderBasic'
+import { Radio } from '@atlaskit/radio'
+import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 
 const IssuesPage = () => {
+    const jqlUISearchModeSwitcher = useGlobalState((state) => state.settings.jqlUISearchModeSwitcher)
+
     return (
         <>
-            <Box xcss={xcss({ marginBottom: 'space.100' })}>
+            <Flex xcss={xcss({ marginBottom: 'space.100', justifyContent: 'space-between' })}>
                 <Heading size="xlarge">Issues</Heading>
-            </Box>
 
-            <Filter />
+                <Flex columnGap="space.050">
+                    <Radio
+                        value="BASIC"
+                        label="BASIC"
+                        name="basic"
+                        testId="radio-default"
+                        isChecked={jqlUISearchModeSwitcher === 'basic'}
+                        onChange={useGlobalState.getState().setSearchModeSwitcherBasic}
+                        onPointerEnterCapture={undefined}
+                        onPointerLeaveCapture={undefined}
+                    />
+                    <Radio
+                        value="JQL"
+                        label="JQL"
+                        name="jql"
+                        testId="radio-disabled"
+                        isChecked={jqlUISearchModeSwitcher === 'jql'}
+                        onChange={useGlobalState.getState().setSearchModeSwitcherJQL}
+                        onPointerEnterCapture={undefined}
+                        onPointerLeaveCapture={undefined}
+                    />
+                </Flex>
+            </Flex>
+
+            {jqlUISearchModeSwitcher === 'jql' ? <Filter /> : <JQLBuilderBasicForm />}
 
             <IssuesTracking />
 

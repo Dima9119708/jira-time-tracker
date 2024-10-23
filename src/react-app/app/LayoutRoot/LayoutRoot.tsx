@@ -114,10 +114,7 @@ const LayoutRoot = () => {
                     )
                 }}
             </WatchController>
-            <WatchController
-                name="timesheet"
-                initialBoolean
-            >
+            <WatchController name="timesheet">
                 {({ localState }) => {
                     const [open] = localState
 

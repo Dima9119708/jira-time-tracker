@@ -274,6 +274,117 @@ const server = (port, errorCallback) => {
                 }
             })
 
+            app.get('/user/search', async (req, res) => {
+                try {
+                    const authParsed = await getParsedAuth()
+
+                    if (authParsed.type === BASIC_AUTH) {
+                        const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/3/user/search`, {
+                            headers: {
+                                Authorization: `Basic ${authParsed.apiToken}`,
+                            },
+                            params: req.query,
+                        })
+
+                        res.send(response.data)
+                    }
+
+                    if (authParsed.type === OAUTH2) {
+                        const response = await axios.get(
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/user/search`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${authParsed.access_token}`,
+                                },
+                                params: req.query,
+                            }
+                        )
+
+                        res.send(response.data)
+                    }
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
+            app.get('/priorityscheme', async (req, res) => {
+                try {
+                    const authParsed = await getParsedAuth()
+
+                    if (authParsed.type === BASIC_AUTH) {
+                        const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/3/priorityscheme`, {
+                            headers: {
+                                Authorization: `Basic ${authParsed.apiToken}`,
+                            },
+                            params: req.query,
+                        })
+
+                        res.send(response.data)
+                    }
+
+                    if (authParsed.type === OAUTH2) {
+                        const response = await axios.get(
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/priorityscheme`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${authParsed.access_token}`,
+                                },
+                                params: req.query,
+                            }
+                        )
+
+                        res.send(response.data)
+                    }
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
+            app.get('/user/assignable/multiProjectSearch', async (req, res) => {
+                try {
+                    const authParsed = await getParsedAuth()
+
+                    if (authParsed.type === BASIC_AUTH) {
+                        const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/3/user/assignable/multiProjectSearch`, {
+                            headers: {
+                                Authorization: `Basic ${authParsed.apiToken}`,
+                            },
+                            params: req.query,
+                        })
+
+                        res.send(response.data)
+                    }
+
+                    if (authParsed.type === OAUTH2) {
+                        const response = await axios.get(
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/user/assignable/multiProjectSearch`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${authParsed.access_token}`,
+                                },
+                                params: req.query,
+                            }
+                        )
+
+                        res.send(response.data)
+                    }
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
             app.get('/filter-details', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
@@ -518,6 +629,80 @@ const server = (port, errorCallback) => {
                 }
             })
 
+            app.get('/statuses', async (req, res) => {
+                try {
+                    const authParsed = await getParsedAuth()
+
+                    if (authParsed.type === BASIC_AUTH) {
+                        const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/3/statuses/search`, {
+                            headers: {
+                                Authorization: `Basic ${authParsed.apiToken}`,
+                            },
+                            params: req.query,
+                        })
+
+                        res.send(response.data)
+                    }
+
+                    if (authParsed.type === OAUTH2) {
+                        const response = await axios.get(
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/statuses/search`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${authParsed.access_token}`,
+                                },
+                                params: req.query,
+                            }
+                        )
+
+                        res.send(response.data)
+                    }
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
+            app.get('/projects', async (req, res) => {
+                try {
+                    const authParsed = await getParsedAuth()
+
+                    if (authParsed.type === BASIC_AUTH) {
+                        const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/3/project/search`, {
+                            headers: {
+                                Authorization: `Basic ${authParsed.apiToken}`,
+                            },
+                            params: req.query,
+                        })
+
+                        res.send(response.data)
+                    }
+
+                    if (authParsed.type === OAUTH2) {
+                        const response = await axios.get(
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/project/search`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${authParsed.access_token}`,
+                                },
+                                params: req.query,
+                            }
+                        )
+
+                        res.send(response.data)
+                    }
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
             app.get('/worklog-task', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
@@ -640,9 +825,7 @@ const server = (port, errorCallback) => {
                     if (authParsed.type === BASIC_AUTH) {
                         const response = await axios.put(
                             `${authParsed.jiraSubDomain}/rest/api/3/issue/${req.body.taskId}/worklog/${req.body.id}`,
-                            {
-                                timeSpentSeconds: req.body.timeSpentSeconds,
-                            },
+                            req.body,
                             {
                                 headers: {
                                     Authorization: `Basic ${authParsed.apiToken}`,
@@ -656,9 +839,45 @@ const server = (port, errorCallback) => {
                     if (authParsed.type === OAUTH2) {
                         const response = await axios.put(
                             `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/issue/${req.body.taskId}/worklog/${req.body.id}`,
+                            req.body,
                             {
-                                timeSpentSeconds: req.body.timeSpentSeconds,
-                            },
+                                headers: {
+                                    Authorization: `Bearer ${authParsed.access_token}`,
+                                },
+                            }
+                        )
+
+                        res.send(response.data)
+                    }
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
+            app.delete('/issue-worklog', async (req, res) => {
+                try {
+                    const authParsed = await getParsedAuth()
+
+                    if (authParsed.type === BASIC_AUTH) {
+                        const response = await axios.delete(
+                            `${authParsed.jiraSubDomain}/rest/api/3/issue/${req.query.taskId}/worklog/${req.query.id}`,
+                            {
+                                headers: {
+                                    Authorization: `Basic ${authParsed.apiToken}`,
+                                },
+                            }
+                        )
+
+                        res.send(response.data)
+                    }
+
+                    if (authParsed.type === OAUTH2) {
+                        const response = await axios.delete(
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/issue/${req.query.taskId}/worklog/${req.query.id}`,
                             {
                                 headers: {
                                     Authorization: `Bearer ${authParsed.access_token}`,

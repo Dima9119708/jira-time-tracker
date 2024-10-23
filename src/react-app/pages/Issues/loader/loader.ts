@@ -38,7 +38,8 @@ export const loaderIssues: LoaderFunction = async () => {
     }
 
     useGlobalState.getState().updateJQL(jql)
-    useGlobalState.getState().setWorkHoursPerWeek(resConfigTimeTrackingOptions.data.workingHoursPerDay)
+    useGlobalState.getState().setWorkingDaysPerWeek(resConfigTimeTrackingOptions.data.workingDaysPerWeek)
+    useGlobalState.getState().setWorkingHoursPerWeek(resConfigTimeTrackingOptions.data.workingHoursPerDay)
 
     return true
 }
