@@ -1,14 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
-import { axiosInstance } from '../../../shared/config/api/api'
+import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useRef } from 'react'
 import dayjs from 'dayjs'
 import { produce } from 'immer'
-import { IssuesTrackingResponse, MySelfResponse, UseWorklogQuery, WorklogIssueMutation, WorklogResponse } from '../types/types'
-import { AxiosError, AxiosResponse } from 'axios'
-import { ErrorType } from '../../../shared/types/jiraTypes'
+import { IssuesTrackingResponse, UseWorklogQuery } from '../types/types'
+import { AxiosError } from 'axios'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { TimerRef } from '../../../features/Timer/ui/Timer'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { useIssueWorklogPOST, useIssueWorklogsGET, useIssueWorklogPUT } from 'react-app/entities/IssueWorklogs'
 
 export const useWorklogQuery = (props: UseWorklogQuery) => {
     const { taskId } = props
@@ -22,86 +21,84 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
     const settingTimeSecond = useGlobalState((state) => state.settings.timeLoggingInterval.second)
     const isSystemIdle = useGlobalState((state) => state.isSystemIdle)
 
-    const mutation = useMutation<
-        AxiosResponse<WorklogIssueMutation>,
-        AxiosError<ErrorType>,
-        WorklogIssueMutation,
-        { oldState: IssuesTrackingResponse | undefined }
-    >({
-        mutationFn: (variables) => {
-            if (variables.id) return axiosInstance.put<WorklogIssueMutation>('/worklog-task', variables)
-            else return axiosInstance.post<WorklogIssueMutation>('/worklog-task', variables)
-        },
-        onMutate: () => {
-            queryClient.setQueryData(['tasks tracking'], (old: IssuesTrackingResponse): IssuesTrackingResponse => {
-                return produce(old, (draft) => {
-                    const task = draft.find((issue) => issue.id === taskId)
+    const onMutateQuery = useCallback(() => {
+        queryClient.setQueryData(['tasks tracking'], (old: IssuesTrackingResponse): IssuesTrackingResponse => {
+            return produce(old, (draft) => {
+                const task = draft.find((issue) => issue.id === taskId)
 
-                    if (task) {
-                        task.fields.timespent += settingTimeSecond
-                    }
-                })
+                if (task) {
+                    task.fields.timespent += settingTimeSecond
+                }
             })
+        })
 
-            return {
-                oldState: queryClient.getQueryData(['tasks tracking']),
-            }
-        },
+        return {
+            oldState: queryClient.getQueryData(['tasks tracking']),
+        }
+    }, [taskId])
+
+    const onError = useCallback((error: AxiosError, context: ReturnType<typeof onMutateQuery> | undefined) => {
+        queryClient.setQueryData(['tasks tracking'], context!.oldState)
+
+        notify.error({
+            title: `Error worklog issue`,
+            description: JSON.stringify(error.response?.data),
+        })
+    }, [])
+
+    const issueWorklogPUT = useIssueWorklogPUT({
+        onMutate: onMutateQuery,
         onError: (error, variables, context) => {
-            queryClient.setQueryData(['tasks tracking'], context!.oldState)
-
-            notify.error({
-                title: `Error worklog issue`,
-                description: JSON.stringify(error.response?.data),
-            })
+            onError(error, context)
         },
     })
 
-    const worklogQuery = useQuery<unknown, AxiosError<ErrorType>>({
-        queryKey: ['worklog', taskId],
-        queryFn: async () => {
-            const response = await axiosInstance.get<WorklogResponse>('/worklog-task', {
-                params: { id: taskId },
-            })
+    const issueWorklogPOST = useIssueWorklogPOST({
+        onMutate: onMutateQuery,
+        onError: (error, variables, context) => {
+            onError(error, context)
+        },
+    })
 
-            const mySelf = queryClient.getQueryData<MySelfResponse>(['login'])
+    const issueWorklogsGET = useIssueWorklogsGET({
+        issueId: taskId,
+        to: dayjs().format('YYYY-MM-DD'),
+        from: dayjs().format('YYYY-MM-DD'),
+        enabled: false,
+    })
 
-            if (!!mySelf) {
-                const myFirstWorklogToday = response.data.worklogs.find((worklog) => {
-                    if (worklog.author.accountId == mySelf.accountId) {
-                        return dayjs(worklog.started).isToday()
-                    }
+    const intervalTriggerCallback = useCallback(() => {
+        issueWorklogsGET
+            .refetch()
+            .then((worklogs) => {
+                if (worklogs.data && worklogs.data.length > 0) {
+                    const worklog = worklogs?.data[0]
+                    const worklogSecond = worklog.timeSpentSeconds
 
-                    return false
-                })
+                    const timeSpentSeconds = worklogSecond + settingTimeSecond
 
-                const worklogSecond = myFirstWorklogToday?.timeSpentSeconds ?? 0
-
-                const timeSpentSeconds = worklogSecond + settingTimeSecond
-
-                if (myFirstWorklogToday) {
-                    mutation.mutate({
-                        taskId,
+                    issueWorklogPUT.mutate({
+                        issueId: taskId,
+                        id: worklog.id,
+                        startDate: worklog.date,
                         timeSpentSeconds,
-                        id: myFirstWorklogToday.id,
+                        timeSpent: '',
                     })
                 } else {
-                    mutation.mutate({
-                        taskId,
+                    const timeSpentSeconds = settingTimeSecond
+
+                    issueWorklogPOST.mutate({
+                        issueId: taskId,
                         timeSpentSeconds,
+                        timeSpent: '',
                     })
                 }
-            }
-
-            return true
-        },
-        gcTime: 0,
-        enabled: false,
-        notifyOnChangeProps: ['error'],
-    })
+            })
+            .catch(() => {})
+    }, [])
 
     useEffect(() => {
-        return timerRef.current?.setIntervalTrigger(settingTimeSecond, worklogQuery.refetch)!
+        return timerRef.current?.setIntervalTrigger(settingTimeSecond, intervalTriggerCallback)
     }, [settingTimeSecond])
 
     useEffect(() => {

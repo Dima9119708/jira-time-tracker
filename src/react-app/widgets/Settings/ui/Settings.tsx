@@ -5,7 +5,7 @@ import { AxiosError, AxiosResponse } from 'axios'
 import { FilterDetails } from '../../../pages/Issues/types/types'
 import { ErrorType } from '../../../shared/types/jiraTypes'
 import { axiosInstance } from '../../../shared/config/api/api'
-import { TIME_OPTIONS, UseGlobalState, useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import { PLUGINS, TIME_OPTIONS, UseGlobalState, useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog'
 import Button, { IconButton } from '@atlaskit/button/new'
 import CrossIcon from '@atlaskit/icon/glyph/cross'
@@ -17,6 +17,12 @@ import Heading from '@atlaskit/heading'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { ErrorMessage } from '@atlaskit/form'
 import { useGlobalBoolean } from 'use-global-boolean'
+import Image from '@atlaskit/image'
+import CheckCircleIcon from '@atlaskit/icon/glyph/check-circle'
+import CrossCircleIcon from '@atlaskit/icon/glyph/cross-circle'
+import { token } from '@atlaskit/tokens'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { electron } from 'react-app/shared/lib/electron/electron'
 
 export type FormValues = UseGlobalState['settings']
 
@@ -41,6 +47,7 @@ const styles = {
 
 const Settings = () => {
     const { watchBoolean, setFalse } = useGlobalBoolean()
+    const navigate = useNavigate()
 
     const opened = watchBoolean('user settings')
 
@@ -87,6 +94,10 @@ const Settings = () => {
         onSuccess: (data, variables, context) => {
             context?.dismissFn()
 
+            electron(async (methods) => {
+                await methods.ipcRenderer.invoke('DELETE_AUTH_PLUGIN_DATA')
+            })
+
             notify.success({
                 title: context!.title,
             })
@@ -103,6 +114,7 @@ const Settings = () => {
 
     const onSave: SubmitHandler<FormValues> = (data) => {
         const newSettings: Partial<UseGlobalState['settings']> = {
+            plugin: data.plugin,
             autoStart: data.autoStart,
             timeLoggingInterval: {
                 unit: data.timeLoggingInterval.unit,
@@ -150,6 +162,50 @@ const Settings = () => {
                         />
                     </ModalHeader>
                     <ModalBody>
+                        <Controller
+                            name="plugin"
+                            control={control}
+                            render={({ field }) => {
+                                return (
+                                    <Box
+                                        xcss={xcss({
+                                            marginBottom: 'space.250',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                        })}
+                                        onClick={() => {
+                                            if (field.value === PLUGINS.TEMPO) {
+                                                localStorage.removeItem('pluginName')
+                                                field.onChange(null)
+                                            } else {
+                                                navigate('/auth-plugin')
+                                                localStorage.setItem('pluginName', PLUGINS.TEMPO)
+                                                setFalse('user settings')
+                                            }
+                                        }}
+                                    >
+                                        <Image
+                                            height="20px"
+                                            src="https://www.tempo.io/images/brand/tempo-full-logo.svg"
+                                            loading="lazy"
+                                        />
+                                        {field.value === PLUGINS.TEMPO ? (
+                                            <CheckCircleIcon
+                                                label="tempo"
+                                                primaryColor={token('color.text.accent.green')}
+                                            />
+                                        ) : (
+                                            <CrossCircleIcon
+                                                label="tempo"
+                                                primaryColor={token('color.text.accent.red')}
+                                            />
+                                        )}
+                                    </Box>
+                                )
+                            }}
+                        />
+
                         <Flex
                             justifyContent="space-between"
                             alignItems="center"

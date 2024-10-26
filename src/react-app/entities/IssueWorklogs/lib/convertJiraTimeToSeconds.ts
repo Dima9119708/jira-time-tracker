@@ -29,3 +29,31 @@ export const convertJiraTimeToSeconds = (timeString: string, workingDaysPerWeek:
 
     return totalSeconds
 }
+
+export const convertSecondsToJiraTime = (totalSeconds: number, workingDaysPerWeek: number, workingHoursPerDay: number): string => {
+    const secondsPerMinute = 60
+    const secondsPerHour = secondsPerMinute * 60
+    const secondsPerDay = secondsPerHour * workingHoursPerDay
+    const secondsPerWeek = secondsPerDay * workingDaysPerWeek
+
+    let remainingSeconds = totalSeconds
+
+    const weeks = Math.floor(remainingSeconds / secondsPerWeek)
+    remainingSeconds %= secondsPerWeek
+
+    const days = Math.floor(remainingSeconds / secondsPerDay)
+    remainingSeconds %= secondsPerDay
+
+    const hours = Math.floor(remainingSeconds / secondsPerHour)
+    remainingSeconds %= secondsPerHour
+
+    const minutes = Math.floor(remainingSeconds / secondsPerMinute)
+
+    const result = []
+    if (weeks) result.push(`${weeks}w`)
+    if (days) result.push(`${days}d`)
+    if (hours) result.push(`${hours}h`)
+    if (minutes) result.push(`${minutes}m`)
+
+    return result.join(' ')
+}

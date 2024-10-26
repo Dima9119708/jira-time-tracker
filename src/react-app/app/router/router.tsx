@@ -5,6 +5,7 @@ import { loaderAuth } from '../../features/AuthByEmailAndToken'
 import LayoutRoot from '../LayoutRoot/LayoutRoot'
 import { ChangePort } from '../../pages/ChangePort'
 import { TopPanel } from 'react-app/widgets/TopPanel'
+import AuthPlugin from 'react-app/pages/AuthPlugin/ui/AuthPlugin'
 
 const createRouter = (routes: RouteObject[]) => {
     return __BUILD_ENV__ === 'browser'
@@ -33,6 +34,18 @@ export const router = createRouter([
                             return {
                                 loader: loaderIssues,
                                 Component: IssuesPage,
+                                errorElement: <ErrorBoundary />,
+                            }
+                        },
+                    },
+                    {
+                        path: 'auth-plugin',
+                        lazy: async () => {
+                            const { loaderIssues, ErrorBoundary } = await import('../../pages/Issues')
+
+                            return {
+                                loader: loaderIssues,
+                                Component: AuthPlugin,
                                 errorElement: <ErrorBoundary />,
                             }
                         },

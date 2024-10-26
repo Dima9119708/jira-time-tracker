@@ -127,6 +127,13 @@ export interface WorklogResponse {
 export interface MySelfResponse {
     accountId: string
     id: string
+    displayName: string
+    avatarUrls: {
+        '16x16': string
+        '24x24': string
+        '32x32': string
+        '48x48': string
+    }
 }
 
 export interface WorklogIssueMutation extends WorklogComment {

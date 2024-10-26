@@ -17,10 +17,11 @@ import Image from '@atlaskit/image'
 import Heading from '@atlaskit/heading'
 import TextArea from '@atlaskit/textarea'
 import TrashIcon from '@atlaskit/icon/glyph/trash'
-import { convertJiraTimeToSeconds } from 'react-app/entities/IssueWorklogs'
+import { useIssueWorklogPOST, useIssueWorklogDELETE, useIssueWorklogsGET, useIssueWorklogPUT } from 'react-app/entities/IssueWorklogs'
+import CopyIcon from '@atlaskit/icon/glyph/copy'
+import { Worklog } from 'react-app/entities/Worklogs'
+import { DatePicker } from '@atlaskit/datetime-picker'
 import { DATE_FORMAT } from 'react-app/shared/const'
-import { getWorklogComment, worklogCommentTemplate } from 'react-app/entities/IssueWorklogs'
-import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 
 export const LogTimeButton = (props: { issueId: string; uniqueNameBoolean: string }) => {
     return (
@@ -36,9 +37,17 @@ export const LogTimeButton = (props: { issueId: string; uniqueNameBoolean: strin
 }
 
 type FormValues = {
+    date: string
     timeSpent: string
     description: string
-    worklog: WorklogResponse['worklogs'][number] | undefined
+    worklog: Worklog | undefined
+}
+
+const DEFAULT_VALUES: FormValues = {
+    date: dayjs().format(DATE_FORMAT),
+    timeSpent: '',
+    description: '',
+    worklog: undefined,
 }
 
 export const LogTimeDialog = (props: { issueId: string; queryKey: string; uniqueNameBoolean: string }) => {
@@ -46,34 +55,25 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
     const { setFalse } = useGlobalBoolean()
     const queryClient = useQueryClient()
 
-    const { handleSubmit, control, setValue } = useForm<FormValues>({
+    const { handleSubmit, control, setValue, reset, getValues } = useForm<FormValues>({
         mode: 'onBlur',
+        defaultValues: DEFAULT_VALUES,
     })
     const notify = useNotifications()
 
     const { isFetching: isFetchingIssues } = useQuery({ queryKey: [queryKey], notifyOnChangeProps: ['isFetching'], enabled: false })
 
-    const worklogUpdate = useMutation<
-        AxiosResponse<WorklogIssueMutation>,
-        AxiosError<ErrorType>,
-        WorklogIssueMutation,
-        { oldState: IssuesTrackingResponse | undefined }
-    >({
-        mutationFn: (variables) => {
-            if (variables.id) return axiosInstance.put<WorklogIssueMutation>('/worklog-task', variables)
-            else return axiosInstance.post<WorklogIssueMutation>('/worklog-task', variables)
-        },
+    const issueWorklogs = useIssueWorklogsGET({
+        issueId,
+    })
+
+    const issueWorklogPOST = useIssueWorklogPOST({
         onSuccess: () => {
-            queryClient
-                .invalidateQueries({
-                    queryKey: [queryKey],
-                })
-                .then(() => {
-                    notify.success({
-                        title: 'Success worklog issue',
-                    })
-                    setFalse(uniqueNameBoolean)
-                })
+            notify.success({
+                title: 'Success worklog issue',
+            })
+            reset(DEFAULT_VALUES)
+            issueWorklogs.refetch()
         },
         onError: (error) => {
             notify.error({
@@ -83,28 +83,7 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
         },
     })
 
-    const worklogs = useQuery<AxiosResponse<WorklogResponse>, AxiosError<ErrorType>, WorklogResponse>({
-        queryKey: ['worklog issue', issueId],
-        queryFn: () =>
-            axiosInstance.get<WorklogResponse>('/worklog-task', {
-                params: { id: issueId },
-            }),
-        select: (data) => {
-            const worklogs = data.data.worklogs.toSorted((a, b) => (dayjs(a.started).isBefore(dayjs(b.started)) ? 1 : -1))
-
-            return {
-                ...data.data,
-                worklogs: worklogs,
-            }
-        },
-    })
-
-    const worklogDelete = useMutation<AxiosResponse<WorklogIssueDelete>, AxiosError<ErrorType>, WorklogIssueDelete, Function>({
-        mutationFn: (variables) => {
-            return axiosInstance.delete<WorklogIssueDelete>('/issue-worklog', {
-                params: variables,
-            })
-        },
+    const issueWorklogPUT = useIssueWorklogPUT({
         onMutate: () => {
             return notify.loading({
                 title: 'Worklog issue',
@@ -115,7 +94,8 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
             notify.success({
                 title: 'Success worklog issue',
             })
-            worklogs.refetch()
+            reset(DEFAULT_VALUES)
+            issueWorklogs.refetch()
         },
         onError: (error, variables, context) => {
             context?.()
@@ -126,19 +106,46 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
         },
     })
 
-    const onSave = (data: FormValues) => {
-        const { workingHoursPerDay, workingDaysPerWeek } = useGlobalState.getState()
+    const issueWorklogDelete = useIssueWorklogDELETE({
+        onSuccess: (data, variables, context) => {
+            if (getValues('worklog')?.id === variables.id) {
+                reset({
+                    ...DEFAULT_VALUES,
+                    worklog: undefined,
+                })
+            }
 
-        worklogUpdate.mutate({
-            taskId: issueId,
-            ...(data.worklog ? { id: data.worklog.id } : undefined),
-            timeSpentSeconds: convertJiraTimeToSeconds(data.timeSpent, workingDaysPerWeek, workingHoursPerDay),
-            ...worklogCommentTemplate(data.description || ''),
-        })
+            issueWorklogs.refetch()
+        },
+        onError: (error) => {
+            notify.error({
+                title: `Error worklog issue`,
+                description: JSON.stringify(error.response?.data),
+            })
+        },
+    })
+
+    const onSave = (data: FormValues) => {
+        if (data.worklog) {
+            issueWorklogPUT.mutate({
+                issueId,
+                id: data.worklog.id,
+                timeSpent: data.timeSpent,
+                startDate: data.date,
+                description: data.description,
+            })
+        } else {
+            issueWorklogPOST.mutate({
+                issueId,
+                startDate: data.date,
+                timeSpent: data.timeSpent,
+                description: data.description,
+            })
+        }
     }
 
     const onCancel = () => {
-        if (worklogDelete.isSuccess) {
+        if (issueWorklogPOST.isSuccess || issueWorklogPUT.isSuccess || issueWorklogDelete.isSuccess) {
             queryClient
                 .invalidateQueries({
                     queryKey: [queryKey],
@@ -170,6 +177,30 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                 />
             </ModalHeader>
             <ModalBody>
+                <Controller
+                    name="date"
+                    control={control}
+                    rules={{
+                        required: 'Required',
+                    }}
+                    render={({ field, fieldState }) => {
+                        return (
+                            <>
+                                <Label htmlFor="date">Date</Label>
+                                <DatePicker
+                                    value={field.value}
+                                    label="date"
+                                    dateFormat={DATE_FORMAT}
+                                    onChange={field.onChange}
+                                />
+                                {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                            </>
+                        )
+                    }}
+                />
+
+                <Box xcss={xcss({ marginTop: 'space.100', marginBottom: 'space.100' })} />
+
                 <Controller
                     name="timeSpent"
                     control={control}
@@ -206,7 +237,7 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                     <Controller
                         name="description"
                         control={control}
-                        render={({ field, fieldState }) => {
+                        render={({ field }) => {
                             return (
                                 <>
                                     <Label htmlFor="description">Description</Label>
@@ -227,7 +258,7 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                 </Box>
 
                 <Box xcss={xcss({ paddingTop: 'space.150', paddingBottom: 'space.100' })}>
-                    {!!worklogs.data?.worklogs.length && (
+                    {!!issueWorklogs.data?.length && (
                         <Box xcss={xcss({ marginBottom: 'space.075' })}>
                             <Heading size="small">Worklogs:</Heading>
                         </Box>
@@ -239,7 +270,7 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                         render={({ field }) => {
                             return (
                                 <>
-                                    {worklogs.data?.worklogs.map((worklog) => (
+                                    {issueWorklogs.data?.map((worklog) => (
                                         <Box
                                             xcss={xcss({
                                                 boxShadow: 'elevation.shadow.overlay',
@@ -259,10 +290,12 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                                                     field.onChange(undefined)
                                                     setValue('timeSpent', '')
                                                     setValue('description', '')
+                                                    setValue('date', '')
                                                 } else {
                                                     field.onChange(worklog)
                                                     setValue('timeSpent', worklog.timeSpent)
-                                                    setValue('description', getWorklogComment(worklog))
+                                                    setValue('description', worklog.description)
+                                                    setValue('date', worklog.date)
                                                 }
                                             }}
                                         >
@@ -280,26 +313,42 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                                             </Flex>
                                             <Flex columnGap="space.100">
                                                 <Text weight="bold">Date:</Text>
-                                                <Text weight="medium">{dayjs(worklog.started).format(DATE_FORMAT)}</Text>
+                                                <Text weight="medium">{worklog.date}</Text>
                                             </Flex>
                                             <Flex columnGap="space.100">
                                                 <Text weight="bold">Logged:</Text>
                                                 <Text weight="medium">{worklog.timeSpent}</Text>
                                             </Flex>
                                             <Flex columnGap="space.100">
-                                                <Text weight="bold">Description: </Text>
-                                                <Text weight="medium">{getWorklogComment(worklog) || '==//=='}</Text>
+                                                <Box xcss={xcss({ flexShrink: 0 })}>
+                                                    <Text weight="bold">Description: </Text>
+                                                </Box>
+                                                <Text weight="medium">{worklog.description}</Text>
                                             </Flex>
 
-                                            <Flex justifyContent="end">
+                                            <Flex
+                                                justifyContent="end"
+                                                columnGap="space.100"
+                                            >
+                                                <IconButton
+                                                    icon={CopyIcon}
+                                                    label="Copy"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setValue('timeSpent', worklog.timeSpent)
+                                                        setValue('description', worklog.description)
+                                                        setValue('worklog', undefined)
+                                                    }}
+                                                />
                                                 <IconButton
                                                     icon={TrashIcon}
-                                                    isLoading={worklogDelete.variables?.id === worklog.id && worklogDelete.isPending}
+                                                    isLoading={
+                                                        issueWorklogDelete.variables?.id === worklog.id && issueWorklogDelete.isPending
+                                                    }
                                                     label="Delete"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
-                                                        setValue('worklog', undefined)
-                                                        worklogDelete.mutate({ taskId: issueId, id: worklog.id })
+                                                        issueWorklogDelete.mutate({ issueId, id: worklog.id })
                                                     }}
                                                 />
                                             </Flex>
@@ -313,13 +362,14 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
             </ModalBody>
             <ModalFooter>
                 <Button
+                    isLoading={isFetchingIssues}
                     appearance="default"
                     onClick={onCancel}
                 >
                     Cancel
                 </Button>
                 <Button
-                    isLoading={worklogUpdate.isPending || isFetchingIssues}
+                    isLoading={issueWorklogPUT.isPending || issueWorklogPOST.isPending}
                     onClick={handleSubmit(onSave)}
                     appearance="primary"
                 >

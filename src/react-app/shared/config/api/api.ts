@@ -13,3 +13,8 @@ export const axiosInstance = axios.create({
     baseURL: `http://localhost:${PORT}`,
     withCredentials: false,
 })
+
+export const axiosInstancePlugin = axios.create({
+    baseURL: `http://localhost:${PORT}`,
+    withCredentials: false,
+})

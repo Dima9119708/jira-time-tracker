@@ -17,6 +17,7 @@ const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
 const Timesheet = lazy(() => import('../../widgets/Timesheet'))
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import RecentIcon from '@atlaskit/icon/glyph/recent'
+import DetectedUnauthorizedPlugin from 'react-app/app/GlobalComponents/DetectedUnauthorizedPlugin/DetectedUnauthorizedPlugin'
 
 const styles = {
     app_wrap: xcss({}),
@@ -43,7 +44,9 @@ const LayoutRoot = () => {
 
     const onLogout = () => {
         queryClient.removeQueries()
-        electron(({ ipcRenderer }) => ipcRenderer.invoke('DELETE_AUTH_DATA'))
+        electron(({ ipcRenderer }) => {
+            ipcRenderer.invoke('DELETE_AUTH_DATA')
+        })
 
         navigate('/auth')
     }
@@ -54,6 +57,7 @@ const LayoutRoot = () => {
             <Notifications />
             <DetectedSystemIdle />
             <AutoStart />
+            <DetectedUnauthorizedPlugin />
 
             <Box xcss={styles.app_wrap}>
                 <Flex xcss={styles.header}>

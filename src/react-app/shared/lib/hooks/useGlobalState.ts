@@ -5,11 +5,16 @@ import { JQLBasic } from 'react-app/widgets/JQLBuilderBasic/ui/JQLBuilderBasicFo
 
 type Unit = { label: 'Minutes' | 'Hours'; value: 'minutes' | 'hours' }
 
+export enum PLUGINS {
+    TEMPO = 'TEMPO',
+}
+
 export interface UseGlobalState {
     filterId: string
     jql: string
     isSystemIdle: boolean
     settings: {
+        plugin: PLUGINS.TEMPO | null
         jqlUISearchModeSwitcher: 'basic' | 'jql'
         jqlBasic?: JQLBasic
         autoStart: boolean
@@ -72,6 +77,7 @@ export const useGlobalState = createStore<UseGlobalState>(
         workingDaysPerWeek: 5,
         openSettings: false,
         settings: {
+            plugin: null,
             jqlUISearchModeSwitcher: 'basic',
             jqlBasic: {
                 assignees: [],

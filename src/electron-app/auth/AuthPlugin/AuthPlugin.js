@@ -1,25 +1,24 @@
 const { BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
-const url = require('url')
-const { AUTH_DATA, OAUTH2 } = require('../../constans')
-const atlassianURL = require('./createAtlassianURL')
+const { AUTH_PLUGIN_DATA, OAUTH2 } = require('../../constans')
 const { AuthStorage } = require('../keyService')
 
-const OAuth2Window = (mainWindow) => {
-    ipcMain.handle('SAVE_DATA_OAuth2', async (event, { access_token, refresh_token, client_id, jiraSubDomain }) => {
+const AuthWindowPlugin = (mainWindow) => {
+    ipcMain.handle('SAVE_AUTH_DATA_PLUGIN', async (event, { access_token, refresh_token, client_id, client_secret, namePlugin }) => {
         return AuthStorage.set(
-            AUTH_DATA,
+            AUTH_PLUGIN_DATA,
             JSON.stringify({
                 access_token: access_token,
                 refresh_token: refresh_token,
                 client_id,
-                jiraSubDomain,
-                type: OAUTH2,
+                client_secret,
+                type: (access_token && refresh_token && OAUTH2) || null,
+                namePlugin: namePlugin,
             })
         )
     })
 
-    ipcMain.on('OPEN_OAuth2', () => {
+    ipcMain.on('OPEN_OAuth2Plugin', (event, { url }) => {
         const oAuthWindow = new BrowserWindow({
             width: 1200,
             height: 800,
@@ -32,7 +31,7 @@ const OAuth2Window = (mainWindow) => {
             alwaysOnTop: true,
         })
 
-        oAuthWindow.loadURL(atlassianURL.toString())
+        oAuthWindow.loadURL(url)
 
         oAuthWindow.webContents.session.webRequest.onBeforeRequest(
             {
@@ -42,7 +41,7 @@ const OAuth2Window = (mainWindow) => {
                 const parsedURL = url.parse(res.url, true)
 
                 if (parsedURL.query.code) {
-                    mainWindow.webContents.send('ACCEPT_OAuth2', parsedURL.query.code)
+                    mainWindow.webContents.send('ACCEPT_OAuth2Plugin', parsedURL.query.code)
                 }
 
                 oAuthWindow.destroy()
@@ -51,4 +50,4 @@ const OAuth2Window = (mainWindow) => {
     })
 }
 
-module.exports = OAuth2Window
+module.exports = AuthWindowPlugin

@@ -34,7 +34,6 @@ const DetectedSystemIdle = () => {
             ipcRenderer.on('SYSTEM-IDLE-TIME-RESPONSE', onSystemIdleTimeResponse)
             ipcRenderer.on('SUSPEND', onSuspend)
             ipcRenderer.on('RESUME', onResume)
-
             return () => {
                 ipcRenderer.removeListener('SUSPEND', onSuspend)
                 ipcRenderer.removeListener('RESUME', onResume)

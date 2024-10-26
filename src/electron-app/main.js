@@ -10,10 +10,11 @@ require('dotenv').config({
 const OAuth2Window = require('./auth/oAuth2/OAuth2')
 const BasicAuth = require('./auth/BasicAuth')
 const ControllerAuth = require('./auth/ControllerAuth')
-
+const ControllerAuthPlugin = require('./auth/ControllerAuthPlugin')
 const { server } = require('./server')
 const { AUTH_DATA } = require('./constans')
 const { AuthStorage, ThemeStorage, ZoomStorage } = require('./auth/keyService')
+const AuthWindowPlugin = require('./auth/AuthPlugin/AuthPlugin')
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -210,7 +211,9 @@ app.whenReady()
         const mainWindow = createMainWindow(port)
 
         ControllerAuth()
+        ControllerAuthPlugin()
         OAuth2Window(mainWindow)
+        AuthWindowPlugin(mainWindow)
         BasicAuth()
 
         app.on('activate', () => {

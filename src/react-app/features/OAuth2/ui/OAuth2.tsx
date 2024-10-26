@@ -55,11 +55,13 @@ const OAuth2 = () => {
                     })
 
                     const client_id = resAccessibleResources.data[0].id
+                    const jiraSubDomain = resAccessibleResources.data[0].url
 
                     await methods.ipcRenderer.invoke('SAVE_DATA_OAuth2', {
                         access_token: resOAuthToken.data.access_token,
                         refresh_token: resOAuthToken.data.refresh_token,
                         client_id,
+                        jiraSubDomain,
                     })
 
                     const resLogin = await axiosInstance.get('/login')
