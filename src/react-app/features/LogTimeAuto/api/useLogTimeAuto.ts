@@ -2,16 +2,13 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef } from 'react'
 import dayjs from 'dayjs'
 import { produce } from 'immer'
-import { IssuesTrackingResponse, UseWorklogQuery } from '../types/types'
 import { AxiosError } from 'axios'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
-import { TimerRef } from '../../../features/Timer/ui/Timer'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { useIssueWorklogPOST, useIssueWorklogsGET, useIssueWorklogPUT } from 'react-app/entities/IssueWorklogs'
+import { TimerRef } from 'react-app/shared/components/Timer/ui/Timer'
 
-export const useWorklogQuery = (props: UseWorklogQuery) => {
-    const { taskId } = props
-
+export const useLogTimeAuto = (issueId: string) => {
     const queryClient = useQueryClient()
 
     const timerRef = useRef<TimerRef>(null)
@@ -22,9 +19,9 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
     const isSystemIdle = useGlobalState((state) => state.isSystemIdle)
 
     const onMutateQuery = useCallback(() => {
-        queryClient.setQueryData(['tasks tracking'], (old: IssuesTrackingResponse): IssuesTrackingResponse => {
-            return produce(old, (draft) => {
-                const task = draft.find((issue) => issue.id === taskId)
+        queryClient.setQueryData(['tasks tracking'], (old) => {
+            return produce(old, (draft: any) => {
+                const task = draft.find((issue: any) => issue.id === issueId)
 
                 if (task) {
                     task.fields.timespent += settingTimeSecond
@@ -35,7 +32,7 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
         return {
             oldState: queryClient.getQueryData(['tasks tracking']),
         }
-    }, [taskId])
+    }, [issueId])
 
     const onError = useCallback((error: AxiosError, context: ReturnType<typeof onMutateQuery> | undefined) => {
         queryClient.setQueryData(['tasks tracking'], context!.oldState)
@@ -61,7 +58,7 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
     })
 
     const issueWorklogsGET = useIssueWorklogsGET({
-        issueId: taskId,
+        issueId: issueId,
         to: dayjs().format('YYYY-MM-DD'),
         from: dayjs().format('YYYY-MM-DD'),
         enabled: false,
@@ -78,7 +75,7 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
                     const timeSpentSeconds = worklogSecond + settingTimeSecond
 
                     issueWorklogPUT.mutate({
-                        issueId: taskId,
+                        issueId: issueId,
                         id: worklog.id,
                         startDate: worklog.date,
                         timeSpentSeconds,
@@ -88,7 +85,7 @@ export const useWorklogQuery = (props: UseWorklogQuery) => {
                     const timeSpentSeconds = settingTimeSecond
 
                     issueWorklogPOST.mutate({
-                        issueId: taskId,
+                        issueId: issueId,
                         timeSpentSeconds,
                         timeSpent: '',
                     })

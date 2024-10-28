@@ -17,7 +17,7 @@ import TrashIcon from '@atlaskit/icon/glyph/trash'
 import Image from '@atlaskit/image'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { DATE_FORMAT } from 'react-app/shared/const'
-import { useGetWorklogs } from 'react-app/entities/Worklogs'
+import { useWorklogsGET } from 'react-app/entities/Worklogs'
 import { convertJiraTimeToSeconds, useIssueWorklogDELETE, useIssueWorklogPUT } from 'react-app/entities/IssueWorklogs'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import Heading from '@atlaskit/heading'
@@ -27,7 +27,7 @@ const Timesheet = () => {
     const [date, setDate] = useState(() => dayjs().format(DATE_FORMAT))
     const notify = useNotifications()
 
-    const worklogs = useGetWorklogs({
+    const worklogs = useWorklogsGET({
         from: date,
         to: date,
     })

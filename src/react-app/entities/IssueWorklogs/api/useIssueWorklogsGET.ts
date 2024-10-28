@@ -5,7 +5,7 @@ import { axiosInstance, axiosInstancePlugin } from 'react-app/shared/config/api/
 import { convertSecondsToJiraTime } from 'react-app/entities/IssueWorklogs/lib/convertJiraTimeToSeconds'
 import dayjs from 'dayjs'
 import { extractTextFromDoc } from 'react-app/entities/Worklogs/lib/helpers/extractTextFromDoc'
-import { Worklog, WorklogsTempoPluginResponse } from 'react-app/entities/Worklogs/api/useGetWorklogs'
+import { Worklog, WorklogsTempoPluginResponse } from 'react-app/entities/Worklogs/api/useWorklogsGET'
 import { data } from 'autoprefixer'
 import { DATE_FORMAT } from 'react-app/shared/const'
 

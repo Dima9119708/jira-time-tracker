@@ -1,4 +1,5 @@
 import AssignableIssue from './ui/AssignableIssue'
-import AssigneeDropdown from 'react-app/entities/UserSearch/ui/AssigneeDropdown'
+import UserSearchDropdown from 'react-app/entities/UserSearch/ui/UserSearchDropdown'
+import AssignableMultiProjectSearch from 'react-app/entities/UserSearch/ui/AssignableMultiProjectSearch'
 
-export { AssignableIssue, AssigneeDropdown }
+export { AssignableIssue, UserSearchDropdown, AssignableMultiProjectSearch }

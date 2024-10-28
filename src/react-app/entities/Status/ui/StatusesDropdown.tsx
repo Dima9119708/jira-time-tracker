@@ -1,12 +1,8 @@
-import DropdownMenu, { DropdownItem, DropdownItemCheckbox } from '@atlaskit/dropdown-menu'
-import { useStatusesSearch } from 'react-app/entities/Status'
+import DropdownMenu, { DropdownItemCheckbox } from '@atlaskit/dropdown-menu'
+import { useStatusesSearchGET } from 'react-app/entities/Status'
 import Lozenge from '@atlaskit/lozenge'
-import { ReactNode, useState } from 'react'
-import Button from '@atlaskit/button/new'
-import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
-import Badge from '@atlaskit/badge'
-import { Box, xcss } from '@atlaskit/primitives'
-import { token } from '@atlaskit/tokens'
+import React, { ReactNode, useState } from 'react'
+import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
 
 interface StatusesDropdownProps {
     values: string[] | undefined
@@ -19,7 +15,7 @@ const StatusesDropdown = (props: StatusesDropdownProps) => {
     const { projectIds = [], values, onChange, elemAfterDropdownItems } = props
     const [opened, setOpened] = useState(false)
 
-    const query = useStatusesSearch({
+    const query = useStatusesSearchGET({
         projectIds: projectIds,
         opened: opened,
     })
@@ -31,23 +27,11 @@ const StatusesDropdown = (props: StatusesDropdownProps) => {
                 values?.length === 0 || values === undefined
                     ? 'Status'
                     : (triggerButtonProps) => (
-                          <Box
-                              xcss={xcss({
-                                  // @ts-ignore
-                                  '& > button, & > button:hover': {
-                                      backgroundColor: token('color.background.selected'),
-                                      color: token('color.text.selected'),
-                                  },
-                              })}
-                          >
-                              <Button
-                                  {...triggerButtonProps}
-                                  ref={triggerButtonProps.triggerRef}
-                                  iconAfter={ChevronDownIcon}
-                              >
-                                  Status <Badge appearance="primary">{values?.length === 1 ? values?.length : `+${values?.length}`}</Badge>
-                              </Button>
-                          </Box>
+                          <JQLBasicDropdownTriggerButton
+                              title="Status"
+                              values={values}
+                              triggerButtonProps={triggerButtonProps}
+                          />
                       )
             }
             shouldRenderToParent

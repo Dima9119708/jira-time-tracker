@@ -6,7 +6,7 @@ import { UseGlobalState, useGlobalState } from 'react-app/shared/lib/hooks/useGl
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 
 interface FilterPUT {
-    description?: Partial<UseGlobalState['settings']>
+    settings?: Partial<UseGlobalState['settings']>
     jql?: Filter['jql']
 }
 
@@ -24,11 +24,11 @@ export const useFilterPUT = (props?: {
 
     return useMutation<AxiosResponse<Filter>, AxiosError, FilterPUT, Function | undefined>({
         mutationFn: async (data) => {
-            const bodyData = { ...data }
+            const bodyData = { jql: data.jql }
 
             const description = JSON.stringify({
                 ...useGlobalState.getState().settings,
-                ...data.description,
+                ...data.settings,
             })
 
             Object.assign(bodyData, {

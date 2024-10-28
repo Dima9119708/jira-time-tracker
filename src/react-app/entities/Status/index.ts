@@ -1,4 +1,4 @@
-import { useStatusesSearch } from 'react-app/entities/Status/lib/useStatusesSearch'
+import { useStatusesSearchGET } from 'react-app/entities/Status/lib/useStatusesSearchGET'
 import StatusesDropdown from './ui/StatusesDropdown'
 
-export { useStatusesSearch, StatusesDropdown }
+export { useStatusesSearchGET, StatusesDropdown }

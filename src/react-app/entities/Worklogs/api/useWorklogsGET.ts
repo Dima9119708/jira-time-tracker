@@ -63,7 +63,7 @@ export type Worklog = {
 
 type QueryResult = Array<[string, Worklog[]]>
 
-export const useGetWorklogs = ({ to, from }: UseGetWorklogsProps) => {
+export const useWorklogsGET = ({ to, from }: UseGetWorklogsProps) => {
     const pluginName = useGlobalState((state) => state.settings.plugin)
 
     const queryClient = useQueryClient()

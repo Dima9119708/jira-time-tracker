@@ -1,8 +1,5 @@
 import { axiosInstance } from 'react-app/shared/config/api/api'
-import { useQueries, useQuery } from '@tanstack/react-query'
-import { useGlobalBoolean } from 'use-global-boolean'
-import { AxiosResponse } from 'axios'
-import { produce } from 'immer'
+import { useQuery } from '@tanstack/react-query'
 
 interface StatusesResponse {
     values: Status[]
@@ -15,10 +12,10 @@ interface Status {
     usages: []
 }
 
-export const useStatusesSearch = (props: { projectIds: string[]; opened: boolean }) => {
+export const useStatusesSearchGET = (props: { projectIds: string[]; opened: boolean }) => {
     const { projectIds, opened } = props
 
-    const dataQuery = useQuery({
+    return useQuery({
         enabled: opened,
         queryKey: ['statuses'],
         queryFn: async () => {
@@ -60,6 +57,4 @@ export const useStatusesSearch = (props: { projectIds: string[]; opened: boolean
             }
         },
     })
-
-    return dataQuery
 }

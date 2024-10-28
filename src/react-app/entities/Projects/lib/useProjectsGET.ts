@@ -17,7 +17,7 @@ export interface Project {
     key: string
 }
 
-export const useGetProjects = ({ opened }: { opened: boolean }) => {
+export const useProjectsGET = ({ opened }: { opened: boolean }) => {
     const query = useQuery({
         queryKey: ['projects'],
         queryFn: () => axiosInstance.get<ProjectsResponse>('/projects'),

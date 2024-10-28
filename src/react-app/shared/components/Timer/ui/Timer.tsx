@@ -1,6 +1,5 @@
-import { forwardRef, Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, FunctionComponent, Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import dayjs from 'dayjs'
-import { Box, xcss } from '@atlaskit/primitives'
 
 export interface TimerRef {
     pause: () => void
@@ -8,7 +7,13 @@ export interface TimerRef {
     setIntervalTrigger: (seconds: number, fn: () => void) => () => void
 }
 
-const Timer = (props: any, ref: Ref<TimerRef>) => {
+interface TimerProps {
+    children: FunctionComponent<string>
+}
+
+const Timer = (props: TimerProps, ref: Ref<TimerRef>) => {
+    const { children } = props
+
     const control = useRef({
         pause: false,
         seconds: 0,
@@ -55,20 +60,7 @@ const Timer = (props: any, ref: Ref<TimerRef>) => {
         },
     }))
 
-    return (
-        <Box
-            xcss={xcss({
-                backgroundColor: 'color.background.neutral',
-                borderRadius: 'border.radius.200',
-                textAlign: 'center',
-                font: 'font.heading.xlarge',
-                fontWeight: 'font.weight.bold',
-                color: 'color.text.accent.blue.bolder',
-            })}
-        >
-            {formattedDate}
-        </Box>
-    )
+    return children(formattedDate)
 }
 
 export default forwardRef(Timer)

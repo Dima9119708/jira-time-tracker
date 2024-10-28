@@ -2,11 +2,9 @@ import React, { memo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../lib/dateHelper'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
-import { Timer } from '../../../features/Timer'
 import { TaskProps, IssuesTrackingResponse } from '../types/types'
 import { produce } from 'immer'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
-import { useWorklogQuery } from '../lib/useWorklogQuery'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
 import { IconButton } from '@atlaskit/button/new'
 import VidPauseIcon from '@atlaskit/icon/glyph/vid-pause'
@@ -20,6 +18,7 @@ import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from 'react-app/shared/const'
+import { LogTimeAuto } from 'react-app/features/LogTimeAuto'
 
 const IssueTracking = (props: TaskProps) => {
     const { fields, id, idxIssue, issueKey } = props
@@ -27,10 +26,6 @@ const IssueTracking = (props: TaskProps) => {
     const [isLoading, setLoading] = useState(false)
 
     const uniqueNameBoolean = `log time issue tracking ${id}`
-
-    const timerRef = useWorklogQuery({
-        taskId: id,
-    })
 
     const onStopTracking = async () => {
         setLoading(true)
@@ -62,7 +57,7 @@ const IssueTracking = (props: TaskProps) => {
                     backgroundColor: 'color.background.accent.blue.subtlest',
                 })}
             >
-                <Timer ref={timerRef} />
+                <LogTimeAuto issueId={id} />
 
                 {!isLoading && fields.status.statusCategory.key !== 'indeterminate' && (
                     <SectionMessage

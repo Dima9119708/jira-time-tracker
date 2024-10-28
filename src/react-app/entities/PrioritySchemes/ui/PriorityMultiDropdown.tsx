@@ -1,13 +1,9 @@
 import React, { ReactNode, useState } from 'react'
 import DropdownMenu, { DropdownItemCheckbox } from '@atlaskit/dropdown-menu'
-import { Box, Flex, Text, xcss } from '@atlaskit/primitives'
-import { token } from '@atlaskit/tokens'
-import Button from '@atlaskit/button/new'
-import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
-import Badge from '@atlaskit/badge'
-import { useGetPrioritySchemes } from 'react-app/entities/PrioritySchemes/lib/useGetPrioritySchemes'
+import { Flex, Text } from '@atlaskit/primitives'
+import { usePrioritySchemesGET } from 'react-app/entities/PrioritySchemes/lib/usePrioritySchemesGET'
 import Image from '@atlaskit/image'
-import UserAvatarCircleIcon from '@atlaskit/icon/glyph/user-avatar-circle'
+import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
 
 interface PriorityMultiDropdownProps {
     values: string[] | undefined
@@ -20,7 +16,7 @@ const PriorityMultiDropdown = (props: PriorityMultiDropdownProps) => {
     const { values, onChange, elemAfterDropdownItems, projectIds } = props
     const [opened, setOpened] = useState(false)
 
-    const query = useGetPrioritySchemes({
+    const query = usePrioritySchemesGET({
         opened: opened,
         projectIds,
     })
@@ -32,24 +28,11 @@ const PriorityMultiDropdown = (props: PriorityMultiDropdownProps) => {
                 values?.length === 0 || values === undefined
                     ? 'Priority'
                     : (triggerButtonProps) => (
-                          <Box
-                              xcss={xcss({
-                                  // @ts-ignore
-                                  '& > button, & > button:hover': {
-                                      backgroundColor: token('color.background.selected'),
-                                      color: token('color.text.selected'),
-                                  },
-                              })}
-                          >
-                              <Button
-                                  {...triggerButtonProps}
-                                  ref={triggerButtonProps.triggerRef}
-                                  iconAfter={ChevronDownIcon}
-                              >
-                                  Priority{' '}
-                                  <Badge appearance="primary">{values?.length === 1 ? values?.length : `+${values?.length}`}</Badge>
-                              </Button>
-                          </Box>
+                          <JQLBasicDropdownTriggerButton
+                              title="Priority"
+                              values={values}
+                              triggerButtonProps={triggerButtonProps}
+                          />
                       )
             }
             shouldRenderToParent

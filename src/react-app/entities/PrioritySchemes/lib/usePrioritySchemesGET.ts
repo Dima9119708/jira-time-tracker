@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
-import { Project } from 'react-app/entities/Projects/lib/useGetProjects'
+import { Project } from 'react-app/entities/Projects/lib/useProjectsGET'
 
 interface PrioritySchemesResponse {
     values: {
@@ -20,7 +20,7 @@ interface PriorityScheme {
     iconUrl: string
 }
 
-export const useGetPrioritySchemes = (props: { opened: boolean; projectIds?: string[] }) => {
+export const usePrioritySchemesGET = (props: { opened: boolean; projectIds?: string[] }) => {
     const { opened, projectIds } = props
 
     const dataQuery = useQuery({

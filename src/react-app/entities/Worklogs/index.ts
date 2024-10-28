@@ -1,5 +1,5 @@
-import { Worklog } from './api/useGetWorklogs'
+import { Worklog } from './api/useWorklogsGET'
 
 export type { Comment } from './lib/helpers/extractTextFromDoc'
 export type { Worklog }
-export { useGetWorklogs } from './api/useGetWorklogs'
+export { useWorklogsGET } from './api/useWorklogsGET'

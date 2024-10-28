@@ -2,22 +2,16 @@ import { Box, Flex, xcss } from '@atlaskit/primitives'
 import { StatusesDropdown } from 'react-app/entities/Status'
 import { Control, FormProvider, useController, useForm, useFormContext, useWatch } from 'react-hook-form'
 import { ProjectsDropdown } from 'react-app/entities/Projects'
-import { AssigneeDropdown } from 'react-app/entities/UserSearch'
+import { AssignableMultiProjectSearch, UserSearchDropdown } from 'react-app/entities/UserSearch'
 import DropdownMenu, { DropdownItemRadio } from '@atlaskit/dropdown-menu'
 import { useCallback, useState } from 'react'
-import { token } from '@atlaskit/tokens'
 import Button from '@atlaskit/button/new'
-import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
 import { PriorityMultiDropdown } from 'react-app/entities/PrioritySchemes'
 import { ProjectValue } from 'react-app/entities/Projects/ui/ProjectsDropdown'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AxiosError, AxiosResponse } from 'axios'
-import { FilterDetails } from 'react-app/pages/Issues/types/types'
-import { ErrorType } from 'react-app/shared/types/jiraTypes'
-import { axiosInstance } from 'react-app/shared/config/api/api'
+import { useQueryClient } from '@tanstack/react-query'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
-import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { useFilterPUT } from 'react-app/entities/Filters'
+import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
 
 export type JQLBasic = {
     priority: string[] | undefined
@@ -115,6 +109,8 @@ const Assignees = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandler 
         name: 'projects',
     })
 
+    const projectKeys = projects?.map((project: any) => project.key) || []
+
     const { field } = useController({
         control,
         name: 'assignees',
@@ -126,9 +122,15 @@ const Assignees = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandler 
         handleSubmit(onSubmit)()
     }
 
-    return (
-        <AssigneeDropdown
-            projectKeys={projects?.map((project: any) => project.key)}
+    return projectKeys?.length > 0 ? (
+        <AssignableMultiProjectSearch
+            projectKeys={projectKeys}
+            values={field.value}
+            onChange={onChange}
+            elemAfterDropdownItems={<Button onClick={() => onChange([])}>Clear</Button>}
+        />
+    ) : (
+        <UserSearchDropdown
             values={field.value}
             onChange={onChange}
             elemAfterDropdownItems={<Button onClick={() => onChange([])}>Clear</Button>}
@@ -188,25 +190,11 @@ const CreatedSort = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandle
             isOpen={open}
             onOpenChange={() => setOpen(!open)}
             trigger={(triggerButtonProps) => (
-                <Box
-                    xcss={xcss({
-                        // @ts-ignore
-                        ...(field.value && {
-                            '& > button, & > button:hover': {
-                                backgroundColor: token('color.background.selected'),
-                                color: token('color.text.selected'),
-                            },
-                        }),
-                    })}
-                >
-                    <Button
-                        {...triggerButtonProps}
-                        ref={triggerButtonProps.triggerRef}
-                        iconAfter={ChevronDownIcon}
-                    >
-                        {`Created sort ${!field.value ? '' : `(${field.value || ''})`} `}
-                    </Button>
-                </Box>
+                <JQLBasicDropdownTriggerButton
+                    values={field.value}
+                    triggerButtonProps={triggerButtonProps}
+                    title={`Created sort ${!field.value ? '' : `(${field.value || ''})`} `}
+                />
             )}
         >
             <DropdownItemRadio
@@ -250,25 +238,11 @@ const PrioritySort = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandl
             isOpen={open}
             onOpenChange={() => setOpen(!open)}
             trigger={(triggerButtonProps) => (
-                <Box
-                    xcss={xcss({
-                        // @ts-ignore
-                        ...(field.value && {
-                            '& > button, & > button:hover': {
-                                backgroundColor: token('color.background.selected'),
-                                color: token('color.text.selected'),
-                            },
-                        }),
-                    })}
-                >
-                    <Button
-                        {...triggerButtonProps}
-                        ref={triggerButtonProps.triggerRef}
-                        iconAfter={ChevronDownIcon}
-                    >
-                        {`Priority sort ${!field.value ? '' : `(${field.value || ''})`} `}
-                    </Button>
-                </Box>
+                <JQLBasicDropdownTriggerButton
+                    values={field.value}
+                    triggerButtonProps={triggerButtonProps}
+                    title={`Priority sort ${!field.value ? '' : `(${field.value || ''})`} `}
+                />
             )}
         >
             <DropdownItemRadio
@@ -327,7 +301,7 @@ const JQLBuilderBasicForm = () => {
         const combinedJQL = [JQLSeparatedAndOperator, JQLSortFormat].filter(Boolean).join(' ')
 
         filterPUT.mutate({
-            description: {
+            settings: {
                 jqlBasic: data,
             },
             jql: combinedJQL,

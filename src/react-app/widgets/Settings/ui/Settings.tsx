@@ -104,7 +104,7 @@ const Settings = () => {
         }
 
         filterPUT.mutate({
-            description: newSettings,
+            settings: newSettings,
         })
     }
 
