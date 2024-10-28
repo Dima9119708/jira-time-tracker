@@ -17,7 +17,7 @@ const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
 const Timesheet = lazy(() => import('../../widgets/Timesheet'))
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import RecentIcon from '@atlaskit/icon/glyph/recent'
-import DetectedUnauthorizedPlugin from 'react-app/app/GlobalComponents/DetectedUnauthorizedPlugin/DetectedUnauthorizedPlugin'
+import UnauthorizedPluginHandler from 'react-app/app/GlobalComponents/UnauthorizedPluginHandler/UnauthorizedPluginHandler'
 
 const styles = {
     app_wrap: xcss({}),
@@ -57,7 +57,7 @@ const LayoutRoot = () => {
             <Notifications />
             <DetectedSystemIdle />
             <AutoStart />
-            <DetectedUnauthorizedPlugin />
+            <UnauthorizedPluginHandler />
 
             <Box xcss={styles.app_wrap}>
                 <Flex xcss={styles.header}>

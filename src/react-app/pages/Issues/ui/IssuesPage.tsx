@@ -1,5 +1,5 @@
 import LoadMore from './LoadMore'
-import { Filter } from '../../../features/Filter'
+import { JQLEditor } from '../../../features/JQLEditor'
 import IssuesTracking from './IssuesTracking'
 import Issues from './Issues'
 import { Flex, xcss } from '@atlaskit/primitives'
@@ -40,7 +40,7 @@ const IssuesPage = () => {
                 </Flex>
             </Flex>
 
-            {jqlUISearchModeSwitcher === 'jql' ? <Filter /> : <JQLBuilderBasicForm />}
+            {jqlUISearchModeSwitcher === 'jql' ? <JQLEditor /> : <JQLBuilderBasicForm />}
 
             <IssuesTracking />
 

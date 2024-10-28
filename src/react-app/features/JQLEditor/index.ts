@@ -1,6 +1,6 @@
 import { FilterProps } from './types/types'
-import Filter from './ui/JQLEditor'
+import JQLEditor from './ui/JQLEditor'
 
 export type { FilterProps }
 
-export { Filter }
+export { JQLEditor }

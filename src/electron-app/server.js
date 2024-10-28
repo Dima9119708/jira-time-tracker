@@ -245,30 +245,29 @@ const server = (port, errorCallback) => {
                 }
             })
 
-            app.get('/filters', async (req, res) => {
+            app.get('/filter/search', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
 
                     if (authParsed.type === BASIC_AUTH) {
-                        const response = await axios.get(
-                            `${authParsed.jiraSubDomain}/rest/api/3/filter/search?filterName=${req.query.filterValue}`,
-                            {
-                                headers: {
-                                    Authorization: `Basic ${authParsed.apiToken}`,
-                                },
-                            }
-                        )
+                        const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/3/filter/search`, {
+                            headers: {
+                                Authorization: `Basic ${authParsed.apiToken}`,
+                            },
+                            params: req.query,
+                        })
 
                         res.send(response.data)
                     }
 
                     if (authParsed.type === OAUTH2) {
                         const response = await axios.get(
-                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/filter/search?filterName=${req.query.filterValue}`,
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/filter/search`,
                             {
                                 headers: {
                                     Authorization: `Bearer ${authParsed.access_token}`,
                                 },
+                                params: req.query,
                             }
                         )
 
@@ -464,7 +463,7 @@ const server = (port, errorCallback) => {
                 }
             })
 
-            app.post('/filter-details', async (req, res) => {
+            app.post('/filter', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
 
@@ -500,7 +499,7 @@ const server = (port, errorCallback) => {
                 }
             })
 
-            app.put('/filter-details', async (req, res) => {
+            app.put('/filter', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
 

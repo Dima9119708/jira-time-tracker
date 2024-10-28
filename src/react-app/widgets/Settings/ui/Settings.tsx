@@ -14,15 +14,15 @@ import Toggle from '@atlaskit/toggle'
 import Textfield from '@atlaskit/textfield'
 import Select from '@atlaskit/select'
 import Heading from '@atlaskit/heading'
-import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { ErrorMessage } from '@atlaskit/form'
 import { useGlobalBoolean } from 'use-global-boolean'
 import Image from '@atlaskit/image'
 import CheckCircleIcon from '@atlaskit/icon/glyph/check-circle'
 import CrossCircleIcon from '@atlaskit/icon/glyph/cross-circle'
 import { token } from '@atlaskit/tokens'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { electron } from 'react-app/shared/lib/electron/electron'
+import { useFilterPUT } from 'react-app/entities/Filters'
 
 export type FormValues = UseGlobalState['settings']
 
@@ -51,9 +51,7 @@ const Settings = () => {
 
     const opened = watchBoolean('user settings')
 
-    const notify = useNotifications()
-
-    const { control, handleSubmit, watch } = useForm<FormValues>({
+    const { control, handleSubmit, watch, getValues } = useForm<FormValues>({
         mode: 'onBlur',
         defaultValues: useGlobalState.getState().settings,
     })
@@ -61,54 +59,15 @@ const Settings = () => {
     const sendInactiveNotificationEnabled = !watch('sendInactiveNotification.enabled')
     const systemIdleEnabled = !watch('systemIdle.enabled')
 
-    const { mutate, isPending } = useMutation<
-        AxiosResponse<FilterDetails>,
-        AxiosError<ErrorType>,
-        string,
-        { dismissFn: Function; title: string }
-    >({
-        mutationFn: (variables) =>
-            axiosInstance.put<FilterDetails>(
-                '/filter-details',
-                {
-                    description: variables,
-                },
-                {
-                    params: {
-                        id: useGlobalState.getState().filterId,
-                    },
-                }
-            ),
-        onMutate: () => {
-            const title = 'Update settings'
-
-            const dismissFn = notify.loading({
-                title: title,
-            })
-
-            return {
-                dismissFn,
-                title,
+    const filterPUT = useFilterPUT({
+        onSuccess: () => {
+            if (typeof getValues('plugin') !== 'string') {
+                electron(async (methods) => {
+                    await methods.ipcRenderer.invoke('DELETE_AUTH_PLUGIN_DATA')
+                })
             }
-        },
-        onSuccess: (data, variables, context) => {
-            context?.dismissFn()
-
-            electron(async (methods) => {
-                await methods.ipcRenderer.invoke('DELETE_AUTH_PLUGIN_DATA')
-            })
-
-            notify.success({
-                title: context!.title,
-            })
 
             setFalse('user settings')
-        },
-        onError: (error) => {
-            notify.error({
-                title: `Error loading issue`,
-                description: JSON.stringify(error.response?.data),
-            })
         },
     })
 
@@ -144,8 +103,9 @@ const Settings = () => {
             },
         }
 
-        useGlobalState.getState().setSettings(newSettings)
-        mutate(useGlobalState.getState().getSettingsString())
+        filterPUT.mutate({
+            description: newSettings,
+        })
     }
 
     return (
@@ -436,7 +396,7 @@ const Settings = () => {
                         </Button>
                         <Button
                             appearance="primary"
-                            isLoading={isPending}
+                            isLoading={filterPUT.isPending}
                             onClick={handleSubmit(onSave)}
                         >
                             Save

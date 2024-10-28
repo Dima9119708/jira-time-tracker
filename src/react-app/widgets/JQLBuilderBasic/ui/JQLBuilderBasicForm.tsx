@@ -17,6 +17,7 @@ import { ErrorType } from 'react-app/shared/types/jiraTypes'
 import { axiosInstance } from 'react-app/shared/config/api/api'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { useFilterPUT } from 'react-app/entities/Filters'
 
 export type JQLBasic = {
     priority: string[] | undefined
@@ -298,36 +299,15 @@ const JQLBuilderBasicForm = () => {
 
     const { control } = formMethods
 
-    const notify = useNotifications()
-
     const queryClient = useQueryClient()
 
-    const { mutate } = useMutation<AxiosResponse<FilterDetails>, AxiosError<ErrorType>, void, Function>({
-        mutationFn: (variables) =>
-            axiosInstance.put<FilterDetails>(
-                '/filter-details',
-                {
-                    description: useGlobalState.getState().getSettingsString(),
-                    jql: useGlobalState.getState().jql,
-                },
-                {
-                    params: {
-                        id: useGlobalState.getState().filterId,
-                    },
-                }
-            ),
-        onMutate: () => {
-            return notify.loading({
-                title: 'Searching',
-            })
-        },
-        onSuccess: (data, variables, context) => {
-            context?.()
-        },
-        onError: (error) => {
-            notify.error({
-                title: `Error loading issue`,
-                description: JSON.stringify(error.response?.data),
+    const filterPUT = useFilterPUT({
+        titleLoading: 'Searching',
+        titleSuccess: '',
+        titleError: 'Filter update error',
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['tasks'],
             })
         },
     })
@@ -346,13 +326,11 @@ const JQLBuilderBasicForm = () => {
 
         const combinedJQL = [JQLSeparatedAndOperator, JQLSortFormat].filter(Boolean).join(' ')
 
-        useGlobalState.getState().updateJQL(combinedJQL)
-        useGlobalState.getState().setSettings({ jqlBasic: data })
-
-        mutate()
-
-        queryClient.invalidateQueries({
-            queryKey: ['tasks'],
+        filterPUT.mutate({
+            description: {
+                jqlBasic: data,
+            },
+            jql: combinedJQL,
         })
     }, [])
 

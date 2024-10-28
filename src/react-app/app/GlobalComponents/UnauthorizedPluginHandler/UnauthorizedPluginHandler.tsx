@@ -9,7 +9,7 @@ import { FilterDetails } from 'react-app/pages/Issues/types/types'
 import { ErrorType } from 'react-app/shared/types/jiraTypes'
 import { axiosInstance } from 'react-app/shared/config/api/api'
 
-const DetectedUnauthorizedPlugin = () => {
+const UnauthorizedPluginHandler = () => {
     const notify = useNotifications()
 
     const currentPath = useRef('')
@@ -76,4 +76,4 @@ const DetectedUnauthorizedPlugin = () => {
     return null
 }
 
-export default DetectedUnauthorizedPlugin
+export default UnauthorizedPluginHandler
