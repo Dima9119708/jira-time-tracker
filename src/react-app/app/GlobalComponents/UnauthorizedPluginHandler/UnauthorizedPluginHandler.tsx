@@ -3,11 +3,7 @@ import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalSta
 import { useEffect, useRef } from 'react'
 import { useBooleanController } from 'use-global-boolean'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
-import { AxiosError, AxiosResponse } from 'axios'
-import { ErrorType } from 'react-app/shared/types/Jira/ErrorType'
-import { axiosInstance } from 'react-app/shared/config/api/api'
-import { FilterShortType } from 'react-app/shared/types/Jira/Filter'
+import { useFilterPUT } from 'react-app/entities/Filters'
 
 const UnauthorizedPluginHandler = () => {
     const notify = useNotifications()
@@ -20,26 +16,7 @@ const UnauthorizedPluginHandler = () => {
 
     currentPath.current = location.pathname
 
-    const { mutate } = useMutation<AxiosResponse<FilterShortType>, AxiosError<ErrorType>, string, { dismissFn: Function; title: string }>({
-        mutationFn: (variables) =>
-            axiosInstance.put<FilterShortType>(
-                '/filter-details',
-                {
-                    description: variables,
-                },
-                {
-                    params: {
-                        id: useGlobalState.getState().filterId,
-                    },
-                }
-            ),
-        onError: (error) => {
-            notify.error({
-                title: `Error loading issue`,
-                description: JSON.stringify(error.response?.data),
-            })
-        },
-    })
+    const filterPUT = useFilterPUT()
 
     useEffect(() => {
         if (isUnauthorizedPlugin && currentPath.current === '/issues') {
@@ -51,11 +28,11 @@ const UnauthorizedPluginHandler = () => {
 
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    useGlobalState.getState().setSettings({
-                        plugin: null,
+                    filterPUT.mutate({
+                        settings: {
+                            plugin: null,
+                        },
                     })
-
-                    mutate(useGlobalState.getState().getSettingsString())
 
                     navigate('/auth-plugin')
 
