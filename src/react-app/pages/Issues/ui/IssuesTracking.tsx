@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { queryGetIssuesTracking } from '../model/queryOptions'
-import TaskTracking from './IssueTracking'
+import IssueTracking from './IssueTracking'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { queryGetIssuesTracking } from 'react-app/entities/Issues'
 
 const IssuesTracking = () => {
     const notify = useNotifications()
@@ -17,19 +17,16 @@ const IssuesTracking = () => {
         })
     )
 
-    return (
-        <>
-            {data?.map((task, idxIssue) => (
-                <TaskTracking
-                    key={task.id}
-                    issueKey={task.key}
-                    idxIssue={idxIssue}
-                    fields={task.fields}
-                    id={task.id}
-                />
-            ))}
-        </>
-    )
+    return data?.map((task, idxIssue) => (
+        <IssueTracking
+            key={task.id}
+            issueKey={task.key}
+            idxIssue={idxIssue}
+            fields={task.fields}
+            id={task.id}
+            isLast={idxIssue === data.length - 1}
+        />
+    ))
 }
 
 export default IssuesTracking

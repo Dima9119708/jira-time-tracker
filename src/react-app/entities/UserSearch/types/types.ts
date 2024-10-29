@@ -1,7 +1,7 @@
-import { Assignee } from '../../../pages/Issues/types/types'
 import { DropdownMenuProps } from '@atlaskit/dropdown-menu'
+import { Assignee } from 'react-app/shared/types/Jira/Issues'
 
-export interface AssignableIssueProps {
+export interface AssignableSearchByIssueDropdownProps {
     assignee: Assignee | null
     issueKey: string
     onChange: (assignee: Assignee) => void

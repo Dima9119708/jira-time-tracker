@@ -1,12 +1,12 @@
 import { queryOptions, infiniteQueryOptions, InfiniteData, QueryKey } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
-import { Issue, IssueResponse, IssuesTrackingResponse } from '../types/types'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { AxiosError } from 'axios'
-import { ErrorType } from '../../../shared/types/jiraTypes'
+import { ErrorType } from '../../../shared/types/Jira/ErrorType'
+import { IssueResponse, Issue } from 'react-app/shared/types/Jira/Issues'
 
 export const queryGetIssuesTracking = (args: { onReject?: (reject: AxiosError<ErrorType>) => void }) =>
-    queryOptions<IssuesTrackingResponse>({
+    queryOptions<IssueResponse['issues']>({
         queryKey: ['tasks tracking'],
         queryFn: async (context) => {
             const tasksIDS = useGlobalState.getState().getIssueIdsSearchParams()
@@ -16,7 +16,7 @@ export const queryGetIssuesTracking = (args: { onReject?: (reject: AxiosError<Er
                     tasksIDS.split(',').map((id) => axiosInstance.get<Issue>('/issue', { params: { id }, signal: context.signal }))
                 )
 
-                return responses.reduce<IssuesTrackingResponse>((acc, response) => {
+                return responses.reduce<IssueResponse['issues']>((acc, response) => {
                     if (response.status === 'fulfilled') {
                         acc.push(response.value.data)
                     }

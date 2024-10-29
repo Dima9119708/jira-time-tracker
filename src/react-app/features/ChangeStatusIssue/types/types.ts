@@ -1,6 +1,6 @@
-import { StatusesTaskProps } from '../../../entities/StatusesIssue'
+import { StatusesByIssueDropdownProps } from 'react-app/entities/Issues/types/types'
 
-export interface ChangeStatusTaskProps extends Omit<StatusesTaskProps, 'onChange'> {
+export interface ChangeStatusTaskProps extends Omit<StatusesByIssueDropdownProps, 'onChange'> {
     queryKey: string
     onChange?: () => void
     idxPage?: number

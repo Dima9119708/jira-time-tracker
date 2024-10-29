@@ -1,7 +1,7 @@
 import { axiosInstance } from 'react-app/shared/config/api/api'
 import { QueryClient } from '@tanstack/react-query'
 import { STATIC_FILTER_NAME } from 'react-app/shared/const'
-import { Filter } from 'react-app/shared/types/Filter'
+import { Filter } from 'react-app/shared/types/Jira/Filter'
 
 export const filterPOST = async (queryClient: QueryClient, description: Filter['description'], jql: Filter['jql']) => {
     return await queryClient.fetchQuery<Filter>({

@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
-import AssignableIssue from 'react-app/entities/UserSearch/ui/AssignableIssue'
-import { Assignee, IssueResponse, IssuesTrackingResponse } from '../../../pages/Issues/types/types'
+import AssignableSearchByIssueDropdown from 'react-app/entities/UserSearch/ui/AssignableSearchByIssueDropdown'
 import { AxiosError, AxiosResponse } from 'axios'
-import { ErrorType } from '../../../shared/types/jiraTypes'
+import { ErrorType } from '../../../shared/types/Jira/ErrorType'
 import { InfiniteData } from '@tanstack/react-query/build/modern/index'
 import { produce } from 'immer'
 import { ChangeAssigneeProps } from '../types/types'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { Assignee, IssueResponse } from 'react-app/shared/types/Jira/Issues'
 
 const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
     const { issueKey, idxIssue, issueName, idxPage, assignee, queryKey, position = 'bottom-start' } = props
@@ -20,7 +20,7 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
         AxiosResponse<Assignee>,
         AxiosError<ErrorType>,
         Assignee,
-        { dismissFn: Function; oldState: InfiniteData<IssueResponse> | IssuesTrackingResponse | undefined; notificationMessage: string }
+        { dismissFn: Function; oldState: InfiniteData<IssueResponse> | IssueResponse['issues'] | undefined; notificationMessage: string }
     >({
         mutationFn: (variables) =>
             axiosInstance.put<Assignee>('/issue-assignee', { accountId: variables.accountId }, { params: { id: issueKey } }),
@@ -29,7 +29,7 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
 
             queryClient.setQueryData(
                 [queryKey],
-                (old: InfiniteData<IssueResponse> | IssuesTrackingResponse): InfiniteData<IssueResponse> | IssuesTrackingResponse => {
+                (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
                     if (Array.isArray(old)) {
                         return produce(old, (draft) => {
                             draft[idxIssue].fields.assignee = variables
@@ -50,7 +50,7 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
             })
 
             return {
-                oldState: queryClient.getQueryData<InfiniteData<IssueResponse> | IssuesTrackingResponse>([queryKey]),
+                oldState: queryClient.getQueryData<InfiniteData<IssueResponse> | IssueResponse['issues']>([queryKey]),
                 dismissFn,
                 notificationMessage,
             }
@@ -78,7 +78,7 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
     })
 
     return (
-        <AssignableIssue
+        <AssignableSearchByIssueDropdown
             assignee={assignee}
             issueKey={issueKey}
             onChange={mutate}

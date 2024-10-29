@@ -2,7 +2,7 @@ import React from 'react'
 import { Flex, Box, Text, xcss } from '@atlaskit/primitives'
 import Image from '@atlaskit/image'
 import UserAvatarCircleIcon from '@atlaskit/icon/glyph/user-avatar-circle'
-import { User } from 'react-app/shared/types/UserSearch'
+import { User } from 'react-app/shared/types/Jira/UserSearch'
 import { DropdownItemCheckbox } from '@atlaskit/dropdown-menu'
 
 interface AssigneeDropdownItemProps {

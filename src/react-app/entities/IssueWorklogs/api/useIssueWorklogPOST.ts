@@ -4,9 +4,9 @@ import { axiosInstance, axiosInstancePlugin } from 'react-app/shared/config/api/
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from 'react-app/shared/const'
 import { AxiosError, AxiosResponse } from 'axios'
-import { MySelfResponse } from 'react-app/pages/Issues/types/types'
 import { queryClient } from 'react-app/app/QueryClientProvide/QueryClientProvide'
 import { convertJiraTimeToSeconds, worklogCommentTemplate } from 'react-app/entities/IssueWorklogs'
+import { MySelf } from 'react-app/shared/types/Jira/MySelf'
 
 export interface CreateIssueWorklog {
     issueId: string
@@ -29,7 +29,7 @@ export const useIssueWorklogPOST = <MutateReturn>(props?: {
         mutationFn: async (data: CreateIssueWorklog) => {
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    const mySelf = queryClient.getQueryData<MySelfResponse>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
 
                     return await axiosInstancePlugin.post('/issue-worklog/plugin', {
                         issueId: data.issueId,

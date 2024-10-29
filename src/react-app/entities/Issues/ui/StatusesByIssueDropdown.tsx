@@ -1,21 +1,18 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { axiosInstance } from '../../../shared/config/api/api'
-import { StatusesTaskResponse, StatusesTaskProps } from '../types/types'
+import { StatusesByIssueDropdownProps } from 'react-app/entities/Issues/types/types'
 import Lozenge from '@atlaskit/lozenge'
 import DropdownMenu, { DropdownItem, DropdownItemGroup } from '@atlaskit/dropdown-menu'
 import { Box, xcss } from '@atlaskit/primitives'
 import { token } from '@atlaskit/tokens'
+import { useStatutesByIssueGET } from 'react-app/entities/Issues/api/useStatutesByIssueGET'
 
-const StatusesIssue = (props: StatusesTaskProps) => {
+const StatusesByIssueDropdown = (props: StatusesByIssueDropdownProps) => {
     const { issueId, onChange, trigger, status, position = 'bottom-start', disabled } = props
     const [open, setOpen] = useState(false)
 
-    const { data, isLoading } = useQuery({
-        queryKey: ['statuses task', issueId],
-        queryFn: () => axiosInstance.get<StatusesTaskResponse>('/statuses-task', { params: { id: issueId } }),
-        select: (data) => data.data,
-        enabled: open,
+    const { data, isLoading } = useStatutesByIssueGET({
+        issueId,
+        open,
     })
 
     const styles = useMemo(() => {
@@ -90,4 +87,4 @@ const StatusesIssue = (props: StatusesTaskProps) => {
     )
 }
 
-export default StatusesIssue
+export default StatusesByIssueDropdown

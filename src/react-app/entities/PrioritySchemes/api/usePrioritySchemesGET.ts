@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
-import { Project } from 'react-app/entities/Projects/lib/useProjectsGET'
+import { Project } from 'react-app/entities/Projects/api/useProjectsGET'
 
 interface PrioritySchemesResponse {
     values: {

@@ -1,8 +1,8 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { queryGetIssues } from '../model/queryOptions'
-import Task from './Issue'
+import Issue from './Issue'
 import { useEffect } from 'react'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { queryGetIssues } from 'react-app/entities/Issues'
 
 const Issues = () => {
     const { data, error } = useInfiniteQuery(queryGetIssues())
@@ -18,21 +18,18 @@ const Issues = () => {
         }
     }, [error])
 
-    return (
-        <>
-            {data?.pages.map((page, idxPage) =>
-                page.issues.map((task, idxIssue) => (
-                    <Task
-                        key={task.id}
-                        issueKey={task.key}
-                        idxPage={idxPage}
-                        idxIssue={idxIssue}
-                        fields={task.fields}
-                        id={task.id}
-                    />
-                ))
-            )}
-        </>
+    return data?.pages.map((page, idxPage) =>
+        page.issues.map((task, idxIssue) => (
+            <Issue
+                key={task.id}
+                issueKey={task.key}
+                idxPage={idxPage}
+                idxIssue={idxIssue}
+                fields={task.fields}
+                id={task.id}
+                isLast={idxPage + idxIssue === idxPage + (page.issues.length - 1)}
+            />
+        ))
     )
 }
 

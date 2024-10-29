@@ -1,6 +1,6 @@
 import { axiosInstance } from 'react-app/shared/config/api/api'
 import { useQuery } from '@tanstack/react-query'
-import { User } from 'react-app/shared/types/UserSearch'
+import { User } from 'react-app/shared/types/Jira/UserSearch'
 
 export const useAssignableMultiProjectSearchGET = (props: { projectKeys: string[]; opened: boolean }) => {
     const { projectKeys, opened } = props

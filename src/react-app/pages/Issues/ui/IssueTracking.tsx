@@ -1,27 +1,24 @@
 import React, { memo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { secondsToUIFormat } from '../lib/dateHelper'
+import { secondsToUIFormat } from '../../../shared/lib/helpers/secondsToUIFormat'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
-import { TaskProps, IssuesTrackingResponse } from '../types/types'
+import { IssueProps } from '../types/types'
 import { produce } from 'immer'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
 import { IconButton } from '@atlaskit/button/new'
 import VidPauseIcon from '@atlaskit/icon/glyph/vid-pause'
-import { Box, Flex, Text, xcss } from '@atlaskit/primitives'
-import Badge from '@atlaskit/badge'
-import Heading from '@atlaskit/heading'
+import { Box, Flex, xcss } from '@atlaskit/primitives'
 import SectionMessage from '@atlaskit/section-message'
-import Image from '@atlaskit/image'
 import { LogTimeButton, LogTimeDialog } from 'react-app/features/LogTime'
 import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
-import dayjs from 'dayjs'
-import { DATE_FORMAT } from 'react-app/shared/const'
 import { LogTimeAuto } from 'react-app/features/LogTimeAuto'
+import { CardIssueDetailsBadges, CardIssueHeader, CardIssue } from 'react-app/entities/Issues'
+import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 
-const IssueTracking = (props: TaskProps) => {
-    const { fields, id, idxIssue, issueKey } = props
+const IssueTracking = (props: IssueProps) => {
+    const { fields, id, idxIssue, issueKey, isLast } = props
     const queryClient = useQueryClient()
     const [isLoading, setLoading] = useState(false)
 
@@ -34,7 +31,7 @@ const IssueTracking = (props: TaskProps) => {
 
         await queryClient.invalidateQueries({ queryKey: ['tasks'] })
 
-        queryClient.setQueryData(['tasks tracking'], (old: IssuesTrackingResponse): IssuesTrackingResponse => {
+        queryClient.setQueryData(['tasks tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
             return produce(old, (draft) => {
                 const idx = draft.findIndex((a) => a.id === id)
                 draft.splice(idx, 1)
@@ -46,16 +43,9 @@ const IssueTracking = (props: TaskProps) => {
 
     return (
         <>
-            <Box
-                xcss={xcss({
-                    display: 'flex',
-                    flexDirection: 'column',
-                    rowGap: 'space.200',
-                    padding: 'space.200',
-                    borderRadius: 'border.radius.200',
-                    boxShadow: 'elevation.shadow.overflow',
-                    backgroundColor: 'color.background.accent.blue.subtlest',
-                })}
+            <CardIssue
+                active
+                isLast={isLast}
             >
                 <LogTimeAuto issueId={id} />
 
@@ -68,103 +58,22 @@ const IssueTracking = (props: TaskProps) => {
                     </SectionMessage>
                 )}
 
-                <Flex justifyContent="space-between">
-                    <Heading size="medium">{fields.summary}</Heading>
+                <CardIssueHeader
+                    summary={fields.summary}
+                    timeoriginalestimate={secondsToUIFormat(fields.timeoriginalestimate)}
+                    timespent={secondsToUIFormat(fields.timespent)}
+                />
 
-                    <Badge appearance="primary">
-                        <Box
-                            as="span"
-                            xcss={xcss({ padding: 'space.050' })}
-                        >
-                            <Box
-                                as="span"
-                                xcss={xcss({ marginRight: 'space.075' })}
-                            >
-                                <Text weight="bold">{secondsToUIFormat(fields.timespent)}</Text>
-                            </Box>
-                            <Box
-                                as="span"
-                                xcss={xcss({ marginRight: 'space.075' })}
-                            >
-                                <Text weight="bold">/</Text>
-                            </Box>
-                            <Box as="span">
-                                <Text weight="bold">{secondsToUIFormat(fields.timeoriginalestimate)}</Text>
-                            </Box>
-                        </Box>
-                    </Badge>
-                </Flex>
-
-                <Flex
-                    gap="space.100"
-                    alignItems="center"
-                    wrap="wrap"
-                >
-                    <Badge appearance="default">
-                        <Flex
-                            xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', alignItems: 'center', columnGap: 'space.075' })}
-                        >
-                            <Image
-                                src={fields.project.avatarUrls['32x32']}
-                                height="15px"
-                                width="15px"
-                            />
-                            <Text
-                                weight="bold"
-                                size="small"
-                            >
-                                Project: {fields.project.name}
-                            </Text>
-                        </Flex>
-                    </Badge>
-
-                    <Badge appearance="default">
-                        <Flex
-                            xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}
-                        >
-                            <Image
-                                src={fields.priority.iconUrl}
-                                height="15px"
-                                width="15px"
-                            />
-                            <Text
-                                weight="bold"
-                                size="small"
-                            >
-                                priority: {fields.priority.name}
-                            </Text>
-                        </Flex>
-                    </Badge>
-
-                    <Badge appearance="default">
-                        <Flex
-                            xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}
-                        >
-                            <Image
-                                src={fields.issuetype.iconUrl}
-                                height="15px"
-                                width="15px"
-                            />
-                            <Text
-                                weight="bold"
-                                size="small"
-                            >
-                                {fields.issuetype.name} ({issueKey})
-                            </Text>
-                        </Flex>
-                    </Badge>
-
-                    <Badge appearance="default">
-                        <Flex xcss={xcss({ textTransform: 'uppercase' })}>
-                            <Text
-                                weight="bold"
-                                size="small"
-                            >
-                                created: {dayjs(fields.created).format(`${DATE_FORMAT} HH:mm:ss`)}
-                            </Text>
-                        </Flex>
-                    </Badge>
-                </Flex>
+                <CardIssueDetailsBadges
+                    issueKey={issueKey}
+                    created={fields.created}
+                    issueTypeIconUrl={fields.issuetype.iconUrl}
+                    issueTypeName={fields.issuetype.name}
+                    projectName={fields.project.name}
+                    priorityIconUrl={fields.priority.iconUrl}
+                    avatarUrl={fields.project.avatarUrls['32x32']}
+                    priorityName={fields.priority.name}
+                />
 
                 <Flex
                     justifyContent="space-between"
@@ -215,7 +124,7 @@ const IssueTracking = (props: TaskProps) => {
                         )}
                     />
                 </Flex>
-            </Box>
+            </CardIssue>
 
             <WatchController name={uniqueNameBoolean}>
                 {({ localState }) => {

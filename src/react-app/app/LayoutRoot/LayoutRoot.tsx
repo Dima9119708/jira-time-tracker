@@ -13,11 +13,12 @@ import { IconButton } from '@atlaskit/button/new'
 import SignOutIcon from '@atlaskit/icon/glyph/sign-out'
 import { TOP_PANEL_HEIGHT } from 'react-app/widgets/TopPanel/ui/TopPanel'
 import { WatchController } from 'use-global-boolean'
-const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
-const Timesheet = lazy(() => import('../../widgets/Timesheet'))
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import RecentIcon from '@atlaskit/icon/glyph/recent'
-import UnauthorizedPluginHandler from 'react-app/app/GlobalComponents/UnauthorizedPluginHandler/UnauthorizedPluginHandler'
+import UnauthorizedPluginHandler from '../GlobalComponents/UnauthorizedPluginHandler/UnauthorizedPluginHandler'
+
+const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
+const Timesheet = lazy(() => import('../../widgets/Timesheet'))
 
 const styles = {
     app_wrap: xcss({}),

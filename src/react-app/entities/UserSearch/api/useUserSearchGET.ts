@@ -1,10 +1,8 @@
-import {useQuery} from "@tanstack/react-query";
-import {axiosInstance} from "react-app/shared/config/api/api";
-import {User} from "react-app/shared/types/UserSearch";
+import { useQuery } from '@tanstack/react-query'
+import { axiosInstance } from 'react-app/shared/config/api/api'
+import { User } from 'react-app/shared/types/Jira/UserSearch'
 
 export const useUserSearchGET = ({ opened }: { opened: boolean }) => {
-
-
     return useQuery({
         enabled: opened,
         queryKey: ['find users'],

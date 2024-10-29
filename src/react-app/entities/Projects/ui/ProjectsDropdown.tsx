@@ -7,7 +7,7 @@ import Button from '@atlaskit/button/new'
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
 import Badge from '@atlaskit/badge'
 import Lozenge from '@atlaskit/lozenge'
-import { Project, useProjectsGET } from 'react-app/entities/Projects/lib/useProjectsGET'
+import { Project, useProjectsGET } from 'react-app/entities/Projects/api/useProjectsGET'
 import Image from '@atlaskit/image'
 import UserAvatarCircleIcon from '@atlaskit/icon/glyph/user-avatar-circle'
 

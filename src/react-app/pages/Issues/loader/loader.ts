@@ -1,10 +1,10 @@
 import { axiosInstance } from '../../../shared/config/api/api'
-import { ConfigurationTimeTrackingOptions } from '../types/types'
 import { LoaderFunction } from 'react-router-dom'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { STATIC_FILTER_NAME } from '../../../shared/const'
 import { filterSearchGET, filterPOST } from 'react-app/entities/Filters'
 import { queryClient } from 'react-app/app/QueryClientProvide/QueryClientProvide'
+import { ConfigurationTimeTrackingOptions } from 'react-app/shared/types/Jira/TimeTracking'
 
 export const loaderIssues: LoaderFunction = async () => {
     let jql = ''

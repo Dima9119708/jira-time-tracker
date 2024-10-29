@@ -1,26 +1,18 @@
+import { AvatarUrls } from 'react-app/shared/types/Jira/CommonTypes'
+
 export interface Filter {
     approximateLastUsed: string | null
     description: string
     editPermissions: Array<{
         id: number
         project?: {
-            avatarUrls: {
-                '16x16': string
-                '24x24': string
-                '32x32': string
-                '48x48': string
-            }
+            avatarUrls: AvatarUrls
             deleted?: boolean
             deletedBy?: {
                 accountId: string
                 accountType: string
                 active: boolean
-                avatarUrls: {
-                    '16x16': string
-                    '24x24': string
-                    '32x32': string
-                    '48x48': string
-                }
+                avatarUrls: AvatarUrls
                 displayName: string
                 key: string
                 name: string
@@ -89,12 +81,7 @@ export interface Filter {
         accountId: string
         accountType: string
         active: boolean
-        avatarUrls: {
-            '16x16': string
-            '24x24': string
-            '32x32': string
-            '48x48': string
-        }
+        avatarUrls: AvatarUrls
         displayName: string
         key: string
         name: string
@@ -140,12 +127,7 @@ export interface Filter {
                 items: any[] // Уточните тип, если известно
                 size: number
             }
-            avatarUrls: {
-                '16x16': string
-                '24x24': string
-                '32x32': string
-                '48x48': string
-            }
+            avatarUrls: AvatarUrls
             displayName: string
             emailAddress: string
             groups: {
@@ -160,6 +142,8 @@ export interface Filter {
     }>
     viewUrl: string
 }
+
+export type FilterShortType = Pick<Filter, 'jql' | 'description' | 'id'>
 
 export interface FilterResponse {
     isLast: boolean

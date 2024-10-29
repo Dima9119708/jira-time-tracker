@@ -1,63 +1,21 @@
 import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { MySelfResponse } from 'react-app/pages/Issues/types/types'
 import { axiosInstance, axiosInstancePlugin } from 'react-app/shared/config/api/api'
 import { convertSecondsToJiraTime } from 'react-app/entities/IssueWorklogs/lib/convertJiraTimeToSeconds'
 import dayjs from 'dayjs'
 import { extractTextFromDoc } from 'react-app/entities/Worklogs/lib/helpers/extractTextFromDoc'
-import { Worklog, WorklogsTempoPluginResponse } from 'react-app/entities/Worklogs/api/useWorklogsGET'
+import { Worklog } from 'react-app/entities/Worklogs/api/useWorklogsGET'
 import { data } from 'autoprefixer'
 import { DATE_FORMAT } from 'react-app/shared/const'
+import { MySelf } from 'react-app/shared/types/Jira/MySelf'
+import { WorklogResponse } from 'react-app/shared/types/Jira/Worklogs'
+import { WorklogsTempoResponse } from 'react-app/shared/types/plugins/Tempo/Worklogs'
 
 interface UseGetIssueWorklogs {
     issueId: string
     from?: string
     to?: string
     enabled?: boolean
-}
-
-interface IssueWorklogsJiraResponse {
-    maxResults: number
-    startAt: number
-    total: number
-    worklogs: {
-        author: {
-            accountId: string
-            active: boolean
-            displayName: string
-            self: string
-        }
-        comment: {
-            type: string
-            version: number
-            content: {
-                type: string
-                text?: string
-                content?: {
-                    type: string
-                    text?: string
-                }[]
-            }[]
-        }
-        id: string
-        issueId: string
-        self: string
-        started: string
-        timeSpent: string
-        timeSpentSeconds: number
-        updateAuthor: {
-            accountId: string
-            active: boolean
-            displayName: string
-            self: string
-        }
-        updated: string
-        visibility: {
-            identifier: string
-            type: string
-            value: string
-        }
-    }[]
 }
 
 type IssueWorklogs = Pick<Worklog, 'date' | 'id' | 'timeSpent' | 'description' | 'timeSpentSeconds' | 'author'>
@@ -73,9 +31,9 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled }: UseGetIssueW
         queryFn: async ({ signal }) => {
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    const mySelf = queryClient.getQueryData<MySelfResponse>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
 
-                    const tempoWorklogsResponse = await axiosInstancePlugin.post<WorklogsTempoPluginResponse>(
+                    const tempoWorklogsResponse = await axiosInstancePlugin.post<WorklogsTempoResponse>(
                         '/worklogs/plugin',
                         {
                             issueIds: [issueId],
@@ -115,9 +73,9 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled }: UseGetIssueW
                 }
 
                 default: {
-                    const mySelf = queryClient.getQueryData<MySelfResponse>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
 
-                    const jiraIssueWorklogsResponse = await axiosInstance.get<IssueWorklogsJiraResponse>('/issue-worklogs', {
+                    const jiraIssueWorklogsResponse = await axiosInstance.get<WorklogResponse>('/issue-worklogs', {
                         params: {
                             issueId: issueId,
                             ...(from && { startedAfter: dayjs(from).valueOf() }),

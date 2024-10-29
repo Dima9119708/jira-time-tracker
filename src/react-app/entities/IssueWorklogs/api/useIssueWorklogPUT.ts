@@ -7,7 +7,7 @@ import { CreateIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssu
 import { AxiosError, AxiosResponse } from 'axios'
 import { convertJiraTimeToSeconds, worklogCommentTemplate } from 'react-app/entities/IssueWorklogs'
 import { queryClient } from 'react-app/app/QueryClientProvide/QueryClientProvide'
-import { MySelfResponse } from 'react-app/pages/Issues/types/types'
+import { MySelf } from 'react-app/shared/types/Jira/MySelf'
 
 export interface PutIssueWorklog extends Partial<CreateIssueWorklog> {
     issueId: string
@@ -31,9 +31,7 @@ export const useIssueWorklogPUT = <MutateReturn>(props?: {
         mutationFn: async (data: PutIssueWorklog) => {
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    console.log('data.startDate =>', data.startDate, dayjs(data.startDate).format(DATE_FORMAT))
-
-                    const mySelf = queryClient.getQueryData<MySelfResponse>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
                     return await axiosInstancePlugin.put('/issue-worklog/plugin', {
                         id: data.id,
                         startDate: dayjs(data.startDate).format(DATE_FORMAT),

@@ -1,6 +1,6 @@
 import React, { ReactNode, useState } from 'react'
 import DropdownMenu from '@atlaskit/dropdown-menu'
-import { useUserSearchGET } from 'react-app/entities/UserSearch/lib/useUserSearchGET'
+import { useUserSearchGET } from 'react-app/entities/UserSearch/api/useUserSearchGET'
 import ItemDropdownCheckbox from 'react-app/entities/UserSearch/ui/ItemDropdownCheckbox'
 import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
 

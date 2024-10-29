@@ -1,4 +1,4 @@
-import { Box, Flex, xcss } from '@atlaskit/primitives'
+import { Flex, xcss } from '@atlaskit/primitives'
 import Toggle from '@atlaskit/toggle'
 import { Label } from '@atlaskit/form'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -8,7 +8,6 @@ import { electron } from 'react-app/shared/lib/electron/electron'
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in'
 import MediaServicesZoomOutIcon from '@atlaskit/icon/glyph/media-services/zoom-out'
 import { IconButton } from '@atlaskit/button/new'
-import Textfield from '@atlaskit/textfield'
 import Badge from '@atlaskit/badge'
 
 export const TOP_PANEL_HEIGHT = '36px'
@@ -77,6 +76,21 @@ const TopPanel = () => {
             })
         }
     }, [zoom])
+
+    useEffect(() => {
+        const onWheel = (ev: WheelEvent) => {
+            if (ev.ctrlKey) {
+                if (ev.deltaY > 0) {
+                    setZoom((prevState) => prevState - 0.1)
+                } else {
+                    setZoom((prevState) => prevState + 0.1)
+                }
+            }
+        }
+
+        window.addEventListener('wheel', onWheel)
+        return () => window.removeEventListener('wheel', onWheel)
+    }, [])
 
     return (
         <>

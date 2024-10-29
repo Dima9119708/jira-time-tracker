@@ -1,7 +1,7 @@
 import { createStore } from '../../config/store/store'
-import { ConfigurationTimeTrackingOptions } from '../../../pages/Issues/types/types'
 import deepmerge from '../utils/deepMerge'
 import { JQLBasic } from 'react-app/widgets/JQLBuilderBasic/ui/JQLBuilderBasicForm'
+import { ConfigurationTimeTrackingOptions } from 'react-app/shared/types/Jira/TimeTracking'
 
 type Unit = { label: 'Minutes' | 'Hours'; value: 'minutes' | 'hours' }
 

@@ -2,46 +2,16 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance, axiosInstancePlugin } from 'react-app/shared/config/api/api'
 
 import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
-import { Issue, IssueResponse, MySelfResponse } from 'react-app/pages/Issues/types/types'
 import { convertSecondsToJiraTime } from 'react-app/entities/IssueWorklogs/lib/convertJiraTimeToSeconds'
 import dayjs from 'dayjs'
 import { extractTextFromDoc } from '../lib/helpers/extractTextFromDoc'
+import { Issue, IssueResponse } from 'react-app/shared/types/Jira/Issues'
+import { MySelf } from 'react-app/shared/types/Jira/MySelf'
+import { WorklogsTempoResponse } from 'react-app/shared/types/plugins/Tempo/Worklogs'
 
 export interface UseGetWorklogsProps {
     from?: string
     to?: string
-}
-
-export interface WorklogsTempoPluginResponse {
-    self: string
-    metadata: {
-        count: number
-        offset: number
-        limit: number
-    }
-    results: Array<{
-        self: string
-        tempoWorklogId: number
-        issue: {
-            self: string
-            id: number
-        }
-        timeSpentSeconds: number
-        billableSeconds: number
-        startDate: string
-        startTime: string
-        description: string
-        createdAt: string
-        updatedAt: string
-        author: {
-            self: string
-            accountId: string
-        }
-        attributes: {
-            self: string
-            values: Array<unknown>
-        }
-    }>
 }
 
 export type Worklog = {
@@ -57,7 +27,7 @@ export type Worklog = {
         name: string
     }
     description: string
-    author: Pick<MySelfResponse, 'avatarUrls' | 'displayName' | 'accountId'>
+    author: Pick<MySelf, 'avatarUrls' | 'displayName' | 'accountId'>
     date: string
 }
 
@@ -73,9 +43,9 @@ export const useWorklogsGET = ({ to, from }: UseGetWorklogsProps) => {
         queryFn: async () => {
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    const mySelf = queryClient.getQueryData<MySelfResponse>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
 
-                    const tempoWorklogsResponse = await axiosInstancePlugin.post<WorklogsTempoPluginResponse>('/worklogs/plugin', {
+                    const tempoWorklogsResponse = await axiosInstancePlugin.post<WorklogsTempoResponse>('/worklogs/plugin', {
                         authorIds: [mySelf.accountId],
                         from: from,
                         to: to,
@@ -120,7 +90,7 @@ export const useWorklogsGET = ({ to, from }: UseGetWorklogsProps) => {
                 }
 
                 default: {
-                    const mySelf = queryClient.getQueryData<MySelfResponse>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
 
                     const jiraWorklogsResponse = await axiosInstance.post<IssueResponse>('/worklogs', {
                         jql: `worklogDate >= "${from}" AND worklogDate <= "${to}" AND worklogAuthor = currentUser()`,

@@ -1,28 +1,20 @@
 import React, { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { axiosInstance } from '../../../shared/config/api/api'
-import { AssignableIssueProps } from '../types/types'
-import { AssignableResponse } from '../../../pages/Issues/types/types'
+import { AssignableSearchByIssueDropdownProps } from '../types/types'
 import DropdownMenu, { DropdownItem, DropdownItemGroup } from '@atlaskit/dropdown-menu'
 import UserAvatarCircleIcon from '@atlaskit/icon/glyph/user-avatar-circle'
 import Image from '@atlaskit/image'
 import { Box, xcss } from '@atlaskit/primitives'
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
 import Button from '@atlaskit/button/new'
+import { useAssignableSearchByIssueGET } from 'react-app/entities/UserSearch/api/useAssignableSearchByIssueGET'
 
-const AssignableIssue = (props: AssignableIssueProps) => {
+const AssignableSearchByIssueDropdown = (props: AssignableSearchByIssueDropdownProps) => {
     const { issueKey, assignee, onChange, position = 'bottom-start' } = props
     const [open, setOpen] = useState(false)
 
-    const { data, isLoading } = useQuery({
-        queryKey: ['assignable issue', issueKey],
-        queryFn: () => axiosInstance.get<AssignableResponse>('/issue-assignable', { params: { id: issueKey } }),
-        select: (response) => {
-            return [...response.data, { accountId: null, displayName: 'Unassigned', avatarUrls: undefined }].sort((a, b) =>
-                a.displayName.localeCompare(b.displayName)
-            )
-        },
-        enabled: open,
+    const { data, isLoading } = useAssignableSearchByIssueGET({
+        issueKey,
+        open,
     })
 
     return (
@@ -99,4 +91,4 @@ const AssignableIssue = (props: AssignableIssueProps) => {
     )
 }
 
-export default AssignableIssue
+export default AssignableSearchByIssueDropdown

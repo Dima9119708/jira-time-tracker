@@ -1,7 +1,7 @@
 import React, { ReactNode, useState } from 'react'
 import DropdownMenu, { DropdownItemCheckbox } from '@atlaskit/dropdown-menu'
 import { Flex, Text } from '@atlaskit/primitives'
-import { usePrioritySchemesGET } from 'react-app/entities/PrioritySchemes/lib/usePrioritySchemesGET'
+import { usePrioritySchemesGET } from 'react-app/entities/PrioritySchemes/api/usePrioritySchemesGET'
 import Image from '@atlaskit/image'
 import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
 

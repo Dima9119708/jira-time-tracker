@@ -1,7 +1,7 @@
 import { AxiosError, AxiosResponse } from 'axios'
 import { useMutation } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
-import { Filter } from 'react-app/shared/types/Filter'
+import { Filter } from 'react-app/shared/types/Jira/Filter'
 import { UseGlobalState, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 

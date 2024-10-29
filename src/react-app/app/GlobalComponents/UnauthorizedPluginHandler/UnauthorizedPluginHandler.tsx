@@ -5,9 +5,9 @@ import { useBooleanController } from 'use-global-boolean'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { AxiosError, AxiosResponse } from 'axios'
-import { FilterDetails } from 'react-app/pages/Issues/types/types'
-import { ErrorType } from 'react-app/shared/types/jiraTypes'
+import { ErrorType } from 'react-app/shared/types/Jira/ErrorType'
 import { axiosInstance } from 'react-app/shared/config/api/api'
+import { FilterShortType } from 'react-app/shared/types/Jira/Filter'
 
 const UnauthorizedPluginHandler = () => {
     const notify = useNotifications()
@@ -17,12 +17,12 @@ const UnauthorizedPluginHandler = () => {
     const [isUnauthorizedPlugin, { setFalse }] = useBooleanController('UNAUTHORIZED PLUGIN')
     const navigate = useNavigate()
     const location = useLocation()
-    console.log('isUnauthorizedPlugin =>', isUnauthorizedPlugin, currentPath.current)
+
     currentPath.current = location.pathname
 
-    const { mutate } = useMutation<AxiosResponse<FilterDetails>, AxiosError<ErrorType>, string, { dismissFn: Function; title: string }>({
+    const { mutate } = useMutation<AxiosResponse<FilterShortType>, AxiosError<ErrorType>, string, { dismissFn: Function; title: string }>({
         mutationFn: (variables) =>
-            axiosInstance.put<FilterDetails>(
+            axiosInstance.put<FilterShortType>(
                 '/filter-details',
                 {
                     description: variables,

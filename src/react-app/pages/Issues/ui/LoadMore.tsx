@@ -1,7 +1,7 @@
 import { useInView } from 'react-intersection-observer'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { memo, useEffect } from 'react'
-import { queryGetIssues } from '../model/queryOptions'
+import { queryGetIssues } from '../../../entities/Issues/api/queryOptionsIssues'
 import Button from '@atlaskit/button/new'
 import { Box, xcss } from '@atlaskit/primitives'
 
