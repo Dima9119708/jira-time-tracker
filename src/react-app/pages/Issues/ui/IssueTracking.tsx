@@ -29,9 +29,9 @@ const IssueTracking = (props: IssueProps) => {
 
         await useGlobalState.getState().changeIssueIdsSearchParams('delete', id)
 
-        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
+        await queryClient.invalidateQueries({ queryKey: ['issues'] })
 
-        queryClient.setQueryData(['tasks tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
+        queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
             return produce(old, (draft) => {
                 const idx = draft.findIndex((a) => a.id === id)
                 draft.splice(idx, 1)
@@ -86,7 +86,7 @@ const IssueTracking = (props: IssueProps) => {
                             issueName={fields.summary}
                             status={fields.status}
                             idxIssue={idxIssue}
-                            queryKey="tasks tracking"
+                            queryKey="issues tracking"
                             trigger={fields.status.name}
                         />
 
@@ -95,7 +95,7 @@ const IssueTracking = (props: IssueProps) => {
                             issueName={fields.summary}
                             issueKey={issueKey}
                             idxIssue={idxIssue}
-                            queryKey="tasks tracking"
+                            queryKey="issues tracking"
                         />
 
                         <LogTimeButton
@@ -109,7 +109,7 @@ const IssueTracking = (props: IssueProps) => {
                         issueName={fields.summary}
                         status={fields.status}
                         idxIssue={idxIssue}
-                        queryKey="tasks tracking"
+                        queryKey="issues tracking"
                         onChange={onStopTracking}
                         disabled={fields.status.statusCategory.key === 'done'}
                         trigger={(triggerButtonProps) => (
@@ -136,7 +136,7 @@ const IssueTracking = (props: IssueProps) => {
                                 <LogTimeDialog
                                     uniqueNameBoolean={uniqueNameBoolean}
                                     issueId={id}
-                                    queryKey="tasks tracking"
+                                    queryKey="issues tracking"
                                 />
                             )}
                         </ModalTransition>

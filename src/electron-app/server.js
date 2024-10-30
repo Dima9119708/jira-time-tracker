@@ -98,7 +98,7 @@ const server = (port, errorCallback) => {
                 }
             })
 
-            app.get('/tasks', async (req, res) => {
+            app.get('/issues', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
 

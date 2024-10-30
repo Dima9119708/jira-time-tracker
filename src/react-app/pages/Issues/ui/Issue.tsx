@@ -24,8 +24,8 @@ const Issue = (props: IssueProps) => {
     const onPlayTracking = () => {
         useGlobalState.getState().changeIssueIdsSearchParams('add', id)
 
-        queryClient.setQueryData(['tasks tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
-            const tasks = queryClient.getQueryData<InfiniteData<IssueResponse>>(['tasks'])
+        queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
+            const tasks = queryClient.getQueryData<InfiniteData<IssueResponse>>(['issues'])
 
             return produce(old, (draft) => {
                 if (tasks) {
@@ -34,7 +34,7 @@ const Issue = (props: IssueProps) => {
             })
         })
 
-        queryClient.setQueryData(['tasks'], (old: InfiniteData<IssueResponse>): InfiniteData<IssueResponse> => {
+        queryClient.setQueryData(['issues'], (old: InfiniteData<IssueResponse>): InfiniteData<IssueResponse> => {
             return produce(old, (draft) => {
                 draft.pages[idxPage!].issues.splice(idxIssue, 1)
             })
@@ -74,7 +74,7 @@ const Issue = (props: IssueProps) => {
                         status={fields.status}
                         idxPage={idxPage}
                         idxIssue={idxIssue}
-                        queryKey="tasks"
+                        queryKey="issues"
                         trigger={fields.status.name}
                     />
 
@@ -84,7 +84,7 @@ const Issue = (props: IssueProps) => {
                         issueKey={issueKey}
                         idxPage={idxPage}
                         idxIssue={idxIssue}
-                        queryKey="tasks"
+                        queryKey="issues"
                     />
 
                     <LogTimeButton
@@ -99,7 +99,7 @@ const Issue = (props: IssueProps) => {
                     status={fields.status}
                     idxPage={idxPage}
                     idxIssue={idxIssue}
-                    queryKey="tasks"
+                    queryKey="issues"
                     position="left"
                     onChange={() => onPlayTracking()}
                     disabled={fields.status.statusCategory.key === 'indeterminate'}
@@ -125,7 +125,7 @@ const Issue = (props: IssueProps) => {
                                 <LogTimeDialog
                                     issueId={id}
                                     uniqueNameBoolean={uniqueNameBoolean}
-                                    queryKey="tasks"
+                                    queryKey="issues"
                                 />
                             )}
                         </ModalTransition>

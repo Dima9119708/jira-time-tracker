@@ -19,7 +19,7 @@ export const useLogTimeAuto = (issueId: string) => {
     const isSystemIdle = useGlobalState((state) => state.isSystemIdle)
 
     const onMutateQuery = useCallback(() => {
-        queryClient.setQueryData(['tasks tracking'], (old) => {
+        queryClient.setQueryData(['issues tracking'], (old) => {
             return produce(old, (draft: any) => {
                 const task = draft.find((issue: any) => issue.id === issueId)
 
@@ -30,12 +30,12 @@ export const useLogTimeAuto = (issueId: string) => {
         })
 
         return {
-            oldState: queryClient.getQueryData(['tasks tracking']),
+            oldState: queryClient.getQueryData(['issues tracking']),
         }
     }, [issueId])
 
     const onError = useCallback((error: AxiosError, context: ReturnType<typeof onMutateQuery> | undefined) => {
-        queryClient.setQueryData(['tasks tracking'], context!.oldState)
+        queryClient.setQueryData(['issues tracking'], context!.oldState)
 
         notify.error({
             title: `Error worklog issue`,

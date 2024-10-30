@@ -7,7 +7,7 @@ import { IssueResponse, Issue } from 'react-app/shared/types/Jira/Issues'
 
 export const queryGetIssuesTracking = (args: { onReject?: (reject: AxiosError<ErrorType>) => void }) =>
     queryOptions<IssueResponse['issues']>({
-        queryKey: ['tasks tracking'],
+        queryKey: ['issues tracking'],
         queryFn: async (context) => {
             const tasksIDS = useGlobalState.getState().getIssueIdsSearchParams()
 
@@ -41,13 +41,13 @@ export const queryGetIssuesTracking = (args: { onReject?: (reject: AxiosError<Er
 
 export const queryGetIssues = () =>
     infiniteQueryOptions<IssueResponse, AxiosError<ErrorType>, InfiniteData<IssueResponse>, QueryKey, number>({
-        queryKey: ['tasks'],
+        queryKey: ['issues'],
         queryFn: async (context) => {
             const MAX_RESULTS = 20
 
             const tasksIDS = useGlobalState.getState().getIssueIdsSearchParams()
 
-            const response = await axiosInstance.get<IssueResponse>('/tasks', {
+            const response = await axiosInstance.get<IssueResponse>('/issues', {
                 params: {
                     jql: useGlobalState.getState().jql,
                     startAt: context.pageParam * MAX_RESULTS,

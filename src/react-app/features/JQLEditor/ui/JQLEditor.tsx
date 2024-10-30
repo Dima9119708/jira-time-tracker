@@ -17,7 +17,7 @@ const JQLEditor = () => {
         titleError: 'Filter update error',
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ['tasks'],
+                queryKey: ['issues'],
             })
         },
     })
