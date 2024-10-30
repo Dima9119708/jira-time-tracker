@@ -7,6 +7,10 @@ import Heading from '@atlaskit/heading'
 import { JQLBuilderBasicForm } from 'react-app/widgets/JQLBuilderBasic'
 import { Radio } from '@atlaskit/radio'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
+import { FavoriteButton, FavoriteListLazy } from 'react-app/widgets/FavoriteList'
+import { WatchController } from 'use-global-boolean'
+import { Suspense } from 'react'
+import Spinner from '@atlaskit/spinner'
 
 const IssuesPage = () => {
     const jqlUISearchModeSwitcher = useGlobalState((state) => state.settings.jqlUISearchModeSwitcher)
@@ -41,6 +45,15 @@ const IssuesPage = () => {
             </Flex>
 
             {jqlUISearchModeSwitcher === 'jql' ? <JQLEditor /> : <JQLBuilderBasicForm />}
+
+            <FavoriteButton />
+
+            <WatchController name="FAVORITE LIST">
+                {({ localState }) => {
+                    const [open] = localState
+                    return <Suspense fallback={<Spinner />}>{open && <FavoriteListLazy />}</Suspense>
+                }}
+            </WatchController>
 
             <IssuesTracking />
 
