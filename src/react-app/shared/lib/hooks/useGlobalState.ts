@@ -18,6 +18,7 @@ export interface UseGlobalState {
         jqlUISearchModeSwitcher: 'basic' | 'jql'
         jqlBasic?: JQLBasic
         autoStart: boolean
+        favorites: Array<{ name: string; issueIds: string[] }>
         timeLoggingInterval: {
             unit: Unit
             displayTime: number
@@ -79,6 +80,7 @@ export const useGlobalState = createStore<UseGlobalState>(
         settings: {
             plugin: null,
             jqlUISearchModeSwitcher: 'basic',
+            favorites: [],
             jqlBasic: {
                 assignees: [],
                 projects: [],

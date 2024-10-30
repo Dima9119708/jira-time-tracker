@@ -132,6 +132,7 @@
     "@atlaskit/css-reset": "^6.11.1",
     "@atlaskit/datetime-picker": "^15.4.1",
     "@atlaskit/dropdown-menu": "^12.20.1",
+    "@atlaskit/empty-state": "^7.12.1",
     "@atlaskit/flag": "^15.8.5",
     "@atlaskit/form": "^10.5.7",
     "@atlaskit/heading": "^2.4.6",

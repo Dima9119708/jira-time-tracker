@@ -2,6 +2,7 @@ import { Box, Flex, Text, xcss } from '@atlaskit/primitives'
 import Heading from '@atlaskit/heading'
 import Badge from '@atlaskit/badge'
 import React, { memo } from 'react'
+import { token } from '@atlaskit/tokens'
 
 interface CardIssueHeader {
     summary: string
@@ -23,17 +24,37 @@ const CardHeader = (props: CardIssueHeader) => {
                 >
                     <Box
                         as="span"
-                        xcss={xcss({ marginRight: 'space.075' })}
+                        xcss={xcss({
+                            marginRight: 'space.075',
+                            // @ts-ignore
+                            '& > *': {
+                                color: `${token('color.text.inverse')}!important`,
+                            },
+                        })}
                     >
                         <Text weight="bold">{timespent}</Text>
                     </Box>
                     <Box
                         as="span"
-                        xcss={xcss({ marginRight: 'space.075' })}
+                        xcss={xcss({
+                            marginRight: 'space.075',
+                            // @ts-ignore
+                            '& > *': {
+                                color: `${token('color.text.inverse')}!important`,
+                            },
+                        })}
                     >
                         <Text weight="bold">/</Text>
                     </Box>
-                    <Box as="span">
+                    <Box
+                        as="span"
+                        xcss={xcss({
+                            // @ts-ignore
+                            '& > *': {
+                                color: token('color.text.inverse'),
+                            },
+                        })}
+                    >
                         <Text weight="bold">{timeoriginalestimate}</Text>
                     </Box>
                 </Box>

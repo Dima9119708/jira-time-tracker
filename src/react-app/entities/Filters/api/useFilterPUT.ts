@@ -5,24 +5,26 @@ import { Filter } from 'react-app/shared/types/Jira/Filter'
 import { UseGlobalState, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 
-interface FilterPUT {
+interface FilterPUT<TCustomVariable> {
     settings?: Partial<UseGlobalState['settings']>
     jql?: Filter['jql']
+    variables?: TCustomVariable
 }
 
-export const useFilterPUT = (props?: {
+export const useFilterPUT = <TCustomVariable>(props?: {
     titleLoading?: string
     titleSuccess?: string
     titleError?: string
-    onSuccess?: (data: Filter, variables: FilterPUT) => void
-    onError?: (error: AxiosError, variables: FilterPUT) => void
+    onMutate?: (variables: FilterPUT<TCustomVariable>) => void
+    onSuccess?: (data: Filter, variables: FilterPUT<TCustomVariable>) => void
+    onError?: (error: AxiosError, variables: FilterPUT<TCustomVariable>) => void
 }) => {
     const titleLoading = props?.titleLoading ?? 'Loading...'
     const titleSuccess = props?.titleSuccess ?? 'Update settings'
     const titleError = props?.titleError ?? 'Update settings'
     const notify = useNotifications()
 
-    return useMutation<AxiosResponse<Filter>, AxiosError, FilterPUT, Function | undefined>({
+    return useMutation<AxiosResponse<Filter>, AxiosError, FilterPUT<TCustomVariable>, Function | undefined>({
         mutationFn: async (data) => {
             const bodyData = { jql: data.jql }
 
@@ -41,7 +43,9 @@ export const useFilterPUT = (props?: {
                 },
             })
         },
-        onMutate: () => {
+        onMutate: (variables) => {
+            props?.onMutate?.(variables)
+
             return notify.loading({
                 title: titleLoading,
             })

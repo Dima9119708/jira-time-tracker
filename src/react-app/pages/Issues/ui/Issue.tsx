@@ -14,6 +14,7 @@ import { LogTimeButton, LogTimeDialog } from 'react-app/features/LogTime'
 import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue } from 'react-app/entities/Issues'
+import { FavoriteIssue } from 'react-app/features/FavoriteIssue'
 
 const Issue = (props: IssueProps) => {
     const { fields, id, idxPage, idxIssue, issueKey, isLast } = props
@@ -91,6 +92,8 @@ const Issue = (props: IssueProps) => {
                         uniqueNameBoolean={uniqueNameBoolean}
                         issueId={id}
                     />
+
+                    <FavoriteIssue issueId={id} />
                 </Flex>
 
                 <ChangeStatusIssue
