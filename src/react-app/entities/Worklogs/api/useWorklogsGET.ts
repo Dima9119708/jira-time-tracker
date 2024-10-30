@@ -43,7 +43,7 @@ export const useWorklogsGET = ({ to, from }: UseGetWorklogsProps) => {
         queryFn: async () => {
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['myself'])!
 
                     const tempoWorklogsResponse = await axiosInstancePlugin.post<WorklogsTempoResponse>('/worklogs/plugin', {
                         authorIds: [mySelf.accountId],
@@ -90,7 +90,7 @@ export const useWorklogsGET = ({ to, from }: UseGetWorklogsProps) => {
                 }
 
                 default: {
-                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['myself'])!
 
                     const jiraWorklogsResponse = await axiosInstance.post<IssueResponse>('/worklogs', {
                         jql: `worklogDate >= "${from}" AND worklogDate <= "${to}" AND worklogAuthor = currentUser()`,

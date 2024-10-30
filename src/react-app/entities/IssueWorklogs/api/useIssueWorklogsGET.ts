@@ -31,7 +31,7 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled }: UseGetIssueW
         queryFn: async ({ signal }) => {
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['myself'])!
 
                     const tempoWorklogsResponse = await axiosInstancePlugin.post<WorklogsTempoResponse>(
                         '/worklogs/plugin',
@@ -73,7 +73,7 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled }: UseGetIssueW
                 }
 
                 default: {
-                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['myself'])!
 
                     const jiraIssueWorklogsResponse = await axiosInstance.get<WorklogResponse>('/issue-worklogs', {
                         params: {

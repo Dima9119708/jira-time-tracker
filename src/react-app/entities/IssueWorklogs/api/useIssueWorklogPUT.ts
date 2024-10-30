@@ -31,7 +31,7 @@ export const useIssueWorklogPUT = <MutateReturn>(props?: {
         mutationFn: async (data: PutIssueWorklog) => {
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['myself'])!
                     return await axiosInstancePlugin.put('/issue-worklog/plugin', {
                         id: data.id,
                         startDate: dayjs(data.startDate).format(DATE_FORMAT),

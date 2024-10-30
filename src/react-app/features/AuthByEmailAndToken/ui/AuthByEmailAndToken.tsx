@@ -63,10 +63,10 @@ const AuthByEmailAndToken = () => {
                 return ipcRenderer.invoke('SAVE_DATA_BASIC_AUTH', variables)
             })
 
-            return axiosInstance.get('/login')
+            return axiosInstance.get('/myself')
         },
         onSuccess: (data) => {
-            queryClient.setQueryData(['login'], data)
+            queryClient.setQueryData(['myself'], data)
             navigate('/issues')
         },
     })

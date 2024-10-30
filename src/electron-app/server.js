@@ -31,7 +31,7 @@ const server = (port, errorCallback) => {
 
             app.use(express.json())
 
-            app.get('/login', async (req, res) => {
+            app.get('/myself', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
 

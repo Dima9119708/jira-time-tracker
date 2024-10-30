@@ -64,9 +64,9 @@ const OAuth2 = () => {
                         jiraSubDomain,
                     })
 
-                    const resLogin = await axiosInstance.get('/login')
+                    const resLogin = await axiosInstance.get('/myself')
 
-                    queryClient.setQueryData(['login'], resLogin.data)
+                    queryClient.setQueryData(['myself'], resLogin.data)
 
                     navigate('/issues')
 

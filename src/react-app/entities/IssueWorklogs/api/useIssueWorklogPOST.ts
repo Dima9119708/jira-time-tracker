@@ -29,7 +29,7 @@ export const useIssueWorklogPOST = <MutateReturn>(props?: {
         mutationFn: async (data: CreateIssueWorklog) => {
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    const mySelf = queryClient.getQueryData<MySelf>(['login'])!
+                    const mySelf = queryClient.getQueryData<MySelf>(['myself'])!
 
                     return await axiosInstancePlugin.post('/issue-worklog/plugin', {
                         issueId: data.issueId,
