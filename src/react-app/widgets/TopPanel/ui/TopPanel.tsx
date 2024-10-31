@@ -2,7 +2,7 @@ import { Flex, xcss } from '@atlaskit/primitives'
 import Toggle from '@atlaskit/toggle'
 import { Label } from '@atlaskit/form'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSetColorMode } from '@atlaskit/app-provider'
+import { useColorMode, useSetColorMode } from '@atlaskit/app-provider'
 import { Outlet } from 'react-router-dom'
 import { electron } from 'react-app/shared/lib/electron/electron'
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in'
@@ -35,7 +35,10 @@ const DEFAULT_COLOR_MODE = electron((methods) => methods.ipcRenderer.sendSync('G
 const DEFAULT_ZOOM = electron<number>((methods) => methods.ipcRenderer.sendSync('GET_ZOOM'))
 
 const TopPanel = () => {
-    const [isChecked, setIsChecked] = useState(DEFAULT_COLOR_MODE === 'dark')
+    const colorMode = useColorMode();
+
+    const [isChecked, setIsChecked] = useState(DEFAULT_COLOR_MODE === 'auto' ? colorMode === 'dark' : DEFAULT_COLOR_MODE === 'dark')
+
     const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM)
     const setColorMode = useSetColorMode()
 

@@ -268,7 +268,7 @@ const FavoriteIssue = (props: FavoriteIssueProps) => {
     const inputRef = useRef<HTMLInputElement>(null)
 
     const { reasonLoading, onAddGroup, onRemoveIssueFromGroup, hasFavorite, favorites } = useFavoriteGroup(issueId)
-    console.log('hasFavorite', hasFavorite, issueId)
+
     useEffect(() => {
         useFavoriteStore.setState((state) => {
             state.favorites = useGlobalState.getState().settings.favorites

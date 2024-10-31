@@ -8,11 +8,9 @@ export const filterPOST = async (queryClient: QueryClient, description: Filter['
         queryKey: ['filter'],
         queryFn: async () => {
             const response = await axiosInstance.post<Filter>('/filter', {
-                params: {
-                    name: STATIC_FILTER_NAME,
-                    description: description,
-                    jql: jql,
-                },
+                name: STATIC_FILTER_NAME,
+                description: description,
+                jql: jql,
             })
 
             return response.data

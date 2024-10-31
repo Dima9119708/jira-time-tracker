@@ -5,26 +5,19 @@ import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import EmptyState from '@atlaskit/empty-state'
 import Spinner from '@atlaskit/spinner'
 import Heading from '@atlaskit/heading'
-import { Box, Grid, xcss } from '@atlaskit/primitives'
+import { Box, Flex, Grid, xcss } from '@atlaskit/primitives'
+import { WatchController } from 'use-global-boolean'
+import ChevronUpIcon from '@atlaskit/icon/glyph/chevron-up'
+import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
+import { useEffect } from 'react'
 
 type FavoriteListData = { name: string; issues: Issue[] }[]
 
-const FavoriteList = () => {
-    const favoriteList = useGlobalState((state) => state.settings.favorites)
-
-    const { isPending, data } = useQuery<FavoriteListData>({
-        queryKey: ['favorite list'],
+const FavoriteRenderIssues = ({ issueIds, name }: { name: string; issueIds: Issue['id'][] }) => {
+    const { isPending, data, isFetching, refetch } = useQuery<Issue[]>({
+        queryKey: ['favorite group', name],
         queryFn: async (context) => {
-            const ids = favoriteList.reduce(
-                (acc, favorite) => {
-                    acc.push(...favorite.issueIds)
-
-                    return acc
-                },
-                [] as Issue['id'][]
-            )
-
-            const filteringDuplicates = new Set(ids)
+            const filteringDuplicates = new Set(issueIds)
 
             const response = await Promise.allSettled(
                 filteringDuplicates
@@ -40,50 +33,125 @@ const FavoriteList = () => {
                 }
             })
 
-            return favoriteList.reduce((acc, favorite) => {
-                const favoriteGroup: FavoriteListData[number] = {
-                    issues: [],
-                    name: favorite.name,
+            return issueIds.reduce((acc, id) => {
+                if (issueMap.has(id)) {
+                    acc.push(issueMap.get(id)!)
                 }
 
-                acc.push(favoriteGroup)
-
-                favorite.issueIds.forEach((id) => {
-                    if (issueMap.has(id)) {
-                        favoriteGroup.issues.push(issueMap.get(id)!)
-                    }
-                })
-
                 return acc
-            }, [] as FavoriteListData)
+            }, [] as Issue[])
         },
+        enabled: false
     })
+
+    useEffect(() => {
+        refetch()
+    }, [issueIds])
 
     return !data?.length ? (
         <EmptyState
-            header={isPending ? '' : 'No favorite issues'}
-            description={isPending ? <Spinner /> : null}
+            header={isFetching ? '' : 'No favorite issues yet'}
+            description={isFetching ? <Spinner /> : 'Add issues to your favorites to access them quickly here.'}
         />
     ) : (
-        data.map(({ name, issues }) => {
-            return (
-                <>
-                    <Grid templateColumns="auto auto">
-                        <Box xcss={xcss({ gridColumn: '1 / -1', backgroundColor: 'color.background.neutral' })}>
-                            <Heading size="small">{name}</Heading>
-                        </Box>
-                        <Box xcss={xcss({ backgroundColor: 'color.background.neutral' })}>
-                            <Heading size="small">{name}</Heading>
-                        </Box>
-                        <Box>
-                            {issues.map((issue) => (
-                                <div>{issue.fields.summary}</div>
-                            ))}
-                        </Box>
-                    </Grid>
-                </>
-            )
-        })
+        data.map((issue) => (
+            <div
+                key={issue.id}
+                style={{ height: 176 }}
+            >
+                {issue.fields.summary}
+            </div>
+        ))
+    )
+}
+
+const FavoriteList = () => {
+    const favoriteList = useGlobalState((state) => state.settings.favorites)
+
+    return !favoriteList.length ? (
+        <EmptyState
+            header={'No favorite issues'}
+            description={null}
+        />
+    ) : (
+        <Box xcss={xcss({ maxHeight: '400px', overflowY: 'auto',  marginBottom: 'space.300' })}>
+            {
+                favoriteList.map(({ name, issueIds }) => {
+                    return (
+                        <Grid
+                            key={name}
+                            templateColumns={`20px auto`}
+                            xcss={xcss({ marginBottom: 'space.200' })}
+                        >
+                            <WatchController>
+                                {({ globalMethods }) => {
+                                    const [isOpenGroup] = globalMethods.watchBoolean(name)
+                                    return (
+                                        <Box
+                                            onClick={() => globalMethods.toggle(name)}
+                                            xcss={xcss({
+                                                gridColumn: '1 / -1',
+                                                backgroundColor: 'color.background.neutral',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                height: 'size.300',
+                                            })}
+                                        >
+                                            <Heading size="small">{name}</Heading>
+                                            {isOpenGroup ? (
+                                                <ChevronUpIcon label="arrow up favorite" />
+                                            ) : (
+                                                <ChevronDownIcon label="arrow down favorite" />
+                                            )}
+                                        </Box>
+                                    )
+                                }}
+                            </WatchController>
+
+                            <WatchController name={name}>
+                                {({ localState }) => {
+                                    const [opened] = localState
+
+                                    return (
+                                        opened && (
+                                            <>
+                                                <Box
+                                                    xcss={xcss({
+                                                        backgroundColor: 'color.background.neutral',
+                                                        width: '20px',
+                                                        overflow: 'hidden',
+                                                        position: 'relative',
+                                                    })}
+                                                >
+                                                    <Box
+                                                        xcss={xcss({
+                                                            textAlign: 'center',
+                                                            transform: 'translate(-50%, -50%) rotate(270deg)',
+                                                            position: 'absolute',
+                                                            top: '50%',
+                                                            left: `calc(20px / 2)`,
+                                                        })}
+                                                    >
+                                                        <Heading size="small">{name}</Heading>
+                                                    </Box>
+                                                </Box>
+                                                <Box>
+                                                    <FavoriteRenderIssues
+                                                        name={name}
+                                                        issueIds={issueIds}
+                                                    />
+                                                </Box>
+                                            </>
+                                        )
+                                    )
+                                }}
+                            </WatchController>
+                        </Grid>
+                    )
+                })
+            }
+        </Box>
     )
 }
 

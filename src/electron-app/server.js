@@ -54,6 +54,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
