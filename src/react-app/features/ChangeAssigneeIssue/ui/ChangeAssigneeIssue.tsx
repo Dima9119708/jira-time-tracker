@@ -10,7 +10,7 @@ import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { Assignee, IssueResponse } from 'react-app/shared/types/Jira/Issues'
 
 const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
-    const { issueKey, idxIssue, issueName, idxPage, assignee, queryKey, position = 'bottom-start' } = props
+    const { issueKey, assignee, queryKeys, position = 'bottom-start' } = props
 
     const queryClient = useQueryClient()
 
@@ -20,27 +20,49 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
         AxiosResponse<Assignee>,
         AxiosError<ErrorType>,
         Assignee,
-        { dismissFn: Function; oldState: InfiniteData<IssueResponse> | IssueResponse['issues'] | undefined; notificationMessage: string }
+        { dismissFn: Function; oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]> | undefined; notificationMessage: string }
     >({
         mutationFn: (variables) =>
-            axiosInstance.put<Assignee>('/issue-assignee', { accountId: variables.accountId }, { params: { id: issueKey } }),
+            axiosInstance.put<Assignee>('/issue-assignee', { accountId: variables.accountId }, { params: { issueKey: issueKey } }),
         onMutate: async (variables) => {
-            await queryClient.cancelQueries({ queryKey: [queryKey] })
 
-            queryClient.setQueryData(
-                [queryKey],
-                (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
-                    if (Array.isArray(old)) {
-                        return produce(old, (draft) => {
-                            draft[idxIssue].fields.assignee = variables
-                        })
-                    } else {
-                        return produce(old, (draft) => {
-                            draft.pages[idxPage!].issues[idxIssue].fields.assignee = variables
-                        })
-                    }
+            const oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]>  = []
+
+            for (const queryKey of queryKeys()) {
+                await queryClient.cancelQueries({ queryKey: [queryKey] })
+
+                const oldState = queryClient.getQueryData<InfiniteData<IssueResponse> | IssueResponse['issues']>([queryKey])
+
+                if (oldState) {
+                    queryClient.setQueryData(
+                        [queryKey],
+                        (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
+                            if (Array.isArray(old)) {
+                                return produce(old, (draft) => {
+                                    const issue = draft.find(({ key }) => key === issueKey)
+
+                                    if (issue) {
+                                        issue.fields.assignee = variables
+                                    }
+                                })
+                            } else {
+                                return produce(old, (draft) => {
+                                    for (const page of draft.pages) {
+                                        const issue = page.issues.find(({ key }) => key === issueKey);
+
+                                        if (issue) {
+                                            issue.fields.assignee = variables;
+                                            break;
+                                        }
+                                    }
+                                })
+                            }
+                        }
+                    )
+
+                    oldStates.push([queryKey, oldState])
                 }
-            )
+            }
 
             const notificationMessage = `from ${assignee?.displayName ?? 'Unassigned'} to ${variables.displayName}`
 
@@ -50,7 +72,7 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
             })
 
             return {
-                oldState: queryClient.getQueryData<InfiniteData<IssueResponse> | IssueResponse['issues']>([queryKey]),
+                oldStates,
                 dismissFn,
                 notificationMessage,
             }
@@ -73,7 +95,35 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
                 description: JSON.stringify(error.response?.data),
             })
 
-            queryClient.setQueryData([queryKey], context!.oldState)
+            if (Array.isArray(context?.oldStates)) {
+                for (const queryKey of context.oldStates) {
+                    queryClient.setQueryData(
+                        [queryKey],
+                        (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
+                            if (Array.isArray(old)) {
+                                return produce(old, (draft) => {
+                                    const issue = draft.find(({ key }) => key === issueKey)
+
+                                    if (issue) {
+                                        issue.fields.assignee = variables
+                                    }
+                                })
+                            } else {
+                                return produce(old, (draft) => {
+                                    for (const page of draft.pages) {
+                                        const issue = page.issues.find(({ key }) => key === issueKey);
+
+                                        if (issue) {
+                                            issue.fields.assignee = variables;
+                                            break;
+                                        }
+                                    }
+                                })
+                            }
+                        }
+                    )
+                }
+            }
         },
     })
 

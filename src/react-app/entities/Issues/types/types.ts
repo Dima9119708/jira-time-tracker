@@ -1,5 +1,6 @@
 import { DropdownMenuProps } from '@atlaskit/dropdown-menu'
 import { Status, Transition } from 'react-app/shared/types/Jira/Issues'
+import { xcss } from '@atlaskit/primitives'
 
 export interface StatusesByIssueDropdownProps {
     issueId: string
@@ -8,4 +9,5 @@ export interface StatusesByIssueDropdownProps {
     status: Status
     position?: DropdownMenuProps['placement']
     disabled?: boolean
+    xcss?: ReturnType<typeof xcss>
 }

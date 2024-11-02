@@ -1,11 +1,24 @@
-import { JQLEditorAsync } from '@atlassianlabs/jql-editor'
-import { useAutocompleteProvider } from '@atlassianlabs/jql-editor-autocomplete-rest'
+import { JQLEditorAsync } from '@atlaskit/jql-editor';
+import { useAutocompleteProvider } from '@atlaskit/jql-editor-autocomplete-rest';
 import { getInitialData, getSuggestions } from '../service/service'
 import { memo } from 'react'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { useFilterPUT } from 'react-app/entities/Filters'
 import { useQueryClient } from '@tanstack/react-query'
 
+import { CharStreams, CommonTokenStream } from 'antlr4ts';
+import { JQLLexer, JQLParser } from '@atlaskit/jql-parser';
+
+// Create the lexer and parser
+const jqlText = "project = JQL";
+const charStream = CharStreams.fromString(jqlText);
+const lexer = new JQLLexer(charStream);
+const tokenStream = new CommonTokenStream(lexer);
+const parser = new JQLParser(tokenStream);
+
+// Parse the input, where jqlQuery is the entry point
+const parsedJQLTree = parser.jqlQuery();
+console.log('parsedJQLTree =>', parsedJQLTree)
 const JQLEditor = () => {
     const query = useGlobalState((state) => state.jql)
 
@@ -26,7 +39,7 @@ const JQLEditor = () => {
 
     return (
         <JQLEditorAsync
-            isSearching={filterPUT.isPending}
+            isSearching={false}
             analyticsSource={'autocomplete'}
             query={query}
             onSearch={(jql, jast) => {

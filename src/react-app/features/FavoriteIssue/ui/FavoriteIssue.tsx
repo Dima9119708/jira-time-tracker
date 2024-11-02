@@ -3,7 +3,7 @@ import Button, { IconButton } from '@atlaskit/button/new'
 import StarIcon from '@atlaskit/icon/glyph/star'
 import Popup from '@atlaskit/popup'
 import { Box, Flex, xcss } from '@atlaskit/primitives'
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textfield from '@atlaskit/textfield'
 import AddIcon from '@atlaskit/icon/glyph/add'
 import TrashIcon from '@atlaskit/icon/glyph/trash'
@@ -28,28 +28,27 @@ interface FavoriteItemProps extends FavoriteIssueProps {
     isGroup: boolean
 }
 
-enum EnumReasonLoading {
+export enum EnumReasonLoading {
     'add' = 'add',
     'remove' = 'remove',
     'edit' = 'edit',
     'choose' = 'choose',
-    'removeFromGroups' = 'removeFromGroups',
+    'removeFromAllGroups' = 'removeFromAllGroups',
     'empty' = '',
 }
 
-const useFavoriteStore = createStore<{ favorites: UseGlobalState['settings']['favorites'] }>(() => ({
+export const useFavoriteStore = createStore<{ favorites: UseGlobalState['settings']['favorites'] }>(() => ({
     favorites: [],
 }))
 
-const useFavoriteGroup = (issueId: FavoriteIssueProps['issueId']) => {
+export const useFavoriteControl = () => {
     const favorites = useFavoriteStore((state) => state.favorites)
-    const [reasonLoading, setReasonLoading] = useState<EnumReasonLoading>(EnumReasonLoading.empty)
-
     const notify = useNotifications()
+    const [reasonLoading, setReasonLoading] = useState<EnumReasonLoading>(EnumReasonLoading.empty)
 
     const filterPUT = useFilterPUT({
         titleLoading: '',
-        titleError: `Update favorite issue: ${issueId}`,
+        titleError: ``,
         titleSuccess: ``,
         onMutate: (variables) => {
             useFavoriteStore.setState((state) => {
@@ -68,11 +67,75 @@ const useFavoriteGroup = (issueId: FavoriteIssueProps['issueId']) => {
         },
     })
 
-    const hasFavorite = useMemo(() => {
+    const hasFavorite = useCallback((issueId: FavoriteIssueProps['issueId']) => {
         return favorites.some(({ issueIds }) => issueIds.includes(issueId))
-    }, [favorites, issueId])
+    }, [favorites])
 
-    const onToggleChooseGroup = (groupName: FavoriteItemProps['name']) => {
+
+    const removeFromAllGroups = (issueId: FavoriteIssueProps['issueId']) => {
+        const newFavorites = produce(useFavoriteStore.getState().favorites, (draft) => {
+            draft.forEach((group) => {
+                if (group.issueIds.includes(issueId)) {
+                    group.issueIds.splice(group.issueIds.indexOf(issueId), 1)
+                }
+            })
+        })
+
+        filterPUT.mutate({
+            settings: {
+                favorites: newFavorites,
+            },
+        })
+
+        setReasonLoading(EnumReasonLoading['removeFromAllGroups'])
+    }
+
+    const onAddNewGroup = (newGroupName: FavoriteItemProps['name']) => {
+        const isDuplicateName = useFavoriteStore.getState().favorites.some(({ name }) => name === newGroupName)
+
+        if (isDuplicateName) {
+            notify.error({
+                title: 'Such a group has already been added to favorites.',
+            })
+
+            return
+        }
+
+        const newGroups = produce(useFavoriteStore.getState().favorites, (draft) => {
+            draft.push({
+                name: newGroupName,
+                issueIds: [],
+            })
+        })
+
+        filterPUT.mutate({
+            settings: {
+                favorites: newGroups,
+            },
+        })
+
+        setReasonLoading(EnumReasonLoading.add)
+    }
+
+    const onRemoveGroup = (groupName: FavoriteItemProps['name']) => {
+        const newFavorites = produce(useFavoriteStore.getState().favorites, (draft) => {
+            const groupIdx = draft.findIndex((group) => group.name === groupName)
+
+            if (groupIdx !== -1) {
+                draft.splice(groupIdx, 1)
+            }
+        })
+
+        filterPUT.mutate({
+            settings: {
+                favorites: newFavorites,
+            },
+        })
+
+        setReasonLoading(EnumReasonLoading.remove)
+    }
+
+    const onAddGroup = (groupName: FavoriteItemProps['name'], issueId: FavoriteIssueProps['issueId']) => {
         const newFavorites = produce(useFavoriteStore.getState().favorites, (draft) => {
             const newGroup = draft.find((group) => group.name === groupName)
 
@@ -92,42 +155,6 @@ const useFavoriteGroup = (issueId: FavoriteIssueProps['issueId']) => {
         })
 
         setReasonLoading(EnumReasonLoading.choose)
-    }
-
-    const onRemoveIssueFromGroup = () => {
-        const newFavorites = produce(useFavoriteStore.getState().favorites, (draft) => {
-            draft.forEach((group) => {
-                if (group.issueIds.includes(issueId)) {
-                    group.issueIds.splice(group.issueIds.indexOf(issueId), 1)
-                }
-            })
-        })
-
-        filterPUT.mutate({
-            settings: {
-                favorites: newFavorites,
-            },
-        })
-
-        setReasonLoading(EnumReasonLoading['removeFromGroups'])
-    }
-
-    const onRemoveGroup = (groupName: FavoriteItemProps['name']) => {
-        const newFavorites = produce(useFavoriteStore.getState().favorites, (draft) => {
-            const groupIdx = draft.findIndex((group) => group.name === groupName)
-
-            if (groupIdx !== -1) {
-                draft.splice(groupIdx, 1)
-            }
-        })
-
-        filterPUT.mutate({
-            settings: {
-                favorites: newFavorites,
-            },
-        })
-
-        setReasonLoading(EnumReasonLoading.remove)
     }
 
     const onEditGroup = (oldGroupName: FavoriteItemProps['name'], newGroupName: FavoriteItemProps['name']) => {
@@ -158,42 +185,15 @@ const useFavoriteGroup = (issueId: FavoriteIssueProps['issueId']) => {
         setReasonLoading(EnumReasonLoading.edit)
     }
 
-    const onAddGroup = (newGroupName: FavoriteItemProps['name']) => {
-        const isDuplicateName = useFavoriteStore.getState().favorites.some(({ name }) => name === newGroupName)
-
-        if (isDuplicateName) {
-            notify.error({
-                title: 'Such a group has already been added to favorites.',
-            })
-
-            return
-        }
-
-        const newGroups = produce(useFavoriteStore.getState().favorites, (draft) => {
-            draft.push({
-                name: newGroupName,
-                issueIds: [],
-            })
-        })
-
-        filterPUT.mutate({
-            settings: {
-                favorites: newGroups,
-            },
-        })
-
-        setReasonLoading(EnumReasonLoading.add)
-    }
-
     return {
-        reasonLoading,
-        favorites,
-        onToggleChooseGroup,
-        onEditGroup,
-        onAddGroup,
-        onRemoveGroup,
-        onRemoveIssueFromGroup,
         hasFavorite,
+        favorites,
+        reasonLoading,
+        removeFromAllGroups,
+        onAddNewGroup,
+        onRemoveGroup,
+        onAddGroup,
+        onEditGroup,
     }
 }
 
@@ -201,7 +201,7 @@ const FavoriteItem = ({ name, isGroup, issueId }: FavoriteItemProps) => {
     const [value, setValue] = useState(name)
     const [isEdit, setIsEdit] = useState(false)
 
-    const { reasonLoading, onToggleChooseGroup, onRemoveGroup, onEditGroup } = useFavoriteGroup(issueId)
+    const { reasonLoading, onAddGroup, onRemoveGroup, onEditGroup } = useFavoriteControl()
 
     return (
         <>
@@ -234,12 +234,12 @@ const FavoriteItem = ({ name, isGroup, issueId }: FavoriteItemProps) => {
             </Box>
 
             <IconButton
-                appearance={isGroup ? 'primary' : 'default'}
+                appearance={isGroup ? 'primary' : 'subtle'}
                 icon={CheckIcon}
                 label="choose"
                 isDisabled={reasonLoading === EnumReasonLoading.edit || reasonLoading === EnumReasonLoading.remove}
                 isLoading={reasonLoading === EnumReasonLoading.choose}
-                onClick={() => onToggleChooseGroup(name)}
+                onClick={() => onAddGroup(name, issueId)}
             />
 
             <IconButton
@@ -267,7 +267,7 @@ const FavoriteIssue = (props: FavoriteIssueProps) => {
     const [isOpen, setIsOpen] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
 
-    const { reasonLoading, onAddGroup, onRemoveIssueFromGroup, hasFavorite, favorites } = useFavoriteGroup(issueId)
+    const { reasonLoading, onAddNewGroup, removeFromAllGroups, hasFavorite, favorites } = useFavoriteControl()
 
     useEffect(() => {
         useFavoriteStore.setState((state) => {
@@ -342,7 +342,7 @@ const FavoriteIssue = (props: FavoriteIssueProps) => {
                             isLoading={reasonLoading === EnumReasonLoading.add}
                             onClick={() => {
                                 if (inputRef.current) {
-                                    onAddGroup(inputRef.current.value)
+                                    onAddNewGroup(inputRef.current.value)
 
                                     inputRef.current.value = ''
                                 }
@@ -354,8 +354,8 @@ const FavoriteIssue = (props: FavoriteIssueProps) => {
                         appearance="default"
                         shouldFitContainer
                         isDisabled={!hasFavorite}
-                        onClick={onRemoveIssueFromGroup}
-                        isLoading={reasonLoading === EnumReasonLoading['removeFromGroups']}
+                        onClick={() => removeFromAllGroups(issueId)}
+                        isLoading={reasonLoading === EnumReasonLoading['removeFromAllGroups']}
                     >
                         Remove issue from group
                     </Button>
@@ -364,7 +364,7 @@ const FavoriteIssue = (props: FavoriteIssueProps) => {
             trigger={(triggerProps) => (
                 <IconButton
                     {...triggerProps}
-                    icon={hasFavorite ? StarFilledIcon : StarIcon}
+                    icon={hasFavorite(issueId) ? StarFilledIcon : StarIcon}
                     label="Favorite"
                     // @ts-ignore
                     appearance="default"

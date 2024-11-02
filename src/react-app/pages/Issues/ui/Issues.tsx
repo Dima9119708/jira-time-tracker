@@ -18,16 +18,13 @@ const Issues = () => {
         }
     }, [error])
 
-    return data?.pages.map((page, idxPage) =>
-        page.issues.map((task, idxIssue) => (
+    return data?.pages.map((page) =>
+        page.issues.map((task) => (
             <Issue
                 key={task.id}
                 issueKey={task.key}
-                idxPage={idxPage}
-                idxIssue={idxIssue}
                 fields={task.fields}
                 id={task.id}
-                isLast={idxPage + idxIssue === idxPage + (page.issues.length - 1)}
             />
         ))
     )

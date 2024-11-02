@@ -175,7 +175,7 @@ const server = (port, errorCallback) => {
 
                     if (authParsed.type === BASIC_AUTH) {
                         const response = await axios.get(
-                            `${authParsed.jiraSubDomain}/rest/api/3/user/assignable/search?issueKey=${req.query.id}`,
+                            `${authParsed.jiraSubDomain}/rest/api/3/user/assignable/search?issueKey=${req.query.issueKey}`,
                             {
                                 headers: {
                                     Authorization: `Basic ${authParsed.apiToken}`,
@@ -188,7 +188,7 @@ const server = (port, errorCallback) => {
 
                     if (authParsed.type === OAUTH2) {
                         const response = await axios.get(
-                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/user/assignable/search?issueKey=${req.query.id}`,
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/user/assignable/search?issueKey=${req.query.issueKey}`,
                             {
                                 headers: {
                                     Authorization: `Bearer ${authParsed.access_token}`,
@@ -213,7 +213,7 @@ const server = (port, errorCallback) => {
 
                     if (authParsed.type === BASIC_AUTH) {
                         const response = await axios.put(
-                            `${authParsed.jiraSubDomain}/rest/api/3/issue/${req.query.id}/assignee`,
+                            `${authParsed.jiraSubDomain}/rest/api/3/issue/${req.query.issueKey}/assignee`,
                             req.body,
                             {
                                 headers: {
@@ -227,7 +227,7 @@ const server = (port, errorCallback) => {
 
                     if (authParsed.type === OAUTH2) {
                         const response = await axios.put(
-                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/issue/${req.query.id}/assignee`,
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/issue/${req.query.issueKey}/assignee`,
                             req.body,
                             {
                                 headers: {

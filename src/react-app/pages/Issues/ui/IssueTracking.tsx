@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react'
+import React, { memo, useCallback, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../../../shared/lib/helpers/secondsToUIFormat'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
@@ -16,13 +16,63 @@ import { ModalTransition } from '@atlaskit/modal-dialog'
 import { LogTimeAuto } from 'react-app/features/LogTimeAuto'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue } from 'react-app/entities/Issues'
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
+import { useFavoriteStore } from 'react-app/features/FavoriteIssue'
+import { token } from '@atlaskit/tokens'
 
 const IssueTracking = (props: IssueProps) => {
-    const { fields, id, idxIssue, issueKey, isLast } = props
+    const { fields, id, issueKey } = props
     const queryClient = useQueryClient()
     const [isLoading, setLoading] = useState(false)
 
     const uniqueNameBoolean = `log time issue tracking ${id}`
+
+    const queryKeys = useCallback(() => {
+        return [
+            ...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`),
+            'issues tracking'
+        ]
+    }, [])
+
+    const styles = useMemo(() => {
+        const colorNew = fields.status.statusCategory.key === 'new' && 'default'
+        const colorIndeterminate = fields.status.statusCategory.key === 'indeterminate' && 'primary'
+        const colorDone = fields.status.statusCategory.key === 'done' && 'subtle'
+
+        return {
+            STATUTES_DROPDOWN_BUTTON: xcss({
+                // @ts-ignore
+                '& > button': {
+                    fontWeight: token('font.weight.semibold'),
+                    ...(colorNew && {
+                        backgroundColor: token('color.background.neutral'),
+                        color: token('color.text'),
+                    }),
+                    ...(colorIndeterminate && {
+                        backgroundColor: token('color.background.information.bold'),
+                        color: token('color.text.inverse'),
+                    }),
+                    ...(colorDone && {
+                        backgroundColor: token('color.chart.success.bold'),
+                        color: token('color.text.inverse'),
+                    }),
+                },
+                '& > button:hover': {
+                    ...(colorNew && {
+                        backgroundColor: token('color.background.neutral.hovered'),
+                        color: token('color.text'),
+                    }),
+                    ...(colorIndeterminate && {
+                        backgroundColor: token('color.background.information.bold.hovered'),
+                        color: token('color.text.inverse'),
+                    }),
+                    ...(colorDone && {
+                        backgroundColor: token('color.chart.success.bold.hovered'),
+                        color: token('color.text.inverse'),
+                    }),
+                },
+            })
+        }
+    }, [fields.status.name])
 
     const onStopTracking = async () => {
         setLoading(true)
@@ -34,7 +84,9 @@ const IssueTracking = (props: IssueProps) => {
         queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
             return produce(old, (draft) => {
                 const idx = draft.findIndex((a) => a.id === id)
-                draft.splice(idx, 1)
+                if (idx !== -1) {
+                    draft.splice(idx, 1)
+                }
             })
         })
 
@@ -45,7 +97,6 @@ const IssueTracking = (props: IssueProps) => {
         <>
             <CardIssue
                 active
-                isLast={isLast}
             >
                 <LogTimeAuto issueId={id} />
 
@@ -85,17 +136,16 @@ const IssueTracking = (props: IssueProps) => {
                             issueId={id}
                             issueName={fields.summary}
                             status={fields.status}
-                            idxIssue={idxIssue}
-                            queryKey="issues tracking"
+                            queryKeys={queryKeys}
                             trigger={fields.status.name}
+                            xcss={styles.STATUTES_DROPDOWN_BUTTON}
                         />
 
                         <ChangeAssigneeIssue
                             assignee={fields.assignee}
                             issueName={fields.summary}
                             issueKey={issueKey}
-                            idxIssue={idxIssue}
-                            queryKey="issues tracking"
+                            queryKeys={queryKeys}
                         />
 
                         <LogTimeButton
@@ -108,8 +158,7 @@ const IssueTracking = (props: IssueProps) => {
                         issueId={id}
                         issueName={fields.summary}
                         status={fields.status}
-                        idxIssue={idxIssue}
-                        queryKey="issues tracking"
+                        queryKeys={queryKeys}
                         onChange={onStopTracking}
                         disabled={fields.status.statusCategory.key === 'done'}
                         trigger={(triggerButtonProps) => (

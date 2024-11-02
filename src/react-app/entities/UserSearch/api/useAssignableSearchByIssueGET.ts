@@ -5,7 +5,7 @@ import { Assignee, Issue } from 'react-app/shared/types/Jira/Issues'
 export const useAssignableSearchByIssueGET = ({ issueKey, open }: { issueKey: Issue['key']; open: boolean }) => {
     return useQuery({
         queryKey: ['assignable issue', issueKey],
-        queryFn: () => axiosInstance.get<Assignee[]>('/issue-assignable', { params: { id: issueKey } }),
+        queryFn: () => axiosInstance.get<Assignee[]>('/issue-assignable', { params: { issueKey: issueKey } }),
         select: (response) => {
             return [
                 ...response.data,

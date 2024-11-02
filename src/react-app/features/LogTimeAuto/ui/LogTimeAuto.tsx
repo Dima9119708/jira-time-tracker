@@ -10,7 +10,7 @@ const LogTimeAuto = (props: TimeLogAutoProps) => {
     const ref = useLogTimeAuto(props.issueId)
 
     return (
-        <Timer ref={ref}>
+        <Timer>
             {(time) => (
                 <Box
                     xcss={xcss({

@@ -17,14 +17,12 @@ const IssuesTracking = () => {
         })
     )
 
-    return data?.map((task, idxIssue) => (
+    return data?.map((task) => (
         <IssueTracking
             key={task.id}
             issueKey={task.key}
-            idxIssue={idxIssue}
             fields={task.fields}
             id={task.id}
-            isLast={idxIssue === data.length - 1}
         />
     ))
 }

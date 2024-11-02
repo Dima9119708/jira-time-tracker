@@ -1,6 +1,5 @@
 import { axiosInstance } from '../../../shared/config/api/api'
-import { JQLAutocompleteResponse, JQLAutocompleteSuggestionsResponse } from '@atlassianlabs/jql-editor-autocomplete-rest'
-import { queryClient } from '../../../app/QueryClientProvide/QueryClientProvide'
+import { JQLAutocompleteResponse, JQLAutocompleteSuggestionsResponse } from '@atlaskit/jql-editor-autocomplete-rest'
 
 export const getInitialData = async (url: string) => {
     const response = await axiosInstance.post<JQLAutocompleteResponse>(

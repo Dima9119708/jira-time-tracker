@@ -32,7 +32,7 @@ const CardHeader = (props: CardIssueHeader) => {
                             },
                         })}
                     >
-                        <Text weight="bold">{timespent}</Text>
+                        <Text weight="medium">{timespent}</Text>
                     </Box>
                     <Box
                         as="span"
@@ -44,7 +44,7 @@ const CardHeader = (props: CardIssueHeader) => {
                             },
                         })}
                     >
-                        <Text weight="bold">/</Text>
+                        <Text weight="medium">/</Text>
                     </Box>
                     <Box
                         as="span"
@@ -55,7 +55,7 @@ const CardHeader = (props: CardIssueHeader) => {
                             },
                         })}
                     >
-                        <Text weight="bold">{timeoriginalestimate}</Text>
+                        <Text weight="medium">{timeoriginalestimate}</Text>
                     </Box>
                 </Box>
             </Badge>

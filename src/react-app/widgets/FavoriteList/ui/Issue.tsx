@@ -3,7 +3,6 @@ import { useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../../../shared/lib/helpers/secondsToUIFormat'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
 import { produce } from 'immer'
-import { IssueProps } from '../types/types'
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
@@ -15,21 +14,27 @@ import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue } from 'react-app/entities/Issues'
 import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
-import { Issue as IssueType } from 'react-app/shared/types/Jira/Issues'
+import { IssueProps } from 'react-app/pages/Issues/types/types'
 import { token } from '@atlaskit/tokens'
 
-const Issue = (props: IssueProps) => {
-    const { fields, id, issueKey } = props
-    const queryClient = useQueryClient()
+interface FavoriteIssueProps extends  IssueProps{
+    queryKey: string
+}
 
-    const uniqueNameBoolean = `log time issue ${id}`
+const Issue = (props: FavoriteIssueProps) => {
+    const { fields, id, issueKey, queryKey } = props
+    const queryClient = useQueryClient()
+    const isTrackingIssue =  useGlobalState((state) => state.issueIdsSearchParams.currentParams.includes(id))
+
+    const uniqueNameBoolean = `favorite log time issue ${id}`
 
     const queryKeys = useCallback(() => {
         return [
             ...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`),
+            'issues tracking',
             'issues'
         ]
-    }, [])
+    }, [queryKey])
 
     const styles = useMemo(() => {
         const colorNew = fields.status.statusCategory.key === 'new' && 'default'
@@ -72,36 +77,22 @@ const Issue = (props: IssueProps) => {
         }
     }, [fields.status.name])
 
-    const onPlayTracking = () => {
-        useGlobalState.getState().changeIssueIdsSearchParams('add', id)
+    const onPlayTracking = async () => {
+       await useGlobalState.getState().changeIssueIdsSearchParams('add', id)
 
-        const issues = queryClient.getQueryData<InfiniteData<IssueResponse>>(['issues'])
+        const issues = queryClient.getQueryData<IssueResponse['issues']>([queryKey])
 
         if (issues) {
-            queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
-                return produce(old, (draft) => {
-                    for (const page of issues.pages) {
-                        const issue = page.issues.find((issue) => issue.id === id);
-                        if (issue) {
-                            draft.unshift(issue)
-                        }
-                    }
-                })
-            })
+            const issue = issues.find((issue) => issue.id === id)
 
-            queryClient.setQueryData(['issues'], (old: InfiniteData<IssueResponse>): InfiniteData<IssueResponse> => {
-                return produce(old, (draft) => {
-                    for (const page of draft.pages) {
-                        const index = page.issues.findIndex((issue) => issue.id === id);
-                        if (index !== -1) {
-                            page.issues.splice(index, 1);
-                            return;
-                        }
-                    }
+            if (issue) {
+                queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
+                    return produce(old, (draft) => {
+                        draft.unshift(issue)
+                    })
                 })
-            })
+            }
         }
-
     }
 
     return (
@@ -168,6 +159,7 @@ const Issue = (props: IssueProps) => {
                             ref={triggerButtonProps.triggerRef}
                             icon={VidPlayIcon}
                             label="Play"
+                            isDisabled={isTrackingIssue}
                             {...(fields.status.statusCategory.key === 'indeterminate' && { onClick: onPlayTracking })}
                         />
                     )}

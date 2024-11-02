@@ -12,21 +12,23 @@ const FavoriteButton = () => {
     const [isOpenFavorite] = watchBoolean('FAVORITE LIST')
 
     return (
-        <Box xcss={xcss({ marginBottom: 'space.250' })}>
-            <Button
-                shouldFitContainer
-                onClick={() => toggle('FAVORITE LIST')}
+        <Box
+            xcss={xcss({ marginBottom: 'space.300' })}
+            onClick={() => toggle('FAVORITE LIST')}
+        >
+            <Flex
+                alignItems="center"
+                justifyContent="center"
+                columnGap="space.050"
+                xcss={xcss({
+                    backgroundColor: 'color.background.neutral',
+                    cursor: 'pointer',
+                })}
             >
-                <Flex
-                    alignItems="center"
-                    justifyContent="center"
-                    columnGap="space.050"
-                >
-                    <StarIcon label="Favorite" />
-                    <Heading size="small">Favorite list</Heading>
-                    {isOpenFavorite ? <ChevronUpIcon label="arrow up favorite" /> : <ChevronDownIcon label="arrow down favorite" />}
-                </Flex>
-            </Button>
+                <StarIcon label="Favorite" />
+                <Heading size="small">Favorite list</Heading>
+                {isOpenFavorite ? <ChevronUpIcon label="arrow up favorite" /> : <ChevronDownIcon label="arrow down favorite" />}
+            </Flex>
         </Box>
     )
 }
