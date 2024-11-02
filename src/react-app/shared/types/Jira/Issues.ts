@@ -33,15 +33,15 @@ export interface IssueFields {
     priority: Priority
     labels: string[]
     aggregatetimeoriginalestimate: number
-    timeestimate: number
-    timespent: number
+    timeestimate: number | null
+    timespent: number | null
     versions: any[]
     issuelinks: any[]
     assignee: Assignee
     updated: string
     status: Status
     components: any[]
-    timeoriginalestimate: number
+    timeoriginalestimate: number| null
     description: any
     security: any
     aggregatetimeestimate: number

@@ -18,6 +18,7 @@ import { CardIssueDetailsBadges, CardIssueHeader, CardIssue } from 'react-app/en
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useFavoriteStore } from 'react-app/features/FavoriteIssue'
 import { token } from '@atlaskit/tokens'
+import { LogTimeIndicator } from 'react-app/features/LogTimeIndicator'
 
 const IssueTracking = (props: IssueProps) => {
     const { fields, id, issueKey } = props
@@ -27,10 +28,7 @@ const IssueTracking = (props: IssueProps) => {
     const uniqueNameBoolean = `log time issue tracking ${id}`
 
     const queryKeys = useCallback(() => {
-        return [
-            ...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`),
-            'issues tracking'
-        ]
+        return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
     }, [])
 
     const styles = useMemo(() => {
@@ -70,7 +68,7 @@ const IssueTracking = (props: IssueProps) => {
                         color: token('color.text.inverse'),
                     }),
                 },
-            })
+            }),
         }
     }, [fields.status.name])
 
@@ -95,10 +93,17 @@ const IssueTracking = (props: IssueProps) => {
 
     return (
         <>
-            <CardIssue
-                active
-            >
-                <LogTimeAuto issueId={id} />
+            <CardIssue active>
+                <LogTimeAuto
+                    issueId={id}
+                    indicatorSlot={
+                        <LogTimeIndicator
+                            timeoriginalestimate={fields.timeoriginalestimate}
+                            timespent={fields.timespent}
+                            timeestimate={fields.timeestimate}
+                        />
+                    }
+                />
 
                 {!isLoading && fields.status.statusCategory.key !== 'indeterminate' && (
                     <SectionMessage
