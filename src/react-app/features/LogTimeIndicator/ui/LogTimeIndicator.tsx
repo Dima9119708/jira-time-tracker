@@ -1,272 +1,17 @@
 import { Box, xcss } from '@atlaskit/primitives'
 import { Issue } from 'react-app/shared/types/Jira/Issues'
-import { useMemo } from 'react'
-import { secondsToUIFormat } from 'react-app/shared/lib/helpers/secondsToUIFormat'
+import { useLogTimeIndicator } from 'react-app/features/LogTimeIndicator/lib/useLogTimeIndicator'
 
-interface LogTimeIndicatorProps extends Pick<Issue['fields'], 'timespent' | 'timeoriginalestimate' | 'timeestimate'> {}
-
-export const isNumber = (value: unknown): value is number => typeof value === 'number'
+export interface LogTimeIndicatorProps extends Pick<Issue['fields'], 'timespent' | 'timeoriginalestimate' | 'timeestimate'> {}
 
 const LogTimeIndicator = (props: LogTimeIndicatorProps) => {
     const { timeoriginalestimate, timespent, timeestimate } = props
 
-    const { timeLogged, timeRemaining, timeLoggedWidth, overOriginalEstimateWidth, timeOriginalEstimate } = useMemo(() => {
-        /*
-         * timespent = 0
-         * timeestimate = 100
-         * timeoriginalestimate = 100
-         * */
-
-        if (
-            (timespent === null || timespent === 0) &&
-            isNumber(timeestimate) &&
-            timeestimate > 0 &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0 &&
-            timeestimate === timeoriginalestimate
-        ) {
-            return {
-                timeLogged: 'No time logged',
-                timeRemaining: `${secondsToUIFormat(timeestimate)} remaining`,
-                timeOriginalEstimate: `${secondsToUIFormat(timeoriginalestimate)} from original estimate`,
-                timeLoggedWidth: '0',
-                overOriginalEstimateWidth: '0',
-            }
-        }
-
-        /*
-         * timespent = 0
-         * timeestimate = 200
-         * timeoriginalestimate = 100
-         * */
-        if (
-            (timespent === null || timespent === 0) &&
-            isNumber(timeestimate) &&
-            timeestimate > 0 &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0 &&
-            timeestimate > timeoriginalestimate
-        ) {
-
-            return {
-                timeLogged: 'No time logged',
-                timeRemaining: `${secondsToUIFormat(timeestimate)} remaining`,
-                timeOriginalEstimate: `${secondsToUIFormat(timeoriginalestimate)} from original estimate`,
-                timeLoggedWidth: '0',
-                overOriginalEstimateWidth: `${((timeestimate - timeoriginalestimate) / timeestimate) * 100}%`,
-            }
-        }
-
-        /*
-         * timespent = 0
-         * timeestimate = 100
-         * timeoriginalestimate = 200
-         * */
-        if (
-            (timespent === null || timespent === 0) &&
-            isNumber(timeestimate) &&
-            timeestimate > 0 &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0 &&
-            timeestimate < timeoriginalestimate
-        ) {
-            return {
-                timeLogged: 'No time logged',
-                timeRemaining: `${secondsToUIFormat(timeestimate)} remaining`,
-                timeOriginalEstimate: `${secondsToUIFormat(timeoriginalestimate)} from original estimate`,
-                timeLoggedWidth: '0',
-                overOriginalEstimateWidth: '0',
-            }
-        }
-
-        /*
-         * timespent = 0
-         * timeestimate = 0
-         * timeoriginalestimate = 200
-         * */
-        if (
-            (timespent === null || timespent === 0) &&
-            (timeestimate === null || timeestimate === 0) &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0
-        ) {
-            return {
-                timeLogged: 'No time logged',
-                timeRemaining: `${secondsToUIFormat(timeoriginalestimate)} remaining`,
-                timeOriginalEstimate: `${secondsToUIFormat(timeoriginalestimate)} from original estimate`,
-                timeLoggedWidth: '0',
-                overOriginalEstimateWidth: '0',
-            }
-        }
-
-        /*
-         * timespent = 100
-         * timeestimate = 0
-         * timeoriginalestimate = 200
-         * */
-        if (
-            isNumber(timespent) &&
-            timespent > 0 &&
-            (timeestimate === null || timeestimate === 0) &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0 &&
-            timespent < timeoriginalestimate
-        ) {
-            return {
-                timeLogged: `${secondsToUIFormat(timespent)} logged`,
-                timeRemaining: ``,
-                timeOriginalEstimate: `${secondsToUIFormat(timeoriginalestimate - timespent)} from original estimate`,
-                timeLoggedWidth: `${(timespent / timeoriginalestimate) * 100}%`,
-                overOriginalEstimateWidth: '0',
-            }
-        }
-
-        /*
-         * timespent = 100
-         * timeestimate = 0
-         * timeoriginalestimate = 100
-         * */
-        if (
-            isNumber(timespent) &&
-            timespent > 0 &&
-            (timeestimate === null || timeestimate === 0) &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0 &&
-            timespent === timeoriginalestimate
-        ) {
-            return {
-                timeLogged: `${secondsToUIFormat(timespent)} logged`,
-                timeRemaining: ``,
-                timeOriginalEstimate: ``,
-                timeLoggedWidth: `100%`,
-                overOriginalEstimateWidth: '0',
-            }
-        }
-
-        /*
-         * timespent = 200
-         * timeestimate = 0
-         * timeoriginalestimate = 100
-         * */
-        if (
-            isNumber(timespent) &&
-            timespent > 0 &&
-            (timeestimate === null || timeestimate === 0) &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0 &&
-            timespent > timeoriginalestimate
-        ) {
-            const exceeded = (timeoriginalestimate / timespent) * 100
-
-            return {
-                timeLogged: `${secondsToUIFormat(timespent)} logged`,
-                timeRemaining: ``,
-                timeOriginalEstimate: `-${secondsToUIFormat(timespent - timeoriginalestimate)} from original estimate`,
-                timeLoggedWidth: `${exceeded}%`,
-                overOriginalEstimateWidth: `${100 - exceeded}%`,
-            }
-        }
-
-        /*
-         * timespent = 150
-         * timeestimate = 150
-         * timeoriginalestimate = 300
-         * */
-        if (
-            isNumber(timespent) &&
-            timespent > 0 &&
-            isNumber(timeestimate) &&
-            timeestimate > 0 &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0 &&
-            timespent + timeestimate === timeoriginalestimate
-        ) {
-            const exceeded = (timespent / timeoriginalestimate) * 100
-
-            return {
-                timeLogged: `${secondsToUIFormat(timespent)} logged`,
-                timeRemaining: `${secondsToUIFormat(timeestimate)} remaining`,
-                timeOriginalEstimate: `${secondsToUIFormat(timeoriginalestimate - timespent)} from original estimate`,
-                timeLoggedWidth: `${exceeded}%`,
-                overOriginalEstimateWidth: `0`,
-            }
-        }
-
-        /*
-         * timespent = 100
-         * timeestimate = 100
-         * timeoriginalestimate = 300
-         * */
-        if (
-            isNumber(timespent) &&
-            timespent > 0 &&
-            isNumber(timeestimate) &&
-            timeestimate > 0 &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0 &&
-            timespent + timeestimate < timeoriginalestimate
-        ) {
-            const exceeded = (timespent / timeoriginalestimate) * 100
-
-            return {
-                timeLogged: `${secondsToUIFormat(timespent)} logged`,
-                timeRemaining: `${secondsToUIFormat(timeestimate)}  remaining`,
-                timeOriginalEstimate: `${secondsToUIFormat(timeoriginalestimate - timespent)} from original estimate`,
-                timeLoggedWidth: `${exceeded}%`,
-                overOriginalEstimateWidth: `0`,
-            }
-        }
-
-        /*
-         * timespent = 250
-         * timeestimate = 100
-         * timeoriginalestimate = 300
-         * */
-        if (
-            isNumber(timespent) &&
-            timespent > 0 &&
-            isNumber(timeestimate) &&
-            timeestimate > 0 &&
-            isNumber(timeoriginalestimate) &&
-            timeoriginalestimate > 0 &&
-            timespent + timeestimate > timeoriginalestimate
-        ) {
-            const exceeded = ((timespent + timeestimate - timeoriginalestimate) / (timespent + timeestimate)) * 100
-
-            return {
-                timeLogged: `${secondsToUIFormat(timespent)} logged`,
-                timeRemaining: `${secondsToUIFormat(timeestimate)}  remaining`,
-                timeOriginalEstimate: `${timespent > timeoriginalestimate ? '-' : ''}${secondsToUIFormat(
-                    timespent > timeoriginalestimate ? timespent - timeoriginalestimate : timeoriginalestimate - timespent
-                )} from original estimate`,
-                timeLoggedWidth: `${100 - exceeded}%`,
-                overOriginalEstimateWidth: `${exceeded}%`,
-            }
-        }
-
-        /*
-         * timespent = 100
-         * timeestimate = 0 || timeestimate = 100 || timeestimate = null
-         * timeoriginalestimate = 0 || timeoriginalestimate = null
-         * */
-        if (isNumber(timespent) && timespent > 0) {
-            return {
-                timeLogged: `${secondsToUIFormat(timespent)} logged`,
-                timeRemaining: ``,
-                timeOriginalEstimate: ``,
-                timeLoggedWidth: ``,
-                overOriginalEstimateWidth: ``,
-            }
-        }
-
-        return {
-            timeLogged: 'No time logged',
-            timeRemaining: '',
-            timeOriginalRemaining: '',
-            timeLoggedWidth: '0',
-            overOriginalEstimateWidth: '0',
-        }
-    }, [timeoriginalestimate, timespent, timeestimate])
+    const { timeLogged, timeRemaining, timeLoggedWidth, overEstimateWidth, timeRemainingFromOriginalEstimate } = useLogTimeIndicator({
+        timeoriginalestimate,
+        timespent,
+        timeestimate,
+    })
 
     return (
         <Box
@@ -303,7 +48,7 @@ const LogTimeIndicator = (props: LogTimeIndicatorProps) => {
                 })}
             >
                 <div>{timeRemaining}</div>
-                <div>{timeOriginalEstimate}</div>
+                <div>{timeRemainingFromOriginalEstimate}</div>
             </Box>
             <Box
                 xcss={xcss({
@@ -316,7 +61,7 @@ const LogTimeIndicator = (props: LogTimeIndicatorProps) => {
                 xcss={xcss({
                     height: 'inherit',
                     backgroundColor: 'color.background.danger.bold',
-                    flexBasis: overOriginalEstimateWidth,
+                    flexBasis: overEstimateWidth,
                 })}
             />
         </Box>
