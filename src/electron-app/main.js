@@ -164,6 +164,10 @@ const createMainWindow = (port) => {
         mainWindow.webContents.send('FOCUS')
     })
 
+    ipcMain.on('IS_FOCUSED', (event) => {
+        event.returnValue = mainWindow.isFocused()
+    })
+
     mainWindow.on('blur', () => {
         mainWindow.webContents.send('BLUR')
     })

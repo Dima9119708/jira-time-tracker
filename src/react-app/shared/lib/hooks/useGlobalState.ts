@@ -38,6 +38,12 @@ export interface UseGlobalState {
             displayTime: number
             second: number
         }
+
+        pluginLogoutAlerts: {
+            enabled: boolean
+            displayTime: number
+            millisecond: number
+        }
     }
     workingHoursPerDay: ConfigurationTimeTrackingOptions['workingHoursPerDay']
     workingDaysPerWeek: ConfigurationTimeTrackingOptions['workingDaysPerWeek']
@@ -109,6 +115,12 @@ export const useGlobalState = createStore<UseGlobalState>(
                 displayTime: 5,
                 second: 300,
             },
+
+            pluginLogoutAlerts: {
+                enabled: true,
+                displayTime: 1,
+                millisecond: 60_000,
+            }
         },
         issueIdsSearchParams: {
             type: null,

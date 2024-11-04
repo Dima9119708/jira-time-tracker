@@ -1196,15 +1196,14 @@ const server = (port, errorCallback) => {
                         refresh_token: authParsed.refresh_token,
                     })
 
-                    AuthStorage.set(
+                    AuthStorage.merge(
                         AUTH_DATA,
-                        JSON.stringify({
-                            ...AuthStorage.get(AUTH_DATA),
+                        {
                             access_token: response.data.access_token,
                             refresh_token: response.data.refresh_token,
                             client_id: authParsed.client_id,
                             type: OAUTH2,
-                        })
+                        }
                     )
 
                     res.send(response.data)

@@ -3,7 +3,6 @@ import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalSta
 import { useEffect, useRef } from 'react'
 import { useBooleanController } from 'use-global-boolean'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useFilterPUT } from 'react-app/entities/Filters'
 
 const UnauthorizedPluginHandler = () => {
     const notify = useNotifications()
@@ -16,8 +15,6 @@ const UnauthorizedPluginHandler = () => {
 
     currentPath.current = location.pathname
 
-    const filterPUT = useFilterPUT()
-
     useEffect(() => {
         if (isUnauthorizedPlugin && currentPath.current === '/issues') {
             const pluginName = useGlobalState.getState().settings.plugin
@@ -28,12 +25,6 @@ const UnauthorizedPluginHandler = () => {
 
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
-                    filterPUT.mutate({
-                        settings: {
-                            plugin: null,
-                        },
-                    })
-
                     navigate('/auth-plugin')
 
                     localStorage.setItem('pluginName', PLUGINS.TEMPO)

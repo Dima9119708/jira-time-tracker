@@ -96,6 +96,11 @@ const Settings = () => {
                         ? dayjs.duration(data.systemIdle.displayTime, 'minutes').asSeconds()
                         : dayjs.duration(data.systemIdle.displayTime, 'hours').asSeconds(),
             },
+            pluginLogoutAlerts: {
+                displayTime: data.pluginLogoutAlerts.displayTime,
+                enabled: data.pluginLogoutAlerts.enabled,
+                millisecond: dayjs.duration(data.pluginLogoutAlerts.displayTime, 'minutes').asMilliseconds()
+            }
         }
 
         filterPUT.mutate({
@@ -302,6 +307,56 @@ const Settings = () => {
                                                     error={fieldState.error?.message}
                                                     disabled={sendInactiveNotificationEnabled}
                                                 />
+                                            </Box>
+                                        )
+                                    }}
+                                />
+                            </Flex>
+                        </Flex>
+
+                        <Flex
+                            xcss={styles.divider}
+                            justifyContent="space-between"
+                        >
+                            <Heading size="small">
+                                Plugin logout alerts
+                            </Heading>
+
+                            <Flex
+                                wrap="nowrap"
+                                alignItems="center"
+                                columnGap="space.100"
+                            >
+                                <Controller
+                                    name="pluginLogoutAlerts.enabled"
+                                    control={control}
+                                    render={({ field }) => {
+                                        return (
+                                            <Box xcss={styles.toggleWarp}>
+                                                <Toggle
+                                                    isChecked={field.value}
+                                                    onChange={field.onChange}
+                                                />
+                                            </Box>
+                                        )
+                                    }}
+                                />
+
+                                <Controller
+                                    name="pluginLogoutAlerts.displayTime"
+                                    control={control}
+                                    rules={{ required: 'Required' }}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box xcss={styles.inputWarp}>
+                                                <Textfield
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                    type="number"
+                                                />
+
+                                                {fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
                                             </Box>
                                         )
                                     }}

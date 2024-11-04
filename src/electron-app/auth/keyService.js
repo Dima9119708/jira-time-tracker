@@ -28,6 +28,15 @@ module.exports = {
 
             store.delete(key)
         },
+        merge: (key, obj) => {
+            initStore()
+
+            try {
+                this.set(key, JSON.stringify({ ...JSON.parse(this.get(key)), ...obj }))
+            } catch (e) {
+                console.log('e =>', e)
+            }
+        },
         clear: (keys = []) => {
             initStore()
 

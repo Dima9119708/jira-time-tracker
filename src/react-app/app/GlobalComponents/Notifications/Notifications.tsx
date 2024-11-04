@@ -1,8 +1,21 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { electron } from '../../../shared/lib/electron/electron'
-import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import { PLUGINS, useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import notifyMusic from 'react-app/shared/assets/music/supercell.wav'
+import { useWatchBoolean } from 'use-global-boolean'
+import dayjs from 'dayjs'
 
 const Notifications = () => {
+    const [isUnauthorizedPlugin] = useWatchBoolean('UNAUTHORIZED PLUGIN')
+
+    const audio = useMemo(() => {
+        const _audio = new Audio(notifyMusic)
+
+        _audio.load()
+
+        return _audio
+    }, [])
+
     useEffect(() => {
         let interval: NodeJS.Timeout
 
@@ -25,6 +38,11 @@ const Notifications = () => {
                         title: 'The task has not been taken into work.',
                         body: 'The application is running in the background, but no task has been taken into work.',
                     })
+
+                    audio.pause()
+                    audio.currentTime = 0
+
+                    audio.play()
                 }, useGlobalState.getState().settings.sendInactiveNotification.millisecond)
             }
 
@@ -39,6 +57,53 @@ const Notifications = () => {
 
         return () => unsubscribe()
     }, [])
+
+    useEffect(() => {
+        if (isUnauthorizedPlugin) {
+            let interval: NodeJS.Timeout
+
+            const pluginName = useGlobalState.getState().settings.plugin
+
+            return electron(({ ipcRenderer }) => {
+                const isFocused = ipcRenderer.sendSync('IS_FOCUSED')
+
+                if (isFocused) return
+
+                const pluginLogoutAlertsEnabled = !useGlobalState.getState().settings.pluginLogoutAlerts.enabled
+
+                if (pluginLogoutAlertsEnabled) {
+                    clearInterval(interval)
+                    return
+                }
+
+                const sendNotify = () => {
+                    const isFocused = ipcRenderer.sendSync('IS_FOCUSED')
+
+                    if (isFocused) {
+                        clearInterval(interval)
+                    }
+
+                    ipcRenderer.send('NOTIFICATION', {
+                        title: `Connection Lost to ${pluginName}`,
+                        body: `The connection to ${pluginName} has been disconnected due to your session expiring. To continue using all features, please log in again.`,
+                    })
+
+                    audio.pause()
+                    audio.currentTime = 0
+
+                    audio.play()
+                }
+
+                sendNotify()
+
+                interval = setInterval(sendNotify, useGlobalState.getState().settings.pluginLogoutAlerts.millisecond)
+
+                return () => {
+                    clearInterval(interval)
+                }
+            })
+        }
+    }, [isUnauthorizedPlugin])
 
     return null
 }

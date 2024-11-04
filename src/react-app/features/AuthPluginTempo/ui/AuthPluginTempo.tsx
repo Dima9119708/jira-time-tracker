@@ -20,6 +20,7 @@ import { useFilterPUT } from 'react-app/entities/Filters'
 interface AuthTempoForm {
     client_id: string
     client_secret: string
+    redirect_uri: string
     apiIntegration: string
 }
 
@@ -37,6 +38,7 @@ export const AuthPluginTempo = () => {
                 client_id: authData?.client_id || '',
                 client_secret: authData?.client_secret || '',
                 apiIntegration: authData?.access_token || '',
+                redirect_uri: process.env.REDIRECT_URI || '',
             }
         },
     })
@@ -133,7 +135,7 @@ export const AuthPluginTempo = () => {
             const tempoURL = new URL(`${authData.jiraSubDomain}/plugins/servlet/ac/io.tempo.jira/oauth-authorize/`)
 
             tempoURL.searchParams.set('client_id', data.client_id)
-            tempoURL.searchParams.set('redirect_uri', process.env.REDIRECT_URL ?? '')
+            tempoURL.searchParams.set('redirect_uri', '')
 
             if (authData.jiraSubDomain) {
                 methods.ipcRenderer.send('OPEN_OAuth2Plugin', {
@@ -181,6 +183,25 @@ export const AuthPluginTempo = () => {
 
             {typeAuth === 'OAuth2' ? (
                 <>
+                    <Label htmlFor="redirect_uri">Redirect URIs:</Label>
+                    <Controller
+                        render={({ field }) => {
+                            return (
+                                <Textfield
+                                    id="redirect_uri"
+                                    value={field.value}
+                                    ref={field.ref}
+                                    onChange={field.onChange}
+                                    isDisabled={loading}
+                                />
+                            )
+                        }}
+                        name="redirect_uri"
+                        control={control}
+                    />
+
+                    <Box xcss={xcss({ marginBottom: 'space.200' })} />
+
                     <Label htmlFor="client_id">Client ID:</Label>
                     <Controller
                         render={({ field }) => {

@@ -143,7 +143,7 @@ export default (env: IBuildEnv) => {
                     use: ['@svgr/webpack'],
                 },
                 {
-                    test: /\.(png|jpg|jpeg|gif)$/i,
+                    test: /\.(png|jpg|jpeg|gif|mp3|wav)$/i,
                     type: 'asset/resource',
                 },
                 {

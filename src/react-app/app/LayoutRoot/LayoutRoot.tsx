@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { Logo } from '../../shared/components/Logo'

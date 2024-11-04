@@ -10,7 +10,7 @@ import { redirect } from 'react-router-dom'
 export const loaderAuthAppInitial = (queryClient: QueryClient) => async () => {
     try {
         const authData = await electron((methods) => methods.ipcRenderer.invoke('GET_AUTH_DATA'))
-
+console.log('authData =>', authData)
         if (authData) {
             await queryClient.fetchQuery({
                 queryKey: ['myself'],
