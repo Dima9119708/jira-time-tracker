@@ -116,7 +116,7 @@ const server = (port, errorCallback) => {
                     }
 
                     if (authParsed.type === OAUTH2) {
-                        const response = await axios.get(`https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/2/search`, {
+                        const response = await axios.get(`https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/search`, {
                             headers: {
                                 Authorization: `Bearer ${authParsed.access_token}`,
                             },

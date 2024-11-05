@@ -94,6 +94,7 @@ export const useGlobalState = createStore<UseGlobalState>(
                 priority: [],
                 prioritySort: '',
                 createdSort: '',
+                search: ''
             },
             autoStart: true,
             timeLoggingInterval: {

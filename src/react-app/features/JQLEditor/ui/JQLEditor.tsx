@@ -6,19 +6,6 @@ import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { useFilterPUT } from 'react-app/entities/Filters'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { CharStreams, CommonTokenStream } from 'antlr4ts';
-import { JQLLexer, JQLParser } from '@atlaskit/jql-parser';
-
-// Create the lexer and parser
-const jqlText = "project = JQL";
-const charStream = CharStreams.fromString(jqlText);
-const lexer = new JQLLexer(charStream);
-const tokenStream = new CommonTokenStream(lexer);
-const parser = new JQLParser(tokenStream);
-
-// Parse the input, where jqlQuery is the entry point
-const parsedJQLTree = parser.jqlQuery();
-console.log('parsedJQLTree =>', parsedJQLTree)
 const JQLEditor = () => {
     const query = useGlobalState((state) => state.jql)
 

@@ -16,6 +16,8 @@ import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import RecentIcon from '@atlaskit/icon/glyph/recent'
 import UnauthorizedPluginHandler from '../GlobalComponents/UnauthorizedPluginHandler/UnauthorizedPluginHandler'
+import { useQuery } from '@tanstack/react-query'
+import { axiosInstance } from 'react-app/shared/config/api/api'
 
 const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
 const Timesheet = lazy(() => import('../../widgets/Timesheet'))

@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useFilterPUT } from 'react-app/entities/Filters'
 import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
+import { SearchByIssues } from 'react-app/features/SearchByIssues'
 
 export type JQLBasic = {
     priority: string[] | undefined
@@ -20,6 +21,7 @@ export type JQLBasic = {
     assignees: string[] | undefined
     prioritySort: 'ASC' | 'DESC' | ''
     createdSort: 'ASC' | 'DESC' | ''
+    search: string | undefined
 }
 
 type SubmitHandler = (data: JQLBasic) => void
@@ -35,6 +37,27 @@ const formatJQLSortClause = (prioritySort: 'ASC' | 'DESC' | '', createdSort: 'AS
     if (createdSort) return `ORDER BY created ${createdSort}`
     if (prioritySort) return `ORDER BY priority ${prioritySort}`
     return ''
+}
+
+const Search = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandler }) => {
+    const { control, onSubmit } = props
+    const { handleSubmit } = useFormContext()
+
+    const { field } = useController({
+        control,
+        name: 'search',
+    })
+
+    return (
+        <SearchByIssues
+            initialValue={field.value}
+            onChange={(jql) => {
+                field.onChange(jql)
+                // @ts-ignore
+                handleSubmit(onSubmit)()
+            }}
+        />
+    )
 }
 
 const Statuses = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandler }) => {
@@ -288,6 +311,7 @@ const JQLBuilderBasicForm = () => {
 
     const onSubmit = useCallback((data: JQLBasic) => {
         const JQLSeparatedAndOperator = [
+            data.search,
             formatJQLInClause('project', data.projects, (project: ProjectValue) => project.id),
             formatJQLInClause('status', data.statuses, (status: string) => `"${status}"`),
             formatJQLInClause('assignee', data.assignees),
@@ -316,6 +340,10 @@ const JQLBuilderBasicForm = () => {
             xcss={xcss({ marginBottom: 'space.250' })}
         >
             <FormProvider {...formMethods}>
+                <Search
+                    control={control}
+                    onSubmit={onSubmit}
+                />
                 <Projects
                     control={control}
                     onSubmit={onSubmit}
