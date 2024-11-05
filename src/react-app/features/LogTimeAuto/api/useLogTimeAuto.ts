@@ -59,8 +59,8 @@ export const useLogTimeAuto = (issueId: string) => {
 
     const issueWorklogsGET = useIssueWorklogsGET({
         issueId: issueId,
-        to: dayjs().format('YYYY-MM-DD'),
-        from: dayjs().format('YYYY-MM-DD'),
+        from: dayjs().startOf('day'),
+        to: dayjs().endOf('day'),
         enabled: false,
     })
 

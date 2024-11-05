@@ -13,10 +13,8 @@ import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
 import { LogTimeButton, LogTimeDialog } from 'react-app/features/LogTime'
 import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
-import { CardIssueDetailsBadges, CardIssueHeader, CardIssue } from 'react-app/entities/Issues'
+import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'
 import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
-import { Issue as IssueType } from 'react-app/shared/types/Jira/Issues'
-import { token } from '@atlaskit/tokens'
 
 const Issue = (props: IssueProps) => {
     const { fields, id, issueKey } = props
@@ -31,46 +29,7 @@ const Issue = (props: IssueProps) => {
         ]
     }, [])
 
-    const styles = useMemo(() => {
-        const colorNew = fields.status.statusCategory.key === 'new' && 'default'
-        const colorIndeterminate = fields.status.statusCategory.key === 'indeterminate' && 'primary'
-        const colorDone = fields.status.statusCategory.key === 'done' && 'subtle'
-
-        return {
-            STATUTES_DROPDOWN_BUTTON: xcss({
-                // @ts-ignore
-                '& > button': {
-                    fontWeight: token('font.weight.semibold'),
-                    ...(colorNew && {
-                        backgroundColor: token('color.background.neutral'),
-                        color: token('color.text'),
-                    }),
-                    ...(colorIndeterminate && {
-                        backgroundColor: token('color.background.information.bold'),
-                        color: token('color.text.inverse'),
-                    }),
-                    ...(colorDone && {
-                        backgroundColor: token('color.chart.success.bold'),
-                        color: token('color.text.inverse'),
-                    }),
-                },
-                '& > button:hover': {
-                    ...(colorNew && {
-                        backgroundColor: token('color.background.neutral.hovered'),
-                        color: token('color.text'),
-                    }),
-                    ...(colorIndeterminate && {
-                        backgroundColor: token('color.background.information.bold.hovered'),
-                        color: token('color.text.inverse'),
-                    }),
-                    ...(colorDone && {
-                        backgroundColor: token('color.chart.success.bold.hovered'),
-                        color: token('color.text.inverse'),
-                    }),
-                },
-            })
-        }
-    }, [fields.status.name])
+    const styles = useStatusStyles(fields)
 
     const onPlayTracking = () => {
         useGlobalState.getState().changeIssueIdsSearchParams('add', id)

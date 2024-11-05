@@ -14,7 +14,13 @@ axiosInstance.interceptors.response.use(undefined, async function (error) {
             await axiosInstance.post('/refresh-token')
 
             return axiosInstance(originalRequest)
+        } else {
+            globalBooleanActions.setTrue('UNAUTHORIZED', true)
         }
+    }
+
+    if (error.response.status === 401 && originalRequest._retry) {
+        globalBooleanActions.setTrue('UNAUTHORIZED', true)
     }
 
     return Promise.reject(error)

@@ -14,10 +14,9 @@ import { LogTimeButton, LogTimeDialog } from 'react-app/features/LogTime'
 import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import { LogTimeAuto } from 'react-app/features/LogTimeAuto'
-import { CardIssueDetailsBadges, CardIssueHeader, CardIssue } from 'react-app/entities/Issues'
+import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useFavoriteStore } from 'react-app/features/FavoriteIssue'
-import { token } from '@atlaskit/tokens'
 import { LogTimeIndicator } from 'react-app/features/LogTimeIndicator'
 
 const IssueTracking = (props: IssueProps) => {
@@ -31,46 +30,7 @@ const IssueTracking = (props: IssueProps) => {
         return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
     }, [])
 
-    const styles = useMemo(() => {
-        const colorNew = fields.status.statusCategory.key === 'new' && 'default'
-        const colorIndeterminate = fields.status.statusCategory.key === 'indeterminate' && 'primary'
-        const colorDone = fields.status.statusCategory.key === 'done' && 'subtle'
-
-        return {
-            STATUTES_DROPDOWN_BUTTON: xcss({
-                // @ts-ignore
-                '& > button': {
-                    fontWeight: token('font.weight.semibold'),
-                    ...(colorNew && {
-                        backgroundColor: token('color.background.neutral'),
-                        color: token('color.text'),
-                    }),
-                    ...(colorIndeterminate && {
-                        backgroundColor: token('color.background.information.bold'),
-                        color: token('color.text.inverse'),
-                    }),
-                    ...(colorDone && {
-                        backgroundColor: token('color.chart.success.bold'),
-                        color: token('color.text.inverse'),
-                    }),
-                },
-                '& > button:hover': {
-                    ...(colorNew && {
-                        backgroundColor: token('color.background.neutral.hovered'),
-                        color: token('color.text'),
-                    }),
-                    ...(colorIndeterminate && {
-                        backgroundColor: token('color.background.information.bold.hovered'),
-                        color: token('color.text.inverse'),
-                    }),
-                    ...(colorDone && {
-                        backgroundColor: token('color.chart.success.bold.hovered'),
-                        color: token('color.text.inverse'),
-                    }),
-                },
-            }),
-        }
-    }, [fields.status.name])
+    const styles = useStatusStyles(fields)
 
     const onStopTracking = async () => {
         setLoading(true)

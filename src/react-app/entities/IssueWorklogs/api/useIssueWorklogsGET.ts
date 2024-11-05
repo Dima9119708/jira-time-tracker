@@ -2,10 +2,9 @@ import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalSta
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance, axiosInstancePlugin } from 'react-app/shared/config/api/api'
 import { convertSecondsToJiraTime } from 'react-app/entities/IssueWorklogs/lib/convertJiraTimeToSeconds'
-import dayjs from 'dayjs'
+import dayjs, { Dayjs } from 'dayjs'
 import { extractTextFromDoc } from 'react-app/entities/Worklogs/lib/helpers/extractTextFromDoc'
 import { Worklog } from 'react-app/entities/Worklogs/api/useWorklogsGET'
-import { data } from 'autoprefixer'
 import { DATE_FORMAT } from 'react-app/shared/const'
 import { MySelf } from 'react-app/shared/types/Jira/MySelf'
 import { WorklogResponse } from 'react-app/shared/types/Jira/Worklogs'
@@ -13,8 +12,8 @@ import { WorklogsTempoResponse } from 'react-app/shared/types/plugins/Tempo/Work
 
 interface UseGetIssueWorklogs {
     issueId: string
-    from?: string
-    to?: string
+    from?: string | Dayjs
+    to?: string | Dayjs
     enabled?: boolean
 }
 
@@ -27,7 +26,7 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled }: UseGetIssueW
 
     return useQuery<IssueWorklogs[]>({
         enabled: enabled,
-        queryKey: ['issue worklogs', pluginName, issueId],
+        queryKey: ['issue worklogs', pluginName, issueId, to, from],
         queryFn: async ({ signal }) => {
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
@@ -78,28 +77,46 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled }: UseGetIssueW
                     const jiraIssueWorklogsResponse = await axiosInstance.get<WorklogResponse>('/issue-worklogs', {
                         params: {
                             issueId: issueId,
-                            ...(from && { startedAfter: dayjs(from).valueOf() }),
-                            ...(to && { startedBefore: dayjs(to).valueOf() }),
                         },
                         signal: signal,
                     })
 
+                    const _from = dayjs(from);
+                    const _to = dayjs(to);
+
                     return jiraIssueWorklogsResponse.data.worklogs.reduce((acc, worklog) => {
-                        const dateStarted = dayjs(worklog.started).format('YYYY-MM-DD')
+                        const dateStarted = dayjs(worklog.started);
 
                         if (worklog.author.accountId === mySelf.accountId) {
-                            acc.push({
-                                id: worklog.id,
-                                timeSpent: worklog.timeSpent,
-                                timeSpentSeconds: worklog.timeSpentSeconds,
-                                description: extractTextFromDoc(worklog.comment),
-                                author: {
-                                    displayName: mySelf.displayName,
-                                    avatarUrls: mySelf.avatarUrls,
-                                    accountId: mySelf.accountId,
-                                },
-                                date: dateStarted,
-                            })
+                            if (from && to && dateStarted.isSameOrAfter(_from) && dateStarted.isSameOrBefore(_to)) {
+                                acc.push({
+                                    id: worklog.id,
+                                    timeSpent: worklog.timeSpent,
+                                    timeSpentSeconds: worklog.timeSpentSeconds,
+                                    description: extractTextFromDoc(worklog.comment),
+                                    author: {
+                                        displayName: mySelf.displayName,
+                                        avatarUrls: mySelf.avatarUrls,
+                                        accountId: mySelf.accountId,
+                                    },
+                                    date: dateStarted.format(DATE_FORMAT),
+                                })
+                            }
+
+                            if (!from && !to) {
+                                acc.push({
+                                    id: worklog.id,
+                                    timeSpent: worklog.timeSpent,
+                                    timeSpentSeconds: worklog.timeSpentSeconds,
+                                    description: extractTextFromDoc(worklog.comment),
+                                    author: {
+                                        displayName: mySelf.displayName,
+                                        avatarUrls: mySelf.avatarUrls,
+                                        accountId: mySelf.accountId,
+                                    },
+                                    date: dateStarted.format(DATE_FORMAT),
+                                })
+                            }
                         }
 
                         return acc

@@ -268,6 +268,7 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                                 <>
                                     {issueWorklogs.data?.map((worklog) => (
                                         <Box
+                                            key={worklog.id}
                                             xcss={xcss({
                                                 boxShadow: 'elevation.shadow.overlay',
                                                 display: 'grid',

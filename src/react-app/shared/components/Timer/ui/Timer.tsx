@@ -44,11 +44,11 @@ const Timer = (props: TimerProps, ref: Ref<TimerRef>) => {
             control.current.pause = false
         },
         setIntervalTrigger: (seconds, fn) => {
-            let triggerValue = seconds
+            let nextTriggerTime = seconds
 
             const interval = setInterval(() => {
-                if (control.current.seconds === triggerValue && !control.current.pause) {
-                    triggerValue += seconds
+                if (control.current.seconds >= nextTriggerTime && !control.current.pause) {
+                    nextTriggerTime += seconds
                     fn()
                 }
             }, 1000)

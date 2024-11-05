@@ -12,7 +12,7 @@ import SettingsIcon from '@atlaskit/icon/glyph/settings'
 import { IconButton } from '@atlaskit/button/new'
 import SignOutIcon from '@atlaskit/icon/glyph/sign-out'
 import { TOP_PANEL_HEIGHT } from 'react-app/widgets/TopPanel/ui/TopPanel'
-import { WatchController } from 'use-global-boolean'
+import { useBooleanController, WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import RecentIcon from '@atlaskit/icon/glyph/recent'
 import UnauthorizedPluginHandler from '../GlobalComponents/UnauthorizedPluginHandler/UnauthorizedPluginHandler'
@@ -44,6 +44,7 @@ const styles = {
 
 const LayoutRoot = () => {
     const navigate = useNavigate()
+    const [isUnauthorized, { toggle }] = useBooleanController('UNAUTHORIZED')
 
     const onLogout = () => {
         queryClient.removeQueries()
@@ -53,6 +54,13 @@ const LayoutRoot = () => {
 
         navigate('/auth')
     }
+
+    useEffect(() => {
+        if (isUnauthorized) {
+            toggle()
+            onLogout()
+        }
+    }, [isUnauthorized])
 
     return (
         <>

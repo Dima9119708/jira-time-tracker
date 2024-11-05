@@ -9,7 +9,7 @@ const getParsedAuth = async () => {
         const authData = AuthStorage.get(AUTH_DATA)
         return JSON.parse(authData)
     } catch (e) {
-        throw new TypeError('The authorization credentials are corrupted')
+        return {}
     }
 }
 
@@ -91,6 +91,9 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -125,6 +128,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -160,6 +165,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -198,6 +205,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -238,6 +247,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -275,6 +286,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -312,6 +325,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -349,6 +364,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -386,6 +403,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -421,6 +440,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -456,6 +477,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -492,6 +515,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -528,6 +553,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -564,6 +591,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -596,6 +625,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -630,6 +661,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -667,6 +700,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -704,41 +739,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
-                } catch (e) {
-                    if (e instanceof TypeError) {
-                        return errorCallback(e.message)
-                    }
 
-                    res.status(e.response.status).send(e.response.data)
-                }
-            })
-
-            app.get('/worklog-task', async (req, res) => {
-                try {
-                    const authParsed = await getParsedAuth()
-
-                    if (authParsed.type === BASIC_AUTH) {
-                        const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/3/issue/${req.query.id}/worklog`, {
-                            headers: {
-                                Authorization: `Basic ${authParsed.apiToken}`,
-                            },
-                        })
-
-                        res.send(response.data)
-                    }
-
-                    if (authParsed.type === OAUTH2) {
-                        const response = await axios.get(
-                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/issue/${req.query.id}/worklog`,
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${authParsed.access_token}`,
-                                },
-                            }
-                        )
-
-                        res.send(response.data)
-                    }
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -776,6 +778,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -836,50 +840,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
-                } catch (e) {
-                    if (e instanceof TypeError) {
-                        return errorCallback(e.message)
-                    }
 
-                    res.status(e.response.status).send(e.response.data)
-                }
-            })
-
-            app.post('/worklog-task', async (req, res) => {
-                try {
-                    const authParsed = await getParsedAuth()
-
-                    if (authParsed.type === BASIC_AUTH) {
-                        const response = await axios.post(
-                            `${authParsed.jiraSubDomain}/rest/api/3/issue/${req.body.taskId}/worklog`,
-                            {
-                                timeSpentSeconds: req.body.timeSpentSeconds,
-                            },
-                            {
-                                headers: {
-                                    Authorization: `Basic ${authParsed.apiToken}`,
-                                },
-                            }
-                        )
-
-                        res.send(response.data)
-                    }
-
-                    if (authParsed.type === OAUTH2) {
-                        const response = await axios.post(
-                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/issue/${req.body.taskId}/worklog`,
-                            {
-                                timeSpentSeconds: req.body.timeSpentSeconds,
-                            },
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${authParsed.access_token}`,
-                                },
-                            }
-                        )
-
-                        res.send(response.data)
-                    }
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -920,6 +882,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -950,46 +914,8 @@ const server = (port, errorCallback) => {
                             res.status(401).send()
                         }
                     }
-                } catch (e) {
-                    if (e instanceof TypeError) {
-                        return errorCallback(e.message)
-                    }
 
-                    res.status(e.response.status).send(e.response.data)
-                }
-            })
-
-            app.put('/worklog-task', async (req, res) => {
-                try {
-                    const authParsed = await getParsedAuth()
-
-                    if (authParsed.type === BASIC_AUTH) {
-                        const response = await axios.put(
-                            `${authParsed.jiraSubDomain}/rest/api/3/issue/${req.body.taskId}/worklog/${req.body.id}`,
-                            req.body,
-                            {
-                                headers: {
-                                    Authorization: `Basic ${authParsed.apiToken}`,
-                                },
-                            }
-                        )
-
-                        res.send(response.data)
-                    }
-
-                    if (authParsed.type === OAUTH2) {
-                        const response = await axios.put(
-                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/issue/${req.body.taskId}/worklog/${req.body.id}`,
-                            req.body,
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${authParsed.access_token}`,
-                                },
-                            }
-                        )
-
-                        res.send(response.data)
-                    }
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -1030,6 +956,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -1060,6 +988,8 @@ const server = (port, errorCallback) => {
                             res.status(401).send()
                         }
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -1098,6 +1028,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -1176,6 +1108,8 @@ const server = (port, errorCallback) => {
 
                         res.send(response.data)
                     }
+
+                    res.status(401).send()
                 } catch (e) {
                     if (e instanceof TypeError) {
                         return errorCallback(e.message)
@@ -1188,6 +1122,8 @@ const server = (port, errorCallback) => {
             app.post('/refresh-token', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
+
+                    if (!('type' in authParsed)) return res.status(401).send()
 
                     const response = await axios.post(`https://auth.atlassian.com/oauth/token`, {
                         grant_type: 'refresh_token',
