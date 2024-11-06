@@ -10,7 +10,7 @@ import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { Assignee, IssueResponse } from 'react-app/shared/types/Jira/Issues'
 
 const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
-    const { issueKey, assignee, queryKeys, position = 'bottom-start' } = props
+    const { issueKey, assignee, queryKeys, position = 'bottom-start', onSuccess } = props
 
     const queryClient = useQueryClient()
 
@@ -22,7 +22,7 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
         Assignee,
         { dismissFn: Function; oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]> | undefined; notificationMessage: string }
     >({
-        mutationFn: (variables) =>
+        mutationFn: (variables, ) =>
             axiosInstance.put<Assignee>('/issue-assignee', { accountId: variables.accountId }, { params: { issueKey: issueKey } }),
         onMutate: async (variables) => {
 
@@ -84,8 +84,9 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
                 description: context!.notificationMessage,
             })
 
-            //  TODO ????
-            // queryClient.invalidateQueries({ queryKey: [queryKey] })
+            if (typeof onSuccess === 'function') {
+                onSuccess()
+            }
         },
         onError: (error, variables, context) => {
             context!.dismissFn()
@@ -96,30 +97,13 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
             })
 
             if (Array.isArray(context?.oldStates)) {
-                for (const queryKey of context.oldStates) {
+                for (const [queryKey, oldState] of context.oldStates) {
                     queryClient.setQueryData(
                         [queryKey],
                         (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
-                            if (Array.isArray(old)) {
-                                return produce(old, (draft) => {
-                                    const issue = draft.find(({ key }) => key === issueKey)
-
-                                    if (issue) {
-                                        issue.fields.assignee = variables
-                                    }
-                                })
-                            } else {
-                                return produce(old, (draft) => {
-                                    for (const page of draft.pages) {
-                                        const issue = page.issues.find(({ key }) => key === issueKey);
-
-                                        if (issue) {
-                                            issue.fields.assignee = variables;
-                                            break;
-                                        }
-                                    }
-                                })
-                            }
+                            return produce(old, (draft) => {
+                                Object.assign(draft, oldState)
+                            })
                         }
                     )
                 }

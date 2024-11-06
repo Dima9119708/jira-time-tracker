@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
 import { User } from 'react-app/shared/types/Jira/UserSearch'
+import { UNASSIGNED_USER } from '../constants/defaultUser'
 
 export const useUserSearchGET = ({ opened }: { opened: boolean }) => {
     return useQuery({
@@ -13,7 +14,11 @@ export const useUserSearchGET = ({ opened }: { opened: boolean }) => {
                 },
             })
 
-            return response.data.filter((user) => user.accountType !== 'app' && user.active)
+            const users = response.data.filter((user) => user.accountType !== 'app' && user.active)
+
+            users.push(UNASSIGNED_USER)
+
+            return users
         },
     })
 }

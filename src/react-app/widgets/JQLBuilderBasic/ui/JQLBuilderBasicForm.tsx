@@ -13,26 +13,30 @@ import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useFilterPUT } from 'react-app/entities/Filters'
 import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
 import { SearchByIssues } from 'react-app/features/SearchByIssues'
+import { Assignee, Priority as PriorityType, Status as StatusType } from 'react-app/shared/types/Jira/Issues'
+import { EnumSortOrder } from 'react-app/shared/types/common'
+import Skeleton from '@atlaskit/skeleton'
+import { getValueFromJql } from 'react-app/shared/lib/utils/getValueFromJql'
 
 export type JQLBasic = {
-    priority: string[] | undefined
-    statuses: string[] | undefined
+    priority: Array<PriorityType['name']> | undefined
+    statuses: Array<StatusType['name']> | undefined
     projects: ProjectValue[] | undefined
-    assignees: string[] | undefined
-    prioritySort: 'ASC' | 'DESC' | ''
-    createdSort: 'ASC' | 'DESC' | ''
+    assignees: Array<Assignee['accountId']> | undefined
+    prioritySort: EnumSortOrder
+    createdSort: EnumSortOrder
     search: string | undefined
 }
 
 type SubmitHandler = (data: JQLBasic) => void
 
-const formatJQLInClause = (field: string, values?: string[] | ProjectValue[], mapFn?: (value: any) => string) => {
+const formatJQLInClause = (field: string, values?: Array<string | null> | ProjectValue[], mapFn?: (value: any) => string) => {
     if (!values?.length) return ''
     const formattedValues = mapFn ? values.map(mapFn) : values
     return `${field} in (${formattedValues.join(',')})`
 }
 
-const formatJQLSortClause = (prioritySort: 'ASC' | 'DESC' | '', createdSort: 'ASC' | 'DESC' | '') => {
+const formatJQLSortClause = (prioritySort: EnumSortOrder, createdSort: EnumSortOrder) => {
     if (prioritySort && createdSort) return `ORDER BY priority ${prioritySort}, created ${createdSort}`
     if (createdSort) return `ORDER BY created ${createdSort}`
     if (prioritySort) return `ORDER BY priority ${prioritySort}`
@@ -41,23 +45,21 @@ const formatJQLSortClause = (prioritySort: 'ASC' | 'DESC' | '', createdSort: 'AS
 
 const Search = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandler }) => {
     const { control, onSubmit } = props
-    const { handleSubmit } = useFormContext()
+    const { handleSubmit, formState } = useFormContext()
 
     const { field } = useController({
         control,
         name: 'search',
     })
 
-    return (
-        <SearchByIssues
-            initialValue={field.value}
-            onChange={(jql) => {
-                field.onChange(jql)
-                // @ts-ignore
-                handleSubmit(onSubmit)()
-            }}
-        />
-    )
+    return    <SearchByIssues
+        initialValue={field.value}
+        onChange={(jql) => {
+            field.onChange(jql)
+            // @ts-ignore
+            handleSubmit(onSubmit)()
+        }}
+    />
 }
 
 const Statuses = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandler }) => {
@@ -132,14 +134,14 @@ const Assignees = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandler 
         name: 'projects',
     })
 
-    const projectKeys = projects?.map((project: any) => project.key) || []
+    const projectKeys = projects?.map((project: ProjectValue) => project.key) || []
 
     const { field } = useController({
         control,
         name: 'assignees',
     })
 
-    const onChange = (ids: string[]) => {
+    const onChange = (ids: JQLBasic['assignees']) => {
         field.onChange(ids)
         // @ts-ignore
         handleSubmit(onSubmit)()
@@ -222,19 +224,19 @@ const CreatedSort = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandle
         >
             <DropdownItemRadio
                 id="asc"
-                isSelected={field.value === 'ASC'}
-                onClick={() => onChange('ASC')}
+                isSelected={field.value === EnumSortOrder.ASC}
+                onClick={() => onChange(EnumSortOrder.ASC)}
             >
-                ASC
+                {EnumSortOrder.ASC}
             </DropdownItemRadio>
             <DropdownItemRadio
                 id="desk"
-                isSelected={field.value === 'DESC'}
-                onClick={() => onChange('DESC')}
+                isSelected={field.value === EnumSortOrder.DESC}
+                onClick={() => onChange(EnumSortOrder.DESC)}
             >
-                DESC
+                {EnumSortOrder.DESC}
             </DropdownItemRadio>
-            <Button onClick={() => onChange('')}>Clear</Button>
+            <Button onClick={() => onChange(EnumSortOrder.NONE)}>Clear</Button>
         </DropdownMenu>
     )
 }
@@ -250,7 +252,7 @@ const PrioritySort = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandl
         name: 'prioritySort',
     })
 
-    const onChange = (sort: 'ASC' | 'DESC' | '') => {
+    const onChange = (sort: EnumSortOrder) => {
         field.onChange(sort)
         // @ts-ignore
         handleSubmit(onSubmit)()
@@ -270,20 +272,20 @@ const PrioritySort = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandl
         >
             <DropdownItemRadio
                 id="asc"
-                isSelected={field.value === 'ASC'}
-                onClick={() => onChange('ASC')}
+                isSelected={field.value === EnumSortOrder.ASC}
+                onClick={() => onChange(EnumSortOrder.ASC)}
             >
-                ASC
+                {EnumSortOrder.ASC}
             </DropdownItemRadio>
             <DropdownItemRadio
                 id="desk"
-                isSelected={field.value === 'DESC'}
-                onClick={() => onChange('DESC')}
+                isSelected={field.value === EnumSortOrder.DESC}
+                onClick={() => onChange(EnumSortOrder.DESC)}
             >
-                DESC
+                {EnumSortOrder.DESC}
             </DropdownItemRadio>
 
-            <Button onClick={() => onChange('')}>Clear</Button>
+            <Button onClick={() => onChange(EnumSortOrder.NONE)}>Clear</Button>
         </DropdownMenu>
     )
 }
@@ -291,7 +293,7 @@ const PrioritySort = (props: { control: Control<JQLBasic>; onSubmit: SubmitHandl
 const JQLBuilderBasicForm = () => {
     const formMethods = useForm<JQLBasic>({
         mode: 'onChange',
-        defaultValues: useGlobalState.getState().settings.jqlBasic,
+        defaultValues: useGlobalState.getState().settings.jqlBasic
     })
 
     const { control } = formMethods
@@ -314,7 +316,7 @@ const JQLBuilderBasicForm = () => {
             data.search,
             formatJQLInClause('project', data.projects, (project: ProjectValue) => project.id),
             formatJQLInClause('status', data.statuses, (status: string) => `"${status}"`),
-            formatJQLInClause('assignee', data.assignees),
+            formatJQLInClause('assignee', data.assignees, (assignee: string | null) => (assignee === null ? 'null' : assignee)),
             formatJQLInClause('priority', data.priority),
         ]
             .filter(Boolean)

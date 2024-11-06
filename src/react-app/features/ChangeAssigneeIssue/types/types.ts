@@ -2,6 +2,7 @@ import { AssignableSearchByIssueDropdownProps } from 'react-app/entities/UserSea
 
 export interface ChangeAssigneeProps extends Omit<AssignableSearchByIssueDropdownProps, 'onChange'> {
     queryKeys: () => string[]
+    onSuccess?: () => void
     issueName: string
     issueKey: string
 }

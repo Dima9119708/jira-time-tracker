@@ -4,11 +4,12 @@ import Image from '@atlaskit/image'
 import UserAvatarCircleIcon from '@atlaskit/icon/glyph/user-avatar-circle'
 import { User } from 'react-app/shared/types/Jira/UserSearch'
 import { DropdownItemCheckbox } from '@atlaskit/dropdown-menu'
+import { Assignee } from 'react-app/shared/types/Jira/Issues'
 
 interface AssigneeDropdownItemProps {
     user: User
-    values: string[] | undefined
-    onChange: (newValues: string[]) => void
+    values: Assignee['accountId'][] | undefined
+    onChange: (newValues: Assignee['accountId'][]) => void
 }
 
 const ItemDropdownCheckbox: React.FC<AssigneeDropdownItemProps> = ({ user, values, onChange }) => {
@@ -30,7 +31,7 @@ const ItemDropdownCheckbox: React.FC<AssigneeDropdownItemProps> = ({ user, value
             onClick={handleClick}
             key={user.accountId}
             isSelected={values?.includes(user.accountId)}
-            id={user.accountId}
+            id={user.name}
         >
             <Flex columnGap="space.050">
                 {user?.avatarUrls?.['48x48'] ? (

@@ -123,7 +123,7 @@ const Issue = (props: FavoriteIssueProps) => {
                     status={fields.status}
                     queryKeys={queryKeys}
                     position="left"
-                    onChange={() => onPlayTracking()}
+                    onMutate={() => onPlayTracking()}
                     disabled={fields.status.statusCategory.key === 'indeterminate'}
                     trigger={(triggerButtonProps) => (
                         <IconButton

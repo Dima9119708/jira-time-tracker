@@ -37,7 +37,7 @@ export interface IssueFields {
     timespent: number | null
     versions: any[]
     issuelinks: any[]
-    assignee: Assignee
+    assignee: Assignee | null
     updated: string
     status: Status
     components: any[]
@@ -130,7 +130,7 @@ interface Votes {
 }
 
 export interface Assignee {
-    accountId: string
+    accountId: string | null
     accountType: string
     active: boolean
     applicationRoles: {

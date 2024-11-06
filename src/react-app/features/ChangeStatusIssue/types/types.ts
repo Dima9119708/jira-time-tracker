@@ -2,6 +2,7 @@ import { StatusesByIssueDropdownProps } from 'react-app/entities/Issues/types/ty
 
 export interface ChangeStatusTaskProps extends Omit<StatusesByIssueDropdownProps, 'onChange'> {
     queryKeys: () => string[]
-    onChange?: () => void
+    onMutate?: () => void
+    onSuccess?: () => void
     issueName: string
 }

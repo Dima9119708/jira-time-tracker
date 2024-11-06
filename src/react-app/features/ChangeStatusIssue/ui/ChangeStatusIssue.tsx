@@ -12,7 +12,7 @@ import { xcss } from '@atlaskit/primitives'
 import { token } from '@atlaskit/tokens'
 
 const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
-    const { issueId, queryKeys, status, issueName, position, disabled, trigger, onChange, xcss } = props
+    const { issueId, queryKeys, status, issueName, position, disabled, trigger, onMutate, xcss, onSuccess } = props
 
     const queryClient = useQueryClient()
 
@@ -69,8 +69,8 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 }
             }
 
-            if (typeof onChange === 'function') {
-                onChange()
+            if (typeof onMutate === 'function') {
+                onMutate()
             }
             const notificationMessage = `from ${status.name} to ${variables.name}`
             const dismissFn = notify.loading({
@@ -91,8 +91,9 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 description: context!.notificationMessage,
             })
 
-            // TODO => ???
-            // queryClient.invalidateQueries({ queryKey: [queryKey] })
+            if (typeof onSuccess === 'function') {
+                onSuccess()
+            }
         },
         onError: (error, variables, context) => {
             context?.dismissFn()
@@ -102,35 +103,18 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 description: JSON.stringify(error.response?.data),
             })
 
-             if (Array.isArray(context?.oldStates)) {
-                 for (const queryKey of context.oldStates) {
-                     queryClient.setQueryData(
-                         [queryKey],
-                         (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
-                             if (Array.isArray(old)) {
-                                 return produce(old, (draft) => {
-                                     const issue = draft.find(({ id }) => id === issueId)
-
-                                     if (issue) {
-                                         issue.fields.status = variables.to
-                                     }
-                                 })
-                             } else {
-                                 return produce(old, (draft) => {
-                                     for (const page of draft.pages) {
-                                         const issue = page.issues.find(({ id }) => id === issueId);
-
-                                         if (issue) {
-                                             issue.fields.status = variables.to;
-                                             break;
-                                         }
-                                     }
-                                 })
-                             }
-                         }
-                     )
-                 }
-             }
+            if (Array.isArray(context?.oldStates)) {
+                for (const [queryKey, oldState] of context.oldStates) {
+                    queryClient.setQueryData(
+                        [queryKey],
+                        (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
+                            return produce(old, (draft) => {
+                                Object.assign(draft, oldState)
+                            })
+                        }
+                    )
+                }
+            }
         },
     })
 

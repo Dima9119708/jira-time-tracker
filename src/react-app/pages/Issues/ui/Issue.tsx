@@ -63,6 +63,26 @@ const Issue = (props: IssueProps) => {
 
     }
 
+    const onSuccessStatusChange = useCallback(() => {
+        const statuses = useGlobalState.getState().settings.jqlBasic?.statuses
+
+        if (Array.isArray(statuses)) {
+            if (!statuses.includes(fields.status.name)) {
+                queryClient.invalidateQueries({ queryKey: ['issues'] })
+            }
+        }
+    }, [fields.status.name])
+
+    const onSuccessAssigneeChange = useCallback(() => {
+        const assignees = useGlobalState.getState().settings.jqlBasic?.assignees
+
+        if (Array.isArray(assignees)) {
+            if (!assignees.includes(fields.assignee === null ? null : fields.assignee.accountId)) {
+                queryClient.invalidateQueries({ queryKey: ['issues'] })
+            }
+        }
+    }, [fields.status.name])
+
     return (
         <CardIssue
             active={false}
@@ -96,6 +116,7 @@ const Issue = (props: IssueProps) => {
                         queryKeys={queryKeys}
                         trigger={fields.status.name}
                         xcss={styles.STATUTES_DROPDOWN_BUTTON}
+                        onSuccess={onSuccessStatusChange}
                     />
 
                     <ChangeAssigneeIssue
@@ -103,6 +124,7 @@ const Issue = (props: IssueProps) => {
                         issueName={fields.summary}
                         issueKey={issueKey}
                         queryKeys={queryKeys}
+                        onSuccess={onSuccessAssigneeChange}
                     />
 
                     <LogTimeButton
@@ -119,7 +141,7 @@ const Issue = (props: IssueProps) => {
                     status={fields.status}
                     queryKeys={queryKeys}
                     position="left"
-                    onChange={() => onPlayTracking()}
+                    onMutate={() => onPlayTracking()}
                     disabled={fields.status.statusCategory.key === 'indeterminate'}
                     trigger={(triggerButtonProps) => (
                         <IconButton

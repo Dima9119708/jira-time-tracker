@@ -4,9 +4,10 @@ import { Flex, Text } from '@atlaskit/primitives'
 import { usePrioritySchemesGET } from 'react-app/entities/PrioritySchemes/api/usePrioritySchemesGET'
 import Image from '@atlaskit/image'
 import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
+import { Priority } from 'react-app/shared/types/Jira/Issues'
 
 interface PriorityMultiDropdownProps {
-    values: string[] | undefined
+    values: Array<Priority['name']> | undefined
     projectIds: string[] | undefined
     onChange: (statuses: string[]) => void
     elemAfterDropdownItems?: ReactNode

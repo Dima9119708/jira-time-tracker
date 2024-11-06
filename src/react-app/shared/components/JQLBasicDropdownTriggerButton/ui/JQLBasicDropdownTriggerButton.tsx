@@ -7,7 +7,7 @@ import React from 'react'
 import { CustomTriggerProps } from '@atlaskit/dropdown-menu'
 
 interface MultiDropdownTriggerButtonProps {
-    values?: string[] | string
+    values?: Array<string | null> | string
     title: string
     triggerButtonProps: CustomTriggerProps
 }

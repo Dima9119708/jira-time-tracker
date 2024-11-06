@@ -19,8 +19,8 @@ interface SearchByIssuesProps {
 const SearchByIssues = (props: SearchByIssuesProps) => {
     const { onChange, width = '40%', initialValue = '' } = props
 
-    const [searchValue, setSearchValue] = useState('')
-    const [previousValue, setPreviousValue] = useState('')
+    const [searchValue, setSearchValue] = useState(initialValue)
+    const [previousValue, setPreviousValue] = useState(initialValue)
     const [expanded, setExpanded] = useState(false)
 
     const { refetch, isFetching } = useQuery({

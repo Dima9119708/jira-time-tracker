@@ -124,7 +124,7 @@ const IssueTracking = (props: IssueProps) => {
                         issueName={fields.summary}
                         status={fields.status}
                         queryKeys={queryKeys}
-                        onChange={onStopTracking}
+                        onMutate={onStopTracking}
                         disabled={fields.status.statusCategory.key === 'done'}
                         trigger={(triggerButtonProps) => (
                             <IconButton

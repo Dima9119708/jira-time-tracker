@@ -2,6 +2,7 @@ import { createStore } from '../../config/store/store'
 import deepmerge from '../utils/deepMerge'
 import { JQLBasic } from 'react-app/widgets/JQLBuilderBasic/ui/JQLBuilderBasicForm'
 import { ConfigurationTimeTrackingOptions } from 'react-app/shared/types/Jira/TimeTracking'
+import { EnumSortOrder } from 'react-app/shared/types/common'
 
 type Unit = { label: 'Minutes' | 'Hours'; value: 'minutes' | 'hours' }
 
@@ -92,8 +93,8 @@ export const useGlobalState = createStore<UseGlobalState>(
                 projects: [],
                 statuses: [],
                 priority: [],
-                prioritySort: '',
-                createdSort: '',
+                prioritySort: EnumSortOrder.NONE,
+                createdSort: EnumSortOrder.NONE,
                 search: ''
             },
             autoStart: true,

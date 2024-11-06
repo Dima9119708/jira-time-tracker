@@ -1,15 +1,10 @@
 import React, { ReactNode, useState } from 'react'
-import { useStatusesSearchGET } from 'react-app/entities/Status'
 import DropdownMenu, { DropdownItemCheckbox } from '@atlaskit/dropdown-menu'
 import { Box, Flex, xcss, Text } from '@atlaskit/primitives'
-import { token } from '@atlaskit/tokens'
-import Button from '@atlaskit/button/new'
-import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
-import Badge from '@atlaskit/badge'
-import Lozenge from '@atlaskit/lozenge'
 import { Project, useProjectsGET } from 'react-app/entities/Projects/api/useProjectsGET'
 import Image from '@atlaskit/image'
 import UserAvatarCircleIcon from '@atlaskit/icon/glyph/user-avatar-circle'
+import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
 
 export type ProjectValue = { id: Project['id']; key: Project['key'] }
 
@@ -34,23 +29,11 @@ export const ProjectsDropdown = (props: ProjectsDropdownProps) => {
                 values?.length === 0 || values === undefined
                     ? 'Project'
                     : (triggerButtonProps) => (
-                          <Box
-                              xcss={xcss({
-                                  // @ts-ignore
-                                  '& > button, & > button:hover': {
-                                      backgroundColor: token('color.background.selected'),
-                                      color: token('color.text.selected'),
-                                  },
-                              })}
-                          >
-                              <Button
-                                  {...triggerButtonProps}
-                                  ref={triggerButtonProps.triggerRef}
-                                  iconAfter={ChevronDownIcon}
-                              >
-                                  Project <Badge appearance="primary">{values?.length === 1 ? values?.length : `+${values?.length}`}</Badge>
-                              </Button>
-                          </Box>
+                        <JQLBasicDropdownTriggerButton
+                            title="Project"
+                            values={values?.map((p) => p.id) || []}
+                            triggerButtonProps={triggerButtonProps}
+                        />
                       )
             }
             shouldRenderToParent

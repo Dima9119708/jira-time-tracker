@@ -56,11 +56,12 @@ const AssignableSearchByIssueDropdown = (props: AssignableSearchByIssueDropdownP
                 <DropdownItemGroup>
                     {!isLoading &&
                         data?.map((user) => {
+                            console.log('user =>', assignee?.accountId, assignee)
                             return (
                                 <DropdownItem
                                     onClick={() => onChange(user)}
                                     key={user.accountId}
-                                    isSelected={user.accountId === assignee?.accountId}
+                                    isSelected={user.accountId === (assignee ? assignee.accountId : assignee)}
                                     elemBefore={
                                         user?.avatarUrls?.['48x48'] ? (
                                             <Image

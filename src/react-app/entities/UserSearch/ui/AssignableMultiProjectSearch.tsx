@@ -1,20 +1,14 @@
 import React, { ReactNode, useState } from 'react'
-import DropdownMenu, { DropdownItemCheckbox } from '@atlaskit/dropdown-menu'
-import { Box, Flex, Text, xcss } from '@atlaskit/primitives'
-import { token } from '@atlaskit/tokens'
-import Button from '@atlaskit/button/new'
-import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
-import Badge from '@atlaskit/badge'
+import DropdownMenu from '@atlaskit/dropdown-menu'
 import { useAssignableMultiProjectSearchGET } from 'react-app/entities/UserSearch/api/useAssignableMultiProjectSearchGET'
-import Image from '@atlaskit/image'
-import UserAvatarCircleIcon from '@atlaskit/icon/glyph/user-avatar-circle'
 import ItemDropdownCheckbox from 'react-app/entities/UserSearch/ui/ItemDropdownCheckbox'
 import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
+import { Assignee } from 'react-app/shared/types/Jira/Issues'
 
 interface AssignableMultiProjectSearchProps {
-    values: string[] | undefined
+    values: Assignee['accountId'][] | undefined
     projectKeys?: string[]
-    onChange: (statuses: string[]) => void
+    onChange: (statuses: Assignee['accountId'][]) => void
     elemAfterDropdownItems?: ReactNode
 }
 

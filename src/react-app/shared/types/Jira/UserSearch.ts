@@ -1,7 +1,7 @@
 import { AvatarUrls } from 'react-app/shared/types/Jira/CommonTypes'
 
 export type User = {
-    accountId: string
+    accountId: string | null
     accountType: string
     active: boolean
     avatarUrls: AvatarUrls
