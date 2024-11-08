@@ -42,7 +42,7 @@ const StatusesDropdown = (props: StatusesDropdownProps) => {
         >
             {!query.isLoading &&
                 query.data?.values.map((status) => {
-                    const colorNew = status.statusCategory === 'TODO' && 'default'
+                    const colorNew = (status.statusCategory === 'TODO') && 'default'
                     const colorIndeterminate = status.statusCategory === 'IN_PROGRESS' && 'inprogress'
                     const colorDone = status.statusCategory === 'DONE' && 'success'
                     const appearance = colorNew || colorIndeterminate || colorDone || 'default'

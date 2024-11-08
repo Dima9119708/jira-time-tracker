@@ -18,6 +18,8 @@ import { token } from '@atlaskit/tokens'
 import { useNavigate } from 'react-router-dom'
 import { electron } from 'react-app/shared/lib/electron/electron'
 import { useFilterPUT } from 'react-app/entities/Filters'
+import EditorWarningIcon from '@atlaskit/icon/glyph/editor/warning';
+import Tooltip from '@atlaskit/tooltip'
 
 export type FormValues = UseGlobalState['settings']
 
@@ -45,6 +47,8 @@ const Settings = () => {
     const navigate = useNavigate()
 
     const opened = watchBoolean('user settings')
+
+    const hasJiraTimeTrackingPermission = useGlobalState((state) => state.hasJiraTimeTrackingPermission)
 
     const { control, handleSubmit, watch, getValues } = useForm<FormValues>({
         mode: 'onBlur',
@@ -99,8 +103,10 @@ const Settings = () => {
             pluginLogoutAlerts: {
                 displayTime: data.pluginLogoutAlerts.displayTime,
                 enabled: data.pluginLogoutAlerts.enabled,
-                millisecond: dayjs.duration(data.pluginLogoutAlerts.displayTime, 'minutes').asMilliseconds()
-            }
+                millisecond: dayjs.duration(data.pluginLogoutAlerts.displayTime, 'minutes').asMilliseconds(),
+            },
+            workingHoursPerDay: data.workingHoursPerDay,
+            workingDaysPerWeek: data.workingDaysPerWeek,
         }
 
         filterPUT.mutate({
@@ -317,10 +323,9 @@ const Settings = () => {
                         <Flex
                             xcss={styles.divider}
                             justifyContent="space-between"
+                            alignItems="center"
                         >
-                            <Heading size="small">
-                                Plugin logout alerts
-                            </Heading>
+                            <Heading size="small">Plugin logout alerts</Heading>
 
                             <Flex
                                 wrap="nowrap"
@@ -436,6 +441,102 @@ const Settings = () => {
                                 />
                             </Flex>
                         </Flex>
+
+                        {!hasJiraTimeTrackingPermission && (
+                            <>
+                                <Flex
+                                    xcss={styles.divider}
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                >
+                                    <Flex columnGap="space.100" alignItems="center">
+                                        <Tooltip content="You don't have sufficient permissions to retrieve and read data from Jira. The administrator hasn't granted access to this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional access.">
+                                            {(tooltipProps) => (
+                                                <div {...tooltipProps}>
+                                                    <EditorWarningIcon label="warning" primaryColor={token('color.icon.warning')} />
+                                                </div>
+                                            )}
+                                        </Tooltip>
+
+                                        <Heading size="small">Working hours per day</Heading>
+                                    </Flex>
+
+                                    <Flex
+                                        wrap="nowrap"
+                                        alignItems="center"
+                                        columnGap="space.100"
+                                    >
+                                        <Controller
+                                            name="workingHoursPerDay"
+                                            control={control}
+                                            rules={{ required: 'Required' }}
+                                            render={({ field, fieldState }) => {
+                                                return (
+                                                    <Box xcss={styles.inputWarp}>
+                                                        <Textfield
+                                                            value={field.value}
+                                                            onChange={field.onChange}
+                                                            onBlur={field.onBlur}
+                                                            type="number"
+                                                        />
+
+                                                        {fieldState.error?.message && (
+                                                            <ErrorMessage>{fieldState.error?.message}</ErrorMessage>
+                                                        )}
+                                                    </Box>
+                                                )
+                                            }}
+                                        />
+                                    </Flex>
+                                </Flex>
+
+                                <Flex
+                                    xcss={styles.divider}
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                >
+                                    <Flex columnGap="space.100" alignItems="center">
+                                        <Tooltip content="You don't have sufficient permissions to retrieve and read data from Jira. The administrator hasn't granted access to this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional access.">
+                                            {(tooltipProps) => (
+                                               <div {...tooltipProps}>
+                                                   <EditorWarningIcon label="warning" primaryColor={token('color.icon.warning')} />
+                                               </div>
+                                            )}
+                                        </Tooltip>
+
+                                        <Heading size="small">Working days per week</Heading>
+                                    </Flex>
+
+                                    <Flex
+                                        wrap="nowrap"
+                                        alignItems="center"
+                                        columnGap="space.100"
+                                    >
+                                        <Controller
+                                            name="workingDaysPerWeek"
+                                            control={control}
+                                            rules={{ required: 'Required' }}
+                                            render={({ field, fieldState }) => {
+                                                return (
+                                                    <Box xcss={styles.inputWarp}>
+                                                        <Textfield
+                                                            value={field.value}
+                                                            onChange={field.onChange}
+                                                            onBlur={field.onBlur}
+                                                            type="number"
+                                                        />
+
+                                                        {fieldState.error?.message && (
+                                                            <ErrorMessage>{fieldState.error?.message}</ErrorMessage>
+                                                        )}
+                                                    </Box>
+                                                )
+                                            }}
+                                        />
+                                    </Flex>
+                                </Flex>
+                            </>
+                        )}
                     </ModalBody>
                     <ModalFooter>
                         <Button

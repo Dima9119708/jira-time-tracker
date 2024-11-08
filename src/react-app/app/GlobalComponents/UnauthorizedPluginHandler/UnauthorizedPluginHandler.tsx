@@ -19,12 +19,12 @@ const UnauthorizedPluginHandler = () => {
         if (isUnauthorizedPlugin && currentPath.current === '/issues') {
             const pluginName = useGlobalState.getState().settings.plugin
 
-            notify.error({
-                title: `The ${pluginName} plugin has been disconnected from the application.`,
-            })
-
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
+                    notify.error({
+                        title: `The ${PLUGINS.TEMPO} plugin has been disconnected from the application.`,
+                    })
+
                     navigate('/auth-plugin')
 
                     localStorage.setItem('pluginName', PLUGINS.TEMPO)
@@ -37,8 +37,10 @@ const UnauthorizedPluginHandler = () => {
                 }
             }
 
-            setFalse()
+
         }
+
+        return () => setFalse()
     }, [isUnauthorizedPlugin])
 
     return null

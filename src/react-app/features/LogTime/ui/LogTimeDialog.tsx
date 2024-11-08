@@ -18,6 +18,7 @@ import CopyIcon from '@atlaskit/icon/glyph/copy'
 import { Worklog } from 'react-app/entities/Worklogs'
 import { DatePicker } from '@atlaskit/datetime-picker'
 import { DATE_FORMAT } from 'react-app/shared/const'
+import { TimeFormatGuide } from 'react-app/shared/components/TimeFormatGuide'
 
 export const LogTimeButton = (props: { issueId: string; uniqueNameBoolean: string }) => {
     return (
@@ -219,17 +220,10 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                         )
                     }}
                 />
-                <Box xcss={xcss({ marginTop: 'space.100', marginBottom: 'space.100' })}>
-                    <Text>Use the format 2w 3d 4h 5m</Text>
-                </Box>
-                <ul>
-                    <li>w = weeks</li>
-                    <li>d = days</li>
-                    <li>h = hours</li>
-                    <li>m = minutes</li>
-                </ul>
 
-                <Box xcss={xcss({ paddingTop: 'space.100', paddingBottom: 'space.100' })}>
+                <TimeFormatGuide />
+
+                <Box xcss={xcss({ paddingBottom: 'space.100' })}>
                     <Controller
                         name="description"
                         control={control}

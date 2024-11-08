@@ -15,19 +15,22 @@ interface UseGetIssueWorklogs {
     from?: string | Dayjs
     to?: string | Dayjs
     enabled?: boolean
+    prefetch?: () => Promise<void>
 }
 
 type IssueWorklogs = Pick<Worklog, 'date' | 'id' | 'timeSpent' | 'description' | 'timeSpentSeconds' | 'author'>
 
-export const useIssueWorklogsGET = ({ issueId, to, from, enabled }: UseGetIssueWorklogs) => {
-    const pluginName = useGlobalState((state) => state.settings.plugin)
-
+export const useIssueWorklogsGET = ({ issueId, to, from, enabled, prefetch }: UseGetIssueWorklogs) => {
     const queryClient = useQueryClient()
 
     return useQuery<IssueWorklogs[]>({
         enabled: enabled,
-        queryKey: ['issue worklogs', pluginName, issueId, to, from],
+        queryKey: ['issue worklogs', issueId, to, from],
         queryFn: async ({ signal }) => {
+            await prefetch?.()
+
+            const pluginName = useGlobalState.getState().settings.plugin
+
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
                     const mySelf = queryClient.getQueryData<MySelf>(['myself'])!
@@ -56,8 +59,8 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled }: UseGetIssueW
                             id: worklog.tempoWorklogId.toString(),
                             timeSpent: convertSecondsToJiraTime(
                                 worklog.timeSpentSeconds,
-                                useGlobalState.getState().workingDaysPerWeek,
-                                useGlobalState.getState().workingHoursPerDay
+                                useGlobalState.getState().settings.workingDaysPerWeek,
+                                useGlobalState.getState().settings.workingHoursPerDay
                             ),
                             timeSpentSeconds: worklog.timeSpentSeconds,
                             description: worklog.description,

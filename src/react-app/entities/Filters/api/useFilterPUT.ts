@@ -46,14 +46,16 @@ export const useFilterPUT = <TCustomVariable>(props?: {
         onMutate: (variables) => {
             props?.onMutate?.(variables)
 
-            return notify.loading({
-                title: titleLoading,
-            })
+            if (titleLoading && titleLoading.trim()) {
+                return notify.loading({
+                    title: titleLoading,
+                })
+            }
         },
         onSuccess: (data, variables, context) => {
             context?.()
 
-            if (titleSuccess) {
+            if (titleSuccess && titleSuccess.trim()) {
                 notify.success({
                     title: titleSuccess,
                 })
@@ -67,7 +69,7 @@ export const useFilterPUT = <TCustomVariable>(props?: {
         onError: (error, variables, context) => {
             context?.()
 
-            if (titleError) {
+            if (titleError && titleError.trim()) {
                 notify.error({
                     title: titleError,
                     description: JSON.stringify(error.response?.data),

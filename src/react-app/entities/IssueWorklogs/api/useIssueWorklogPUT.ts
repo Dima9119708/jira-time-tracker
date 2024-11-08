@@ -19,16 +19,20 @@ export interface PutIssueWorklog extends Partial<CreateIssueWorklog> {
 }
 
 export const useIssueWorklogPUT = <MutateReturn>(props?: {
+    prefetch?: () => Promise<void>
     onMutate?: (variables: PutIssueWorklog) => MutateReturn
     onSuccess?: (data: AxiosResponse<any, any>, variables: PutIssueWorklog, context: MutateReturn | undefined) => void
     onError?: (error: AxiosError, variables: PutIssueWorklog, context: MutateReturn | undefined) => void
 }) => {
-    const pluginName = useGlobalState((state) => state.settings.plugin)
-    const workingDaysPerWeek = useGlobalState((state) => state.workingDaysPerWeek)
-    const workingHoursPerDay = useGlobalState((state) => state.workingHoursPerDay)
+    const workingDaysPerWeek = useGlobalState((state) => state.settings.workingDaysPerWeek)
+    const workingHoursPerDay = useGlobalState((state) => state.settings.workingHoursPerDay)
 
     return useMutation({
         mutationFn: async (data: PutIssueWorklog) => {
+            await props?.prefetch?.()
+
+            const pluginName = useGlobalState.getState().settings.plugin
+
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
                     const mySelf = queryClient.getQueryData<MySelf>(['myself'])!
@@ -38,7 +42,7 @@ export const useIssueWorklogPUT = <MutateReturn>(props?: {
                         authorAccountId: mySelf.accountId,
                         timeSpentSeconds:
                             data.timeSpentSeconds || convertJiraTimeToSeconds(data.timeSpent, workingDaysPerWeek, workingHoursPerDay),
-                        ...(data.description && { description: data.description }),
+                        ...(data.description !== undefined && { description: data.description }),
                     })
                 }
 
@@ -49,7 +53,7 @@ export const useIssueWorklogPUT = <MutateReturn>(props?: {
                         started: dayjs(data.startDate).format('YYYY-MM-DDTHH:mm:ss.SSSZZ'),
                         timeSpentSeconds:
                             data.timeSpentSeconds || convertJiraTimeToSeconds(data.timeSpent, workingDaysPerWeek, workingHoursPerDay),
-                        ...(data.description && worklogCommentTemplate(data.description ?? '')),
+                        ...(data.description !== undefined  && worklogCommentTemplate(data.description)),
                     })
                 }
             }

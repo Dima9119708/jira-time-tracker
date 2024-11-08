@@ -1,5 +1,5 @@
-import SearchByIssues from './ui/SearchByIssues'
+import SearchByIssues, { SearchData } from './ui/SearchByIssues'
 
-export {
-    SearchByIssues
-}
+export { SearchByIssues }
+
+export type { SearchData }

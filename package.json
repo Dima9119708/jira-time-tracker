@@ -162,6 +162,7 @@
     "@atlaskit/textfield": "^6.5.3",
     "@atlaskit/toggle": "^13.4.5",
     "@atlaskit/tokens": "^2.0.3",
+    "@atlaskit/tooltip": "^18.8.5",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^10.0.7",
     "@tanstack/react-query": "5.8.7",

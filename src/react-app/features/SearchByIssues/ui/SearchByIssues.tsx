@@ -1,6 +1,6 @@
 import Textfield from '@atlaskit/textfield'
 import { FormEvent, useCallback, useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { QueryObserver, useQuery, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
 import EditorSearchIcon from '@atlaskit/icon/glyph/editor/search'
 import EditorExpandIcon from '@atlaskit/icon/glyph/editor/expand'
@@ -8,62 +8,87 @@ import { IconButton } from '@atlaskit/button/new'
 import { Box, xcss } from '@atlaskit/primitives'
 import debounce from 'lodash.debounce'
 import Spinner from '@atlaskit/spinner'
-import { getValueFromJql } from 'react-app/shared/lib/utils/getValueFromJql'
+
+interface Issue {
+    id: number;
+    key: string;
+    keyHtml: string;
+    img: string;
+    summary: string;
+    summaryText: string;
+}
+
+interface Section {
+    label: string;
+    id: string;
+    msg?: string;
+    sub?: string;
+    issues: Issue[];
+}
+
+interface SearchResponse {
+    sections: Section[];
+}
+
+export type SearchData = {
+    issueIds: Issue['id'][],
+    value: string
+}
 
 interface SearchByIssuesProps {
     width?: string
-    initialValue?: string
-    onChange: (jql: string) => void
+    value?: string
+    onChange: (data: SearchData) => void
 }
 
 const SearchByIssues = (props: SearchByIssuesProps) => {
-    const { onChange, width = '40%', initialValue = '' } = props
+    const { onChange, width = '40%', value = '' } = props
 
-    const [searchValue, setSearchValue] = useState(initialValue)
-    const [previousValue, setPreviousValue] = useState(initialValue)
+    const [searchValue, setSearchValue] = useState(value)
+    const [previousValue, setPreviousValue] = useState(value)
     const [expanded, setExpanded] = useState(false)
+    const queryClient = useQueryClient()
 
-    const { refetch, isFetching } = useQuery({
+    const { refetch, isFetching, data } = useQuery({
         queryKey: ['searchIssues'],
         queryFn: async ({ signal }) => {
-            const responses = await Promise.allSettled([
-                axiosInstance.get('/issues', {
-                    params: {
-                        jql: `text ~ "${searchValue}*" OR description ~ "${searchValue}*"`,
-                    },
-                    signal,
-                }),
-                axiosInstance.get('/issues', {
-                    params: {
-                        jql: `issueKey = "${searchValue}"`,
-                    },
-                    signal,
-                }),
-            ])
+            if (searchValue === '') {
+                onChange({
+                    issueIds: [],
+                    value: ''
+                })
 
-            const jqlArray: string[] = []
+                return 1
+            }
 
-            responses.forEach((response) => {
-                if (response.status === 'fulfilled') {
-                    jqlArray.push(response.value.config.params.jql)
-                }
+            const response = await axiosInstance.get<SearchResponse>('/issue/picker', {
+                params: {
+                    currentJQL: 'project in projectsWhereUserHasPermission("Work on issues")',
+                    showSubTasks: true,
+                    showSubTaskParent: true,
+                    query: searchValue,
+                },
+                signal,
             })
 
-            onChange(jqlArray.join(' OR '))
+            const data = response.data.sections.reduce((acc, section) => {
+
+                acc.push(...section.issues.map((issue) => issue.id))
+
+                return acc
+            }, [] as SearchData['issueIds'])
+
+            const filterDuplicates = new Set(data)
+
+            onChange({
+                issueIds: Array.from(filterDuplicates.values()),
+                value: searchValue
+            })
+
+            return filterDuplicates.size
         },
         enabled: false,
     })
-
-    useEffect(() => {
-        getValueFromJql<string>(initialValue, 'text')
-            .then((value) => {
-                const v = value.replace(/\*$/, '')
-
-                setSearchValue(v)
-                setPreviousValue(v)
-            })
-            .catch(() => {})
-    }, [])
 
     useEffect(() => {
         const debouncedRefetch = debounce(() => {
@@ -80,6 +105,16 @@ const SearchByIssues = (props: SearchByIssuesProps) => {
         }
     }, [searchValue, previousValue, refetch])
 
+    useEffect(() => {
+        if (value === '') {
+            console.log('value =>', value)
+            setSearchValue('')
+            queryClient.removeQueries({
+                queryKey: ['searchIssues']
+            })
+        }
+    }, [value])
+
     const handleSearchChange = useCallback((e: FormEvent<HTMLInputElement>) => {
         setSearchValue(e.currentTarget.value)
     }, [])
@@ -87,6 +122,7 @@ const SearchByIssues = (props: SearchByIssuesProps) => {
     return (
         <Box xcss={xcss({ width: expanded ? '100%' : width })}>
             <Textfield
+                isInvalid={data === 0}
                 isCompact
                 elemBeforeInput={<EditorSearchIcon label="search issues" />}
                 elemAfterInput={

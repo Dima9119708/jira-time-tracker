@@ -17,16 +17,20 @@ export interface CreateIssueWorklog {
 }
 
 export const useIssueWorklogPOST = <MutateReturn>(props?: {
+    prefetch?: () => Promise<void>
     onMutate?: (variables: CreateIssueWorklog) => MutateReturn
     onSuccess?: (data: AxiosResponse<any, any>, variables: CreateIssueWorklog, context: MutateReturn | undefined) => void
     onError?: (error: AxiosError, variables: CreateIssueWorklog, context: MutateReturn | undefined) => void
 }) => {
-    const pluginName = useGlobalState((state) => state.settings.plugin)
-    const workingDaysPerWeek = useGlobalState((state) => state.workingDaysPerWeek)
-    const workingHoursPerDay = useGlobalState((state) => state.workingHoursPerDay)
+    const workingDaysPerWeek = useGlobalState((state) => state.settings.workingDaysPerWeek)
+    const workingHoursPerDay = useGlobalState((state) => state.settings.workingHoursPerDay)
 
     return useMutation({
         mutationFn: async (data: CreateIssueWorklog) => {
+            await props?.prefetch?.()
+
+            const pluginName = useGlobalState.getState().settings.plugin
+
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
                     const mySelf = queryClient.getQueryData<MySelf>(['myself'])!

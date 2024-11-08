@@ -39,7 +39,7 @@ axiosInstancePlugin.interceptors.response.use(undefined, async function (error) 
 
             return axiosInstancePlugin(originalRequest)
         } else {
-            globalBooleanActions.setTrue('UNAUTHORIZED PLUGIN', true)
+            globalBooleanActions.setTrue('UNAUTHORIZED PLUGIN')
         }
     }
 

@@ -176,6 +176,45 @@ const server = (port, errorCallback) => {
                 }
             })
 
+            app.get('/issue/picker', async (req, res) => {
+                try {
+                    const authParsed = await getParsedAuth()
+
+                    if (authParsed.type === BASIC_AUTH) {
+                        const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/3/issue/picker`, {
+                            headers: {
+                                Authorization: `Basic ${authParsed.apiToken}`,
+                            },
+                            params: req.query
+                        })
+
+                        res.send(response.data)
+                    }
+
+                    if (authParsed.type === OAUTH2) {
+                        const response = await axios.get(
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/issue/picker`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${authParsed.access_token}`,
+                                },
+                                params: req.query
+                            }
+                        )
+
+                        res.send(response.data)
+                    }
+
+                    res.status(401).send()
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
             app.get('/issue-assignable', async (req, res) => {
                 try {
                     const authParsed = await getParsedAuth()
@@ -468,6 +507,43 @@ const server = (port, errorCallback) => {
                     if (authParsed.type === OAUTH2) {
                         const response = await axios.get(
                             `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/2/configuration/timetracking/options`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${authParsed.access_token}`,
+                                },
+                            }
+                        )
+
+                        res.send(response.data)
+                    }
+
+                    res.status(401).send()
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        return errorCallback(e.message)
+                    }
+
+                    res.status(e.response.status).send(e.response.data)
+                }
+            })
+
+            app.get('/configuration-timetracking-provider', async (req, res) => {
+                try {
+                    const authParsed = await getParsedAuth()
+
+                    if (authParsed.type === BASIC_AUTH) {
+                        const response = await axios.get(`${authParsed.jiraSubDomain}/rest/api/3/configuration/timetracking`, {
+                            headers: {
+                                Authorization: `Basic ${authParsed.apiToken}`,
+                            },
+                        })
+
+                        res.send(response.data)
+                    }
+
+                    if (authParsed.type === OAUTH2) {
+                        const response = await axios.get(
+                            `https://api.atlassian.com/ex/jira/${authParsed.client_id}/rest/api/3/configuration/timetracking`,
                             {
                                 headers: {
                                     Authorization: `Bearer ${authParsed.access_token}`,

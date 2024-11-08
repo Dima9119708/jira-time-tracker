@@ -29,28 +29,38 @@ const styles = {
         color: 'color.text',
         borderBottomWidth: '1px',
         borderBottomStyle: 'solid',
-        borderBottomColor: 'color.border',
+        borderBottomColor: 'color.border.bold',
     }),
     cell: xcss({
         wordBreak: 'break-word',
+    }),
+    rowDetail: xcss({
+        display: 'grid',
+        gridTemplateColumns: 'subgrid',
+        gridColumn: '1 / -1',
+        paddingTop: 'space.150',
+        paddingBottom: 'space.150',
     }),
 }
 
 export const TableHead = ({ children }: { children: ReactNode }) => <Box xcss={styles.head}>{children}</Box>
 export const TableBody = ({ children }: { children: ReactNode }) => <Box xcss={styles.body}>{children}</Box>
 export const TableRow = ({ children }: { children: ReactNode }) => <Box xcss={styles.row}>{children}</Box>
-export const TableCell = ({ children }: { children?: ReactNode }) => <Box xcss={styles.cell}>{children}</Box>
+export const TableCell = ({ children, styles }: { children?: ReactNode; styles?: ReturnType<typeof xcss> }) => (
+    <Box xcss={styles}>{children}</Box>
+)
+export const TableRowDetail = ({ children }: { children: ReactNode }) => <Box xcss={styles.rowDetail}>{children}</Box>
 
-export const Table = (props: { children: ReactNode; gridTemplateColumns: string }) => {
-    const { children, gridTemplateColumns } = props
+export const Table = (props: { children: ReactNode; gridTemplateColumns: string; minWidth?: string }) => {
+    const { children, gridTemplateColumns, minWidth = '600px' } = props
 
     return (
         <Box
             xcss={xcss({
                 display: 'grid',
-                gridTemplateRows: '30px 1fr',
+                gridTemplateRows: 'auto 1fr',
                 gap: 'space.100',
-
+                minWidth,
                 gridTemplateColumns,
             })}
         >

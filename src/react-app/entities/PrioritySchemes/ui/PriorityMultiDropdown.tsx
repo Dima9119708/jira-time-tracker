@@ -63,12 +63,15 @@ const PriorityMultiDropdown = (props: PriorityMultiDropdownProps) => {
                             id={priority.name}
                         >
                             <Flex columnGap="space.050">
-                                <Image
-                                    height={20}
-                                    width={20}
-                                    src={priority.iconUrl}
-                                    loading="lazy"
-                                />
+                                {priority.iconUrl && (
+                                    <Image
+                                        height={20}
+                                        width={20}
+                                        src={priority.iconUrl}
+                                        loading="lazy"
+                                    />
+                                )}
+
                                 <Text> {priority.name}</Text>
                             </Flex>
                         </DropdownItemCheckbox>

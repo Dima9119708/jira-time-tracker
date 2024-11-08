@@ -10,14 +10,18 @@ export interface DeleteIssueWorklog extends Partial<CreateIssueWorklog> {
 }
 
 export const useIssueWorklogDELETE = <MutateReturn>(props?: {
+    prefetch?: () => Promise<void>
     onMutate?: (variables: DeleteIssueWorklog) => MutateReturn
     onSuccess: (data: AxiosResponse<any, any>, variables: DeleteIssueWorklog, context: MutateReturn | undefined) => void
     onError: (error: AxiosError, variables: DeleteIssueWorklog, context: MutateReturn | undefined) => void
 }) => {
-    const pluginName = useGlobalState((state) => state.settings.plugin)
 
     return useMutation({
         mutationFn: async (data: DeleteIssueWorklog) => {
+            await props?.prefetch?.()
+
+            const pluginName = useGlobalState.getState().settings.plugin
+
             switch (pluginName) {
                 case PLUGINS.TEMPO: {
                     return await axiosInstancePlugin.delete('/issue-worklog/plugin', {

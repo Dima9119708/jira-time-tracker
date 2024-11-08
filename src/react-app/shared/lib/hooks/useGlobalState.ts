@@ -45,9 +45,10 @@ export interface UseGlobalState {
             displayTime: number
             millisecond: number
         }
+
+        workingHoursPerDay: ConfigurationTimeTrackingOptions['workingHoursPerDay']
+        workingDaysPerWeek: ConfigurationTimeTrackingOptions['workingDaysPerWeek']
     }
-    workingHoursPerDay: ConfigurationTimeTrackingOptions['workingHoursPerDay']
-    workingDaysPerWeek: ConfigurationTimeTrackingOptions['workingDaysPerWeek']
     issueIdsSearchParams: {
         type: 'add' | 'delete' | null
         value: string
@@ -55,9 +56,10 @@ export interface UseGlobalState {
     }
     setFilterId: (id: string) => void
     parseAndSaveSetting: (string: string) => void
-    setWorkingHoursPerWeek: (hours: UseGlobalState['workingHoursPerDay']) => void
-    setWorkingDaysPerWeek: (hours: UseGlobalState['workingDaysPerWeek']) => void
+    setWorkingHoursPerWeek: (hours: UseGlobalState['settings']['workingHoursPerDay']) => void
+    setWorkingDaysPerWeek: (hours: UseGlobalState['settings']['workingDaysPerWeek']) => void
     updateJQL: (jql: string) => void
+    hasJiraTimeTrackingPermission: boolean,
     changeIssueIdsSearchParams: (
         type: UseGlobalState['issueIdsSearchParams']['type'],
         value: UseGlobalState['issueIdsSearchParams']['value']
@@ -76,13 +78,15 @@ export const TIME_OPTIONS: Unit[] = [
     { label: 'Hours', value: 'hours' },
 ]
 
+export const DEFAULT_WORKING_HOURS_PER_DAY = 8
+export const DEFAULT_WORKING_DAYS_PER_WEEK = 5
+
 export const useGlobalState = createStore<UseGlobalState>(
     (set, get) => ({
         filterId: '',
         jql: '',
         isSystemIdle: false,
-        workingHoursPerDay: 8,
-        workingDaysPerWeek: 5,
+        hasJiraTimeTrackingPermission: false,
         openSettings: false,
         settings: {
             plugin: null,
@@ -95,7 +99,11 @@ export const useGlobalState = createStore<UseGlobalState>(
                 priority: [],
                 prioritySort: EnumSortOrder.NONE,
                 createdSort: EnumSortOrder.NONE,
-                search: ''
+                statusSort: EnumSortOrder.NONE,
+                search: {
+                    issueIds: [],
+                    value: '',
+                }
             },
             autoStart: true,
             timeLoggingInterval: {
@@ -122,7 +130,10 @@ export const useGlobalState = createStore<UseGlobalState>(
                 enabled: true,
                 displayTime: 1,
                 millisecond: 60_000,
-            }
+            },
+
+            workingHoursPerDay: DEFAULT_WORKING_HOURS_PER_DAY,
+            workingDaysPerWeek: DEFAULT_WORKING_DAYS_PER_WEEK,
         },
         issueIdsSearchParams: {
             type: null,
@@ -154,12 +165,12 @@ export const useGlobalState = createStore<UseGlobalState>(
         },
         setWorkingHoursPerWeek: (hours) => {
             set((draft) => {
-                draft.workingHoursPerDay = hours
+                draft.settings.workingHoursPerDay = hours
             })
         },
         setWorkingDaysPerWeek: (hours) => {
             set((draft) => {
-                draft.workingDaysPerWeek = hours
+                draft.settings.workingDaysPerWeek = hours
             })
         },
         parseAndSaveSetting: (string) => {
