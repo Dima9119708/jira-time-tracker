@@ -14,7 +14,7 @@ export const useUserSearchGET = ({ opened }: { opened: boolean }) => {
                 },
             })
 
-            const users = response.data.filter((user) => user.accountType !== 'app' && user.active)
+            const users = response.data
 
             users.push(UNASSIGNED_USER)
 

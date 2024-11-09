@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { AssignableSearchByIssueDropdownProps } from '../types/types'
 import DropdownMenu, { DropdownItem, DropdownItemGroup } from '@atlaskit/dropdown-menu'
 import UserAvatarCircleIcon from '@atlaskit/icon/glyph/user-avatar-circle'
@@ -7,15 +7,24 @@ import { Box, xcss } from '@atlaskit/primitives'
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
 import Button from '@atlaskit/button/new'
 import { useAssignableSearchByIssueGET } from 'react-app/entities/UserSearch/api/useAssignableSearchByIssueGET'
+import { isActiveUser } from 'react-app/shared/lib/utils/isActiveUser'
 
+// TODO => bad name component
 const AssignableSearchByIssueDropdown = (props: AssignableSearchByIssueDropdownProps) => {
     const { issueKey, assignee, onChange, position = 'bottom-start' } = props
     const [open, setOpen] = useState(false)
+    const [showAll, setShowAll] = useState(false)
 
-    const { data, isLoading } = useAssignableSearchByIssueGET({
+    const { data: queryData, isLoading } = useAssignableSearchByIssueGET({
         issueKey,
         open,
     })
+
+    const data = showAll ? queryData : queryData?.filter(isActiveUser)
+
+    useEffect(() => () => {
+        setShowAll(false)
+    }, [])
 
     return (
         <Box xcss={xcss({ maxWidth: 'size.1000' })}>
@@ -86,6 +95,12 @@ const AssignableSearchByIssueDropdown = (props: AssignableSearchByIssueDropdownP
                             )
                         })}
                 </DropdownItemGroup>
+                <Button
+                    shouldFitContainer
+                    onClick={() => setShowAll((prevState) => !prevState)}
+                >
+                    { showAll ? 'Hide' : 'Show all' }
+                </Button>
             </DropdownMenu>
         </Box>
     )

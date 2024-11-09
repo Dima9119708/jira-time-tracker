@@ -1,7 +1,7 @@
 export const UNASSIGNED_USER = {
     accountId: null,
     accountType: '',
-    active: false,
+    active: true,
     applicationRoles: {
         items: [],
         size: 0,
@@ -13,7 +13,7 @@ export const UNASSIGNED_USER = {
         '48x48': '',
     },
     displayName: 'Unassigned',
-    emailAddress: '',
+    emailAddress: 'unassigned@gmail.com',
     groups: {
         items: [],
         size: 0,

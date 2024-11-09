@@ -17,6 +17,9 @@ import { ModalTransition } from '@atlaskit/modal-dialog'
 import RecentIcon from '@atlaskit/icon/glyph/recent'
 import UnauthorizedPluginHandler from '../GlobalComponents/UnauthorizedPluginHandler/UnauthorizedPluginHandler'
 import { token } from '@atlaskit/tokens'
+import { useQueryClient } from '@tanstack/react-query'
+import { MySelf } from 'react-app/shared/types/Jira/MySelf'
+import Image from '@atlaskit/image'
 
 const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
 const Timesheet = lazy(() => import('../../widgets/Timesheet'))
@@ -51,6 +54,10 @@ const styles = {
 const LayoutRoot = () => {
     const navigate = useNavigate()
     const [isUnauthorized, { toggle }] = useBooleanController('UNAUTHORIZED')
+    const queryClient = useQueryClient()
+
+    const myself = queryClient.getQueryData<MySelf>(['myself'])
+    const avatarUrl = myself?.avatarUrls?.['16x16'] ?? ''
 
     const onLogout = () => {
         queryClient.removeQueries()
@@ -84,6 +91,11 @@ const LayoutRoot = () => {
                     />
 
                     <Flex columnGap="space.100">
+                        <Flex alignItems="center">
+                            <Image src={avatarUrl} height="25px" width="25px" />
+                        </Flex>
+
+
                         <WatchController>
                             {({ globalMethods }) => {
                                 return (
