@@ -1,5 +1,5 @@
 import { useWorklogsGET } from 'react-app/entities/Worklogs'
-import { useIssueWorklogDELETE, useIssueWorklogPOST, useIssueWorklogPUT } from 'react-app/entities/IssueWorklogs'
+import { useIssueWorklogDELETE, useIssueWorklogPOST, useIssueWorklogPUT, useIssueWorklogsGET } from 'react-app/entities/IssueWorklogs'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { UseGetWorklogsProps } from 'react-app/entities/Worklogs/api/useWorklogsGET'
 import { useQuery } from '@tanstack/react-query'
@@ -7,8 +7,24 @@ import { axiosInstance } from 'react-app/shared/config/api/api'
 import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useFilterPUT } from 'react-app/entities/Filters'
 import { useCallback } from 'react'
+import { UseGetIssueWorklogs } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogsGET'
+import { PutIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogPUT'
+import { DeleteIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogDELETE'
+import { CreateIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogPOST'
 
-interface UseWorklogCrudProps extends UseGetWorklogsProps {}
+interface UseWorklogCrudProps extends Pick<UseGetWorklogsProps, 'to' | 'from'>, Partial<Pick<UseGetIssueWorklogs, 'issueId'>> {
+    enabledGetIssueWorklogs?: boolean
+    enabledGetWorklogs?: boolean
+    put?: {
+        onSuccess: (variables: PutIssueWorklog) => void
+    }
+    post?: {
+        onSuccess: (variables: CreateIssueWorklog) => void
+    }
+    delete?: {
+        onSuccess: (variables: DeleteIssueWorklog) => void
+    }
+}
 
 enum TimeTrackingProviderKeys {
     JIRA = 'JIRA',
@@ -16,7 +32,7 @@ enum TimeTrackingProviderKeys {
 }
 
 export const useWorklogCrud = (props: UseWorklogCrudProps) => {
-    const { from, to } = props
+    const { from, to, enabledGetWorklogs = true, enabledGetIssueWorklogs = false, issueId = '' } = props
     const notify = useNotifications()
 
     const filterPUT = useFilterPUT({
@@ -28,9 +44,9 @@ export const useWorklogCrud = (props: UseWorklogCrudProps) => {
         queryKey: ['time tracking provider'],
         queryFn: async (context) => {
             const [provider] = await Promise.allSettled([
-                axiosInstance.get<{ key: string, name: string }>('/configuration-timetracking-provider', {
-                    signal: context.signal
-                })
+                axiosInstance.get<{ key: string; name: string }>('/configuration-timetracking-provider', {
+                    signal: context.signal,
+                }),
             ])
 
             if (provider.status === 'fulfilled') {
@@ -50,7 +66,7 @@ export const useWorklogCrud = (props: UseWorklogCrudProps) => {
         },
         staleTime: 15 * 60 * 1000,
         enabled: false,
-        notifyOnChangeProps: []
+        notifyOnChangeProps: [],
     })
 
     const prefetch = useCallback(async () => {
@@ -64,7 +80,7 @@ export const useWorklogCrud = (props: UseWorklogCrudProps) => {
             await filterPUT.mutateAsync({
                 settings: {
                     plugin: provider.data,
-                }
+                },
             })
         }
 
@@ -78,11 +94,49 @@ export const useWorklogCrud = (props: UseWorklogCrudProps) => {
     const worklogs = useWorklogsGET({
         from: from,
         to: to,
-        prefetch: prefetch
+        prefetch: prefetch,
+        enabled: enabledGetWorklogs,
+    })
+
+    const issueWorklogs = useIssueWorklogsGET({
+        from: from,
+        to: to,
+        issueId,
+        prefetch: prefetch,
+        enabled: enabledGetIssueWorklogs,
     })
 
     const worklogPOST = useIssueWorklogPOST({
-        prefetch: prefetch
+        prefetch: prefetch,
+        onMutate: () => {
+            return notify.loading({
+                title: 'Worklog issue',
+            })
+        },
+        onSuccess: (data, variables, context) => {
+            context?.()
+
+            props.post?.onSuccess?.(variables)
+
+            if (enabledGetWorklogs) {
+                worklogs.refetch()
+            }
+
+            if (enabledGetIssueWorklogs) {
+                issueWorklogs.refetch()
+            }
+        },
+        onError: (error, variables, context) => {
+            context?.()
+
+            if (enabledGetWorklogs) {
+                worklogs.refetch()
+            }
+
+            if (enabledGetIssueWorklogs) {
+                issueWorklogs.refetch()
+            }
+        },
     })
 
     const worklogPUT = useIssueWorklogPUT({
@@ -97,7 +151,16 @@ export const useWorklogCrud = (props: UseWorklogCrudProps) => {
             notify.success({
                 title: 'Success worklog issue',
             })
-            worklogs.refetch()
+
+            props.put?.onSuccess?.(variables)
+
+            if (enabledGetWorklogs) {
+                worklogs.refetch()
+            }
+
+            if (enabledGetIssueWorklogs) {
+                issueWorklogs.refetch()
+            }
         },
         onError: (error, variables, context) => {
             context?.()
@@ -106,11 +169,17 @@ export const useWorklogCrud = (props: UseWorklogCrudProps) => {
                 description: JSON.stringify(error.response?.data),
             })
 
-            worklogs.refetch()
+            if (enabledGetWorklogs) {
+                worklogs.refetch()
+            }
+
+            if (enabledGetIssueWorklogs) {
+                issueWorklogs.refetch()
+            }
         },
     })
 
-    const worklogDelete = useIssueWorklogDELETE({
+    const worklogDELETE = useIssueWorklogDELETE({
         prefetch: prefetch,
         onMutate: () => {
             return notify.loading({
@@ -122,7 +191,16 @@ export const useWorklogCrud = (props: UseWorklogCrudProps) => {
             notify.success({
                 title: 'Success worklog issue',
             })
-            worklogs.refetch()
+
+            props.delete?.onSuccess?.(variables)
+
+            if (enabledGetWorklogs) {
+                worklogs.refetch()
+            }
+
+            if (enabledGetIssueWorklogs) {
+                issueWorklogs.refetch()
+            }
         },
         onError: (error, variables, context) => {
             context?.()
@@ -131,14 +209,21 @@ export const useWorklogCrud = (props: UseWorklogCrudProps) => {
                 description: JSON.stringify(error.response?.data),
             })
 
-            worklogs.refetch()
+            if (enabledGetWorklogs) {
+                worklogs.refetch()
+            }
+
+            if (enabledGetIssueWorklogs) {
+                issueWorklogs.refetch()
+            }
         },
     })
 
     return {
         worklogPOST,
-        worklogDelete,
+        worklogDELETE,
         worklogPUT,
-        worklogs
+        worklogs,
+        issueWorklogs,
     }
 }

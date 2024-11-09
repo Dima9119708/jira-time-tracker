@@ -15,6 +15,7 @@ export interface UseGetWorklogsProps {
     from?: string | Dayjs
     to?: string | Dayjs
     prefetch?: () => Promise<void>
+    enabled?: boolean
 }
 
 export type Worklog = {
@@ -38,11 +39,12 @@ export type Worklog = {
 
 type QueryResult = Array<[string, Worklog[]]>
 
-export const useWorklogsGET = ({ to, from, prefetch }: UseGetWorklogsProps) => {
+export const useWorklogsGET = ({ to, from, prefetch, enabled }: UseGetWorklogsProps) => {
 
     const queryClient = useQueryClient()
 
     return useQuery<QueryResult>({
+        enabled: enabled,
         queryKey: ['worklogs', to, from],
         queryFn: async (context) => {
             await prefetch?.()
@@ -88,7 +90,7 @@ export const useWorklogsGET = ({ to, from, prefetch }: UseGetWorklogsProps) => {
                                 name: issue.data.fields.project.name,
                                 avatarUrl: issue.data.fields.project.avatarUrls['48x48']
                             },
-                            description: worklog.description || '==//==',
+                            description: worklog.description.trim() || '==//==',
                             author: {
                                 displayName: mySelf.displayName,
                                 avatarUrls: mySelf.avatarUrls,

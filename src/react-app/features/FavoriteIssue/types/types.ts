@@ -9,6 +9,9 @@ export enum EnumReasonLoading {
 
 export interface FavoriteIssueProps {
     issueId: string
+    isEditGroup?: boolean
+    isDeleteGroup?: boolean,
+    isAddNewGroup?: boolean
 }
 
 export interface FavoriteItemProps extends FavoriteIssueProps {

@@ -25,13 +25,12 @@ import Calendar from '@atlaskit/calendar'
 import { useWorklogCrud } from 'react-app/features/WorklogCrud'
 import { TimeFormatGuide } from 'react-app/shared/components/TimeFormatGuide'
 import { TableRowDetail } from 'react-app/shared/ui/Table/ui/Table'
-import InlineEdit from '@atlaskit/inline-edit'
 
 const Timesheet = () => {
     const { setFalse } = useGlobalBoolean()
     const [date, setDate] = useState(() => dayjs().format(DATE_FORMAT))
 
-    const { worklogs, worklogPUT, worklogDelete } = useWorklogCrud({
+    const { worklogs, worklogPUT, worklogDELETE } = useWorklogCrud({
         from: dayjs(date).startOf('day'),
         to: dayjs(date).endOf('day'),
     })
@@ -164,6 +163,7 @@ const Timesheet = () => {
                                     <TableCell />
                                 </TableHead>
                                 <TableBody>
+                                    {/* TODO => Move to separate components */}
                                     {worklogs.map((worklog) => (
                                         <TableRow key={worklog.id}>
                                             <TableCell>
@@ -289,7 +289,7 @@ const Timesheet = () => {
                                                 <ConfirmDelete
                                                     title="Are you sure you want to delete this worklog?"
                                                     onYes={() => {
-                                                        worklogDelete.mutate({
+                                                        worklogDELETE.mutate({
                                                             issueId: worklog.issue.id,
                                                             id: worklog.id,
                                                         })

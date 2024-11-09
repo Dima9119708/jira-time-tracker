@@ -6,12 +6,11 @@ import Heading from '@atlaskit/heading'
 import { IconButton } from '@atlaskit/button/new'
 import CheckIcon from '@atlaskit/icon/glyph/check'
 import EditFilledIcon from '@atlaskit/icon/glyph/edit-filled'
-import TrashIcon from '@atlaskit/icon/glyph/trash'
 import { EnumReasonLoading, useFavoriteControl } from 'react-app/features/FavoriteIssue'
-
 import { FavoriteItemProps } from 'react-app/features/FavoriteIssue/types/types'
+import { ConfirmDelete } from 'react-app/shared/components/ConfirmDelete'
 
-export const FavoriteItem = ({ name, isGroup, issueId }: FavoriteItemProps) => {
+export const FavoriteItem = ({ name, isGroup, issueId, isEditGroup, isDeleteGroup }: FavoriteItemProps) => {
     const [value, setValue] = useState(name)
     const [isEdit, setIsEdit] = useState(false)
 
@@ -56,22 +55,26 @@ export const FavoriteItem = ({ name, isGroup, issueId }: FavoriteItemProps) => {
                 onClick={() => onAddGroup(name, issueId)}
             />
 
-            <IconButton
-                appearance="subtle"
-                icon={EditFilledIcon}
-                label="edit"
-                isDisabled={reasonLoading === EnumReasonLoading.choose || reasonLoading === EnumReasonLoading.remove}
-                isLoading={reasonLoading === EnumReasonLoading.edit}
-                onClick={() => setIsEdit((prevState) => !prevState)}
-            />
-            <IconButton
-                appearance="default"
-                icon={TrashIcon}
-                isDisabled={reasonLoading === EnumReasonLoading.choose || reasonLoading === EnumReasonLoading.edit}
-                label="remove group"
-                isLoading={reasonLoading === EnumReasonLoading.remove}
-                onClick={() => onRemoveGroup(name)}
-            />
+            {isEditGroup && (
+                <IconButton
+                    appearance="subtle"
+                    icon={EditFilledIcon}
+                    label="edit"
+                    isDisabled={reasonLoading === EnumReasonLoading.choose || reasonLoading === EnumReasonLoading.remove}
+                    isLoading={reasonLoading === EnumReasonLoading.edit}
+                    onClick={() => setIsEdit((prevState) => !prevState)}
+                />
+            )}
+            {isDeleteGroup && (
+                <ConfirmDelete
+                    title="Are you sure you want to delete this group?"
+                    isLoading={reasonLoading === EnumReasonLoading.remove}
+                    isDisabled={reasonLoading === EnumReasonLoading.choose || reasonLoading === EnumReasonLoading.edit}
+                    onYes={() => {
+                        onRemoveGroup(name)
+                    }}
+                />
+            )}
         </>
     )
 }

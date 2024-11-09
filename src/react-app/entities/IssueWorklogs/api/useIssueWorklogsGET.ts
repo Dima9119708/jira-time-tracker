@@ -10,7 +10,7 @@ import { MySelf } from 'react-app/shared/types/Jira/MySelf'
 import { WorklogResponse } from 'react-app/shared/types/Jira/Worklogs'
 import { WorklogsTempoResponse } from 'react-app/shared/types/plugins/Tempo/Worklogs'
 
-interface UseGetIssueWorklogs {
+export interface UseGetIssueWorklogs {
     issueId: string
     from?: string | Dayjs
     to?: string | Dayjs
@@ -63,7 +63,7 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled, prefetch }: Us
                                 useGlobalState.getState().settings.workingHoursPerDay
                             ),
                             timeSpentSeconds: worklog.timeSpentSeconds,
-                            description: worklog.description,
+                            description: worklog.description || '==//==',
                             author: {
                                 displayName: mySelf.displayName,
                                 avatarUrls: mySelf.avatarUrls,
@@ -89,6 +89,7 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled, prefetch }: Us
 
                     return jiraIssueWorklogsResponse.data.worklogs.reduce((acc, worklog) => {
                         const dateStarted = dayjs(worklog.started);
+                        const dateCreated = dayjs(worklog.created);
 
                         if (worklog.author.accountId === mySelf.accountId) {
                             if (from && to && dateStarted.isSameOrAfter(_from) && dateStarted.isSameOrBefore(_to)) {
@@ -96,13 +97,14 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled, prefetch }: Us
                                     id: worklog.id,
                                     timeSpent: worklog.timeSpent,
                                     timeSpentSeconds: worklog.timeSpentSeconds,
-                                    description: extractTextFromDoc(worklog.comment),
+                                    description: extractTextFromDoc(worklog.comment).trim() || '==//==',
                                     author: {
                                         displayName: mySelf.displayName,
                                         avatarUrls: mySelf.avatarUrls,
                                         accountId: mySelf.accountId,
                                     },
                                     date: dateStarted.format(DATE_FORMAT),
+                                    dateCreated
                                 })
                             }
 
@@ -118,12 +120,28 @@ export const useIssueWorklogsGET = ({ issueId, to, from, enabled, prefetch }: Us
                                         accountId: mySelf.accountId,
                                     },
                                     date: dateStarted.format(DATE_FORMAT),
+                                    dateCreated
                                 })
                             }
                         }
 
                         return acc
-                    }, [] as IssueWorklogs[])
+                    }, [] as (IssueWorklogs & { dateCreated: Dayjs })[])
+                        .sort((a, b) => b.dateCreated.isBefore(a.date) ? 1 : -1)
+                        .map((worklog) => {
+                            return {
+                                id: worklog.id,
+                                timeSpent: worklog.timeSpent,
+                                timeSpentSeconds: worklog.timeSpentSeconds,
+                                description: worklog.description,
+                                author: {
+                                    displayName: mySelf.displayName,
+                                    avatarUrls: mySelf.avatarUrls,
+                                    accountId: mySelf.accountId,
+                                },
+                                date: worklog.date,
+                            }
+                        })
                 }
             }
         },

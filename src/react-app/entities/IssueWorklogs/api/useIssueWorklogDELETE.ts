@@ -9,12 +9,13 @@ export interface DeleteIssueWorklog extends Partial<CreateIssueWorklog> {
     id: string
 }
 
-export const useIssueWorklogDELETE = <MutateReturn>(props?: {
+export interface UseIssueWorklogDELETE<MutateReturn> {
     prefetch?: () => Promise<void>
     onMutate?: (variables: DeleteIssueWorklog) => MutateReturn
     onSuccess: (data: AxiosResponse<any, any>, variables: DeleteIssueWorklog, context: MutateReturn | undefined) => void
     onError: (error: AxiosError, variables: DeleteIssueWorklog, context: MutateReturn | undefined) => void
-}) => {
+}
+export const useIssueWorklogDELETE = <MutateReturn>(props?: UseIssueWorklogDELETE<MutateReturn>) => {
 
     return useMutation({
         mutationFn: async (data: DeleteIssueWorklog) => {

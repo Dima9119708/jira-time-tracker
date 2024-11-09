@@ -4,7 +4,7 @@ import { PLUGINS, TIME_OPTIONS, UseGlobalState, useGlobalState } from '../../../
 import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle } from '@atlaskit/modal-dialog'
 import Button, { IconButton } from '@atlaskit/button/new'
 import CrossIcon from '@atlaskit/icon/glyph/cross'
-import { Flex, xcss, Box } from '@atlaskit/primitives'
+import { Flex, xcss, Box, Text } from '@atlaskit/primitives'
 import Toggle from '@atlaskit/toggle'
 import Textfield from '@atlaskit/textfield'
 import Select from '@atlaskit/select'
@@ -366,6 +366,8 @@ const Settings = () => {
                                         )
                                     }}
                                 />
+
+                                <Text>Minutes</Text>
                             </Flex>
                         </Flex>
 
@@ -450,7 +452,7 @@ const Settings = () => {
                                     alignItems="center"
                                 >
                                     <Flex columnGap="space.100" alignItems="center">
-                                        <Tooltip content="You don't have sufficient permissions to retrieve and read data from Jira. The administrator hasn't granted access to this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional access.">
+                                        <Tooltip content="You see this field in the settings because you do not have sufficient permissions to automatically retrieve data from Jira. The administrator has not granted you access to retrieve and read this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional permissions for data access.">
                                             {(tooltipProps) => (
                                                 <div {...tooltipProps}>
                                                     <EditorWarningIcon label="warning" primaryColor={token('color.icon.warning')} />
@@ -487,6 +489,8 @@ const Settings = () => {
                                                 )
                                             }}
                                         />
+
+                                        <Text>Hours</Text>
                                     </Flex>
                                 </Flex>
 
@@ -496,7 +500,7 @@ const Settings = () => {
                                     alignItems="center"
                                 >
                                     <Flex columnGap="space.100" alignItems="center">
-                                        <Tooltip content="You don't have sufficient permissions to retrieve and read data from Jira. The administrator hasn't granted access to this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional access.">
+                                        <Tooltip content="You see this field in the settings because you do not have sufficient permissions to automatically retrieve data from Jira. The administrator has not granted you access to retrieve and read this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional permissions for data access.">
                                             {(tooltipProps) => (
                                                <div {...tooltipProps}>
                                                    <EditorWarningIcon label="warning" primaryColor={token('color.icon.warning')} />
@@ -533,6 +537,8 @@ const Settings = () => {
                                                 )
                                             }}
                                         />
+
+                                        <Text>Days</Text>
                                     </Flex>
                                 </Flex>
                             </>

@@ -13,11 +13,12 @@ import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import StarFilledIcon from '@atlaskit/icon/glyph/star-filled'
 import EmptyState from '@atlaskit/empty-state'
 import { EnumReasonLoading, FavoriteIssueProps } from 'react-app/features/FavoriteIssue/types/types'
+import AddGroup from 'react-app/features/FavoriteIssue/ui/AddGroup'
+import FavoriteContentBox from 'react-app/features/FavoriteIssue/ui/FavoriteContentBox'
 
 const FavoriteIssue = (props: FavoriteIssueProps) => {
-    const { issueId } = props
+    const { issueId, isEditGroup = true, isDeleteGroup = true, isAddNewGroup = true } = props
     const [isOpen, setIsOpen] = useState(false)
-    const inputRef = useRef<HTMLInputElement>(null)
 
     const { reasonLoading, onAddNewGroup, removeFromAllGroups, hasFavorite, favorites } = useFavoriteControl()
 
@@ -33,16 +34,17 @@ const FavoriteIssue = (props: FavoriteIssueProps) => {
             onClose={() => setIsOpen(false)}
             placement="bottom-start"
             content={() => (
-                <Box xcss={xcss({ padding: 'space.200', minWidth: '400px' })}>
+                <FavoriteContentBox>
                     <Box
                         xcss={xcss({
                             overflowY: 'auto',
                             overflowX: 'hidden',
                             maxHeight: '300px',
                             paddingBottom: 'space.600',
+                            marginBottom: 'space.300',
                         })}
                     >
-                        {favorites.length === 0 && <EmptyState header="No favorite issues" />}
+                        {favorites.length === 0 && <EmptyState header="No groups have been added yet." />}
                         {favorites.map(({ name, issueIds }, idx) => (
                             <Flex
                                 key={name}
@@ -68,50 +70,30 @@ const FavoriteIssue = (props: FavoriteIssueProps) => {
                                     name={name}
                                     isGroup={issueIds.includes(issueId)}
                                     issueId={issueId}
+                                    isDeleteGroup={isDeleteGroup}
+                                    isEditGroup={isEditGroup}
                                 />
                             </Flex>
                         ))}
                     </Box>
 
-                    <Flex
-                        xcss={xcss({
-                            height: '30px',
-                            marginBottom: 'space.100',
-                            // marginTop: 'space.300',
-                            // @ts-ignore
-                            '& > div, & > button': {
-                                height: 'inherit',
-                            },
-                        })}
-                        alignItems="center"
-                        columnGap="space.100"
-                    >
-                        <Textfield ref={inputRef} />
-                        <IconButton
-                            appearance="primary"
-                            icon={AddIcon}
-                            label="add"
+                    {isAddNewGroup && (
+                        <AddGroup
                             isLoading={reasonLoading === EnumReasonLoading.add}
-                            onClick={() => {
-                                if (inputRef.current) {
-                                    onAddNewGroup(inputRef.current.value)
-
-                                    inputRef.current.value = ''
-                                }
-                            }}
+                            onAdd={onAddNewGroup}
                         />
-                    </Flex>
+                    )}
 
                     <Button
                         appearance="default"
                         shouldFitContainer
-                        isDisabled={!hasFavorite}
+                        isDisabled={!hasFavorite(issueId)}
                         onClick={() => removeFromAllGroups(issueId)}
                         isLoading={reasonLoading === EnumReasonLoading['removeFromAllGroups']}
                     >
-                        Remove issue from group
+                        Remove the issue from all its groups.
                     </Button>
-                </Box>
+                </FavoriteContentBox>
             )}
             trigger={(triggerProps) => (
                 <IconButton

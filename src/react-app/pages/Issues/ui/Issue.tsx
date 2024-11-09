@@ -10,7 +10,7 @@ import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/Change
 import { Flex, xcss } from '@atlaskit/primitives'
 import { IconButton } from '@atlaskit/button/new'
 import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
-import { LogTimeButton, LogTimeDialog } from 'react-app/features/LogTime'
+import { LogTimeButton, LogTimeDialog } from 'react-app/widgets/LogTime'
 import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'

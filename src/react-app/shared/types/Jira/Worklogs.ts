@@ -30,6 +30,7 @@ export interface Worklog {
     issueId: string
     self: string
     started: string
+    created: string
     timeSpent: string
     timeSpentSeconds: number
     updateAuthor: {

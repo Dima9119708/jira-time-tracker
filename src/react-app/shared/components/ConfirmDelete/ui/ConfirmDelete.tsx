@@ -2,20 +2,70 @@ import { Popup } from '@atlaskit/popup'
 import Button, { IconButton } from '@atlaskit/button/new'
 import TrashIcon from '@atlaskit/icon/glyph/trash'
 import { Box, Flex, xcss, Text } from '@atlaskit/primitives'
-import { useState } from 'react'
-import Heading from '@atlaskit/heading'
+import React, { useEffect, useRef, useState } from 'react'
+import { CommonIconButtonProps } from '@atlaskit/button/dist/types/new-button/variants/icon/types'
 
 interface ConfirmDeleteProps {
+    id?: string
     title: string,
+    isLoading?: boolean
+    isDisabled?: boolean
+    stopPropagation?: boolean
     onYes?: () => void
     onNo?: () => void
+    icon?: CommonIconButtonProps['icon']
 }
 
 const ConfirmDelete = (props: ConfirmDeleteProps) => {
+    const {
+        icon = TrashIcon
+    } = props
     const [isOpen, setIsOpen] = useState(false)
+
+    const buttonNoRef = useRef<HTMLButtonElement>(null)
+    const buttonYesRef = useRef<HTMLButtonElement>(null)
+
+    useEffect(() => {
+        if (isOpen && props.id && props.stopPropagation) {
+            const abortController = new AbortController()
+
+           const element = document.getElementById(props.id)
+
+            if (element) {
+                element.addEventListener('click', (ev) => {
+                    ev.stopImmediatePropagation()
+                }, {
+                    signal: abortController.signal
+                })
+
+                if (buttonYesRef.current) {
+                    buttonYesRef.current.addEventListener('click', (ev) => {
+                        setIsOpen(false)
+                        props.onYes?.()
+                    }, {
+                        signal: abortController.signal
+                    })
+                }
+                if (buttonNoRef.current) {
+                    buttonNoRef.current.addEventListener('click', (ev) => {
+                        setIsOpen(false)
+                        props.onNo?.()
+                    }, {
+                        signal: abortController.signal
+                    })
+                }
+
+            }
+
+            return () => {
+                 abortController.abort()
+            }
+        }
+    }, [isOpen])
 
     return (
         <Popup
+            id={props.id}
             isOpen={isOpen}
             onClose={() => setIsOpen(false)}
             shouldRenderToParent
@@ -27,6 +77,7 @@ const ConfirmDelete = (props: ConfirmDeleteProps) => {
                     <Box xcss={xcss({ marginBottom: 'space.100' })} />
                     <Flex columnGap="space.100" justifyContent="end">
                         <Button
+                            ref={buttonNoRef}
                             appearance="default"
                             onClick={() => {
                                 setIsOpen(false)
@@ -36,6 +87,7 @@ const ConfirmDelete = (props: ConfirmDeleteProps) => {
                             No
                         </Button>
                         <Button
+                            ref={buttonYesRef}
                             appearance="danger"
                             onClick={() => {
                                 setIsOpen(false)
@@ -50,9 +102,17 @@ const ConfirmDelete = (props: ConfirmDeleteProps) => {
             trigger={(triggerProps) => (
                 <IconButton
                     {...triggerProps}
-                    icon={TrashIcon}
+                    icon={icon}
                     label="Delete"
-                    onClick={() => setIsOpen(prevState => !prevState)}
+                    isDisabled={props.isDisabled}
+                    isLoading={props.isLoading}
+                    onClick={(e) => {
+                        if (props.stopPropagation) {
+                            e.stopPropagation()
+                        }
+
+                        setIsOpen(prevState => !prevState)
+                    }}
                 />
             )}
         />

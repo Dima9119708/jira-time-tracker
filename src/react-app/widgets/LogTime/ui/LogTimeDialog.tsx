@@ -19,6 +19,10 @@ import { Worklog } from 'react-app/entities/Worklogs'
 import { DatePicker } from '@atlaskit/datetime-picker'
 import { DATE_FORMAT } from 'react-app/shared/const'
 import { TimeFormatGuide } from 'react-app/shared/components/TimeFormatGuide'
+import { useWorklogCrud } from 'react-app/features/WorklogCrud'
+import { secondsToUIFormat } from 'react-app/shared/lib/helpers/secondsToUIFormat'
+import { ConfirmDelete } from 'react-app/shared/components/ConfirmDelete'
+import { useMemo } from 'react'
 
 export const LogTimeButton = (props: { issueId: string; uniqueNameBoolean: string }) => {
     return (
@@ -60,67 +64,46 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
 
     const { isFetching: isFetchingIssues } = useQuery({ queryKey: [queryKey], notifyOnChangeProps: ['isFetching'], enabled: false })
 
-    const issueWorklogs = useIssueWorklogsGET({
+    const {
+        worklogPUT: issueWorklogPUT,
+        issueWorklogs,
+        worklogPOST: issueWorklogPOST,
+        worklogDELETE: issueWorklogDelete,
+    } = useWorklogCrud({
         issueId,
-    })
-
-    const issueWorklogPOST = useIssueWorklogPOST({
-        onSuccess: () => {
-            notify.success({
-                title: 'Success worklog issue',
-            })
-            reset(DEFAULT_VALUES)
-            issueWorklogs.refetch()
+        enabledGetWorklogs: false,
+        enabledGetIssueWorklogs: true,
+        post: {
+            onSuccess: () => {
+                reset(DEFAULT_VALUES)
+            },
         },
-        onError: (error) => {
-            notify.error({
-                title: `Error worklog issue`,
-                description: JSON.stringify(error.response?.data),
-            })
+        put: {
+            onSuccess: () => {
+                reset(DEFAULT_VALUES)
+            },
         },
-    })
-
-    const issueWorklogPUT = useIssueWorklogPUT({
-        onMutate: () => {
-            return notify.loading({
-                title: 'Worklog issue',
-            })
-        },
-        onSuccess: (data, variables, context) => {
-            context?.()
-            notify.success({
-                title: 'Success worklog issue',
-            })
-            reset(DEFAULT_VALUES)
-            issueWorklogs.refetch()
-        },
-        onError: (error, variables, context) => {
-            context?.()
-            notify.error({
-                title: `Error worklog issue`,
-                description: JSON.stringify(error.response?.data),
-            })
+        delete: {
+            onSuccess: (variables) => {
+                if (getValues('worklog')?.id === variables.id) {
+                    reset({
+                        ...DEFAULT_VALUES,
+                        worklog: undefined,
+                    })
+                }
+            },
         },
     })
 
-    const issueWorklogDelete = useIssueWorklogDELETE({
-        onSuccess: (data, variables, context) => {
-            if (getValues('worklog')?.id === variables.id) {
-                reset({
-                    ...DEFAULT_VALUES,
-                    worklog: undefined,
-                })
-            }
+    const totalTime = useMemo(() => {
+        if (issueWorklogs.data) {
+            const total = issueWorklogs.data.reduce((acc, worklog) => acc + worklog.timeSpentSeconds, 0)
 
-            issueWorklogs.refetch()
-        },
-        onError: (error) => {
-            notify.error({
-                title: `Error worklog issue`,
-                description: JSON.stringify(error.response?.data),
-            })
-        },
-    })
+            return secondsToUIFormat(total, true)
+        }
+
+        return ''
+    }, [issueWorklogs.data])
 
     const onSave = (data: FormValues) => {
         if (data.worklog) {
@@ -187,6 +170,7 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                                 <DatePicker
                                     value={field.value}
                                     label="date"
+                                    placeholder={DATE_FORMAT}
                                     dateFormat={DATE_FORMAT}
                                     onChange={field.onChange}
                                 />
@@ -254,6 +238,25 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                         </Box>
                     )}
 
+                    {!issueWorklogs.isLoading && issueWorklogs?.data && issueWorklogs?.data?.length > 0 && (
+                        <Box
+                            xcss={xcss({
+                                textAlign: 'center',
+                                marginBottom: 'space.200',
+                                backgroundColor: 'color.background.neutral',
+                                padding: 'space.100',
+                                borderRadius: 'border.radius.200',
+                            })}
+                        >
+                            <Heading
+                                as="h2"
+                                size="small"
+                            >
+                                Total time: {totalTime}
+                            </Heading>
+                        </Box>
+                    )}
+
                     <Controller
                         name="worklog"
                         control={control}
@@ -290,31 +293,34 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                                                 }
                                             }}
                                         >
-                                            <Flex columnGap="space.100">
-                                                <Text weight="bold">User:</Text>
-
+                                            <Flex wrap="wrap" gap="space.100" columnGap="space.250">
                                                 <Flex columnGap="space.100">
-                                                    <Image
-                                                        src={worklog.author.avatarUrls?.['48x48']}
-                                                        height="20px"
-                                                        width="20px"
-                                                    />
-                                                    <Text weight="medium">{worklog.author.displayName}</Text>
+                                                    <Text weight="bold">User:</Text>
+
+                                                    <Flex columnGap="space.100">
+                                                        <Image
+                                                            src={worklog.author.avatarUrls?.['48x48']}
+                                                            height="20px"
+                                                            width="20px"
+                                                        />
+                                                        <Text weight="regular">{worklog.author.displayName}</Text>
+                                                    </Flex>
+                                                </Flex>
+                                                <Flex columnGap="space.100">
+                                                    <Text weight="bold">Date:</Text>
+                                                    <Text weight="regular">{worklog.date}</Text>
+                                                </Flex>
+                                                <Flex columnGap="space.100">
+                                                    <Text weight="bold">Logged:</Text>
+                                                    <Text weight="regular">{secondsToUIFormat(worklog.timeSpentSeconds, true)}</Text>
                                                 </Flex>
                                             </Flex>
-                                            <Flex columnGap="space.100">
-                                                <Text weight="bold">Date:</Text>
-                                                <Text weight="medium">{worklog.date}</Text>
-                                            </Flex>
-                                            <Flex columnGap="space.100">
-                                                <Text weight="bold">Logged:</Text>
-                                                <Text weight="medium">{worklog.timeSpent}</Text>
-                                            </Flex>
+
                                             <Flex columnGap="space.100">
                                                 <Box xcss={xcss({ flexShrink: 0 })}>
                                                     <Text weight="bold">Description: </Text>
                                                 </Box>
-                                                <Text weight="medium">{worklog.description}</Text>
+                                                <Text weight="regular">{worklog.description}</Text>
                                             </Flex>
 
                                             <Flex
@@ -331,14 +337,13 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                                                         setValue('worklog', undefined)
                                                     }}
                                                 />
-                                                <IconButton
-                                                    icon={TrashIcon}
-                                                    isLoading={
-                                                        issueWorklogDelete.variables?.id === worklog.id && issueWorklogDelete.isPending
-                                                    }
-                                                    label="Delete"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
+
+                                                <ConfirmDelete
+                                                    id={`issue-worklog-delete-${worklog.id}`}
+                                                    title="Are you sure you want to delete this worklog?"
+                                                    stopPropagation
+                                                    isLoading={issueWorklogDelete.variables?.id === worklog.id && issueWorklogDelete.isPending}
+                                                    onYes={() => {
                                                         issueWorklogDelete.mutate({ issueId, id: worklog.id })
                                                     }}
                                                 />

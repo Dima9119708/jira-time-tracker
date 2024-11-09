@@ -16,7 +16,10 @@ import TrashIcon from '@atlaskit/icon/glyph/trash'
 import InlineEdit from '@atlaskit/inline-edit'
 import Textfield from '@atlaskit/textfield'
 import EditFilledIcon from '@atlaskit/icon/glyph/edit-filled'
+import EditorEditIcon from '@atlaskit/icon/glyph/editor/edit';
+import EditorRemoveIcon from '@atlaskit/icon/glyph/editor/remove';
 import IssueComponent from './Issue'
+import { ConfirmDelete } from 'react-app/shared/components/ConfirmDelete'
 
 const FavoriteGroupIssues = memo(({ issueIds, name }: { name: string; issueIds: Issue['id'][] }) => {
     const queryKey = `favorite group ${name}`
@@ -57,8 +60,8 @@ const FavoriteGroupIssues = memo(({ issueIds, name }: { name: string; issueIds: 
 
     return !data?.length ? (
         <EmptyState
-            header={isFetching ? '' : 'No favorite issues yet'}
-            description={isFetching ? <Spinner /> : 'Add issues to your favorites to access them quickly here.'}
+            header={isFetching ? '' : 'This group has no issues.'}
+            description={isFetching ? <Spinner /> : ''}
         />
     ) : (
         data.map((issue, idx) => (
@@ -94,11 +97,7 @@ const FavoriteGroup = (props: { name: Issue['fields']['summary']; issueIds: Issu
             })}
         >
             <Box
-                onClick={() => {
-                    if (!isEdit) {
-                        setOpened((prevState) => !prevState)
-                    }
-                }}
+
                 xcss={xcss({
                     gridColumn: '1 / -1',
                     backgroundColor: 'color.background.neutral',
@@ -118,6 +117,11 @@ const FavoriteGroup = (props: { name: Issue['fields']['summary']; issueIds: Issu
                             marginBlockStart: 0,
                         },
                     })}
+                    onClick={() => {
+                        if (!isEdit) {
+                            setOpened((prevState) => !prevState)
+                        }
+                    }}
                 >
                     <InlineEdit
                         isEditing={isEdit}
@@ -148,10 +152,16 @@ const FavoriteGroup = (props: { name: Issue['fields']['summary']; issueIds: Issu
 
                 {opened ? <ChevronUpIcon label="arrow up favorite" /> : <ChevronDownIcon label="arrow down favorite" />}
 
-                <Flex columnGap="space.100">
+                <Box xcss={xcss({
+                    display: 'flex',
+                    columnGap: 'space.100',
+                    // @ts-ignore
+                    '& > button': {
+                        height: '20px',
+                    },
+                })}>
                     <IconButton
-                        appearance="subtle"
-                        icon={EditFilledIcon}
+                        icon={EditorEditIcon}
                         label="edit"
                         isDisabled={reasonLoading === EnumReasonLoading.choose || reasonLoading === EnumReasonLoading.remove}
                         isLoading={reasonLoading === EnumReasonLoading.edit}
@@ -160,18 +170,16 @@ const FavoriteGroup = (props: { name: Issue['fields']['summary']; issueIds: Issu
                             setIsEdit((prevState) => !prevState)
                         }}
                     />
-                    <IconButton
-                        appearance="default"
-                        icon={TrashIcon}
-                        isDisabled={reasonLoading === EnumReasonLoading.choose || reasonLoading === EnumReasonLoading.edit}
-                        label="remove group"
+                    <ConfirmDelete
+                        icon={EditorRemoveIcon}
+                        title="Are you sure you want to delete this group?"
                         isLoading={reasonLoading === EnumReasonLoading.remove}
-                        onClick={(e) => {
-                            e.stopPropagation()
+                        isDisabled={reasonLoading === EnumReasonLoading.choose || reasonLoading === EnumReasonLoading.edit}
+                        onYes={() => {
                             onRemoveGroup(name)
                         }}
                     />
-                </Flex>
+                </Box>
             </Box>
 
             {opened && (
@@ -219,7 +227,7 @@ const FavoriteList = () => {
 
     return !favoriteList.length ? (
         <EmptyState
-            header={'No favorite issues'}
+            header={'No groups have been added yet.'}
             description={null}
         />
     ) : (

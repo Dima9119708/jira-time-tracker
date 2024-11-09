@@ -18,12 +18,14 @@ export interface PutIssueWorklog extends Partial<CreateIssueWorklog> {
     description?: string
 }
 
-export const useIssueWorklogPUT = <MutateReturn>(props?: {
+export interface UseIssueWorklogPUTProps<MutateReturn> {
     prefetch?: () => Promise<void>
     onMutate?: (variables: PutIssueWorklog) => MutateReturn
     onSuccess?: (data: AxiosResponse<any, any>, variables: PutIssueWorklog, context: MutateReturn | undefined) => void
     onError?: (error: AxiosError, variables: PutIssueWorklog, context: MutateReturn | undefined) => void
-}) => {
+}
+
+export const useIssueWorklogPUT = <MutateReturn>(props?: UseIssueWorklogPUTProps<MutateReturn>) => {
     const workingDaysPerWeek = useGlobalState((state) => state.settings.workingDaysPerWeek)
     const workingHoursPerDay = useGlobalState((state) => state.settings.workingHoursPerDay)
 

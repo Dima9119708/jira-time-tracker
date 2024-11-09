@@ -16,12 +16,14 @@ export interface CreateIssueWorklog {
     description?: string
 }
 
-export const useIssueWorklogPOST = <MutateReturn>(props?: {
+export interface UseIssueWorklogPOSTProps<MutateReturn> {
     prefetch?: () => Promise<void>
     onMutate?: (variables: CreateIssueWorklog) => MutateReturn
     onSuccess?: (data: AxiosResponse<any, any>, variables: CreateIssueWorklog, context: MutateReturn | undefined) => void
     onError?: (error: AxiosError, variables: CreateIssueWorklog, context: MutateReturn | undefined) => void
-}) => {
+}
+
+export const useIssueWorklogPOST = <MutateReturn>(props?: UseIssueWorklogPOSTProps<MutateReturn>) => {
     const workingDaysPerWeek = useGlobalState((state) => state.settings.workingDaysPerWeek)
     const workingHoursPerDay = useGlobalState((state) => state.settings.workingHoursPerDay)
 

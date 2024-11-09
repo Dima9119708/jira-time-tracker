@@ -56,7 +56,6 @@ const AssignableSearchByIssueDropdown = (props: AssignableSearchByIssueDropdownP
                 <DropdownItemGroup>
                     {!isLoading &&
                         data?.map((user) => {
-                            console.log('user =>', assignee?.accountId, assignee)
                             return (
                                 <DropdownItem
                                     onClick={() => onChange(user)}

@@ -14,9 +14,6 @@ export const TOP_PANEL_HEIGHT = '36px'
 
 const styles = {
     wrap: xcss({
-        position: 'sticky',
-        top: '0',
-        left: '0',
         height: TOP_PANEL_HEIGHT,
         borderBottomWidth: '3px',
         borderBottomStyle: 'solid',

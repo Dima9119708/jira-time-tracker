@@ -16,29 +16,35 @@ import { useBooleanController, WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import RecentIcon from '@atlaskit/icon/glyph/recent'
 import UnauthorizedPluginHandler from '../GlobalComponents/UnauthorizedPluginHandler/UnauthorizedPluginHandler'
-import { useQuery } from '@tanstack/react-query'
-import { axiosInstance } from 'react-app/shared/config/api/api'
+import { token } from '@atlaskit/tokens'
 
 const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
 const Timesheet = lazy(() => import('../../widgets/Timesheet'))
 
+const HEADER_HEIGHT = 60
+const HEADER_MAIN_MARGIN = token('space.250')
+
 const styles = {
     app_wrap: xcss({}),
     header: xcss({
-        position: 'sticky',
-        top: TOP_PANEL_HEIGHT,
-        left: '0',
+        height: `${HEADER_HEIGHT}px`,
+        alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 'space.150',
+        paddingRight: 'space.150',
+        paddingLeft: 'space.150',
         borderBottomWidth: '1px',
         borderBottomStyle: 'solid',
         borderColor: 'color.border.accent.gray',
         backgroundColor: 'color.background.input',
         zIndex: 'blanket',
-        marginBottom: 'space.200',
     }),
     main: xcss({
+        height: `calc(100vh - ${TOP_PANEL_HEIGHT} - ${HEADER_HEIGHT}px - ${HEADER_MAIN_MARGIN})`,
+        overflowY: 'auto',
+        overflowX: 'hidden',
         padding: 'space.150',
+        // @ts-ignore
+        marginTop: HEADER_MAIN_MARGIN,
     }),
 }
 

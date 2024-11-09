@@ -36,7 +36,6 @@ export const useFavoriteControl = () => {
         return favorites.some(({ issueIds }) => issueIds.includes(issueId))
     }, [favorites])
 
-
     const removeFromAllGroups = (issueId: FavoriteIssueProps['issueId']) => {
         const newFavorites = produce(useFavoriteStore.getState().favorites, (draft) => {
             draft.forEach((group) => {

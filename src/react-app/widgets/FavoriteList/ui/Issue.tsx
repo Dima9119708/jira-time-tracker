@@ -9,7 +9,7 @@ import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/Change
 import { Flex, xcss } from '@atlaskit/primitives'
 import { IconButton } from '@atlaskit/button/new'
 import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
-import { LogTimeButton, LogTimeDialog } from 'react-app/features/LogTime'
+import { LogTimeButton, LogTimeDialog } from 'react-app/widgets/LogTime'
 import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'
@@ -17,22 +17,19 @@ import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssu
 import { IssueProps } from 'react-app/pages/Issues/types/types'
 import { token } from '@atlaskit/tokens'
 
-interface FavoriteIssueProps extends  IssueProps{
+interface FavoriteIssueProps extends IssueProps {
     queryKey: string
 }
 
 const Issue = (props: FavoriteIssueProps) => {
     const { fields, id, issueKey, queryKey } = props
     const queryClient = useQueryClient()
-    const isTrackingIssue =  useGlobalState((state) => state.issueIdsSearchParams.currentParams.includes(id))
+    const isTrackingIssue = useGlobalState((state) => state.issueIdsSearchParams.currentParams.includes(id))
 
     const uniqueNameBoolean = `favorite log time issue ${id}`
 
     const queryKeys = useCallback(() => {
-        return [
-            ...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`),
-            'issues tracking',
-        ]
+        return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
     }, [queryKey])
 
     const styles = useStatusStyles(fields)
@@ -55,10 +52,10 @@ const Issue = (props: FavoriteIssueProps) => {
                 queryClient.setQueryData(['issues'], (old: InfiniteData<IssueResponse>): InfiniteData<IssueResponse> => {
                     return produce(old, (draft) => {
                         for (const page of draft.pages) {
-                            const index = page.issues.findIndex((issue) => issue.id === id);
+                            const index = page.issues.findIndex((issue) => issue.id === id)
                             if (index !== -1) {
-                                page.issues.splice(index, 1);
-                                return;
+                                page.issues.splice(index, 1)
+                                return
                             }
                         }
                     })
@@ -68,9 +65,7 @@ const Issue = (props: FavoriteIssueProps) => {
     }
 
     return (
-        <CardIssue
-            active={false}
-        >
+        <CardIssue active={false}>
             <CardIssueHeader
                 summary={fields.summary}
                 timeoriginalestimate={secondsToUIFormat(fields.timeoriginalestimate)}
@@ -114,7 +109,12 @@ const Issue = (props: FavoriteIssueProps) => {
                         issueId={id}
                     />
 
-                    <FavoriteIssue issueId={id} />
+                    <FavoriteIssue
+                        issueId={id}
+                        isDeleteGroup={false}
+                        isEditGroup={false}
+                        isAddNewGroup={false}
+                    />
                 </Flex>
 
                 <ChangeStatusIssue
