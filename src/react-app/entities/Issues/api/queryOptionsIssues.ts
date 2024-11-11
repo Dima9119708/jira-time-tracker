@@ -1,4 +1,4 @@
-import { queryOptions, infiniteQueryOptions, InfiniteData, QueryKey } from '@tanstack/react-query'
+import { queryOptions, infiniteQueryOptions, InfiniteData, QueryKey, UseInfiniteQueryOptions } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { AxiosError } from 'axios'
@@ -39,27 +39,37 @@ export const queryGetIssuesTracking = (args: { onReject?: (reject: AxiosError<Er
         },
     })
 
-export const queryGetIssues = () =>
-    infiniteQueryOptions<IssueResponse, AxiosError<ErrorType>, InfiniteData<IssueResponse>, QueryKey, number>({
-        queryKey: ['issues'],
-        queryFn: async (context) => {
-            const MAX_RESULTS = 20
+interface QueryGetIssuesOptions {
+    queryKey?: UseInfiniteQueryOptions['queryKey']
+    jql: string,
+    onFilteringIssues?: (data: IssueResponse) => IssueResponse
+    enabled?: UseInfiniteQueryOptions['enabled']
+    maxResults?: number,
+    gcTime?: UseInfiniteQueryOptions['gcTime']
+}
 
-            const tasksIDS = useGlobalState.getState().getIssueIdsSearchParams()
+export const queryGetIssues = (options: QueryGetIssuesOptions) => {
+    const { queryKey = ['issues'], onFilteringIssues, jql, maxResults = 20, ...queryOptions } = options
+
+    return infiniteQueryOptions<IssueResponse, AxiosError<ErrorType>, InfiniteData<IssueResponse>, QueryKey, number>({
+        queryKey: queryKey,
+        queryFn: async (context) => {
+            const MAX_RESULTS = maxResults
 
             const response = await axiosInstance.get<IssueResponse>('/issues', {
                 params: {
-                    jql: useGlobalState.getState().jql,
+                    jql: jql,
                     startAt: context.pageParam * MAX_RESULTS,
                     maxResults: MAX_RESULTS,
                 },
                 signal: context.signal,
             })
 
-            return {
-                ...response.data,
-                issues: response.data.issues.filter((issue) => !tasksIDS.includes(issue.id)),
+            if (typeof onFilteringIssues === 'function') {
+                return onFilteringIssues(response.data)
             }
+
+            return response.data
         },
         getNextPageParam: (lastPage, allPages, lastPageParam, allPageParams) => {
             if (lastPage.issues.length > 0) {
@@ -69,4 +79,8 @@ export const queryGetIssues = () =>
             }
         },
         initialPageParam: 0,
+        enabled: queryOptions.enabled,
+        gcTime: queryOptions.gcTime,
     })
+}
+

@@ -4,7 +4,7 @@ import { useAssignableMultiProjectSearchGET } from 'react-app/entities/UserSearc
 import ItemDropdownCheckbox from 'react-app/entities/UserSearch/ui/ItemDropdownCheckbox'
 import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
 import { Assignee } from 'react-app/shared/types/Jira/Issues'
-import { isActiveUser } from 'react-app/shared/lib/utils/isActiveUser'
+import { isActiveUser } from 'react-app/entities/UserSearch/lib/isActiveUser'
 import Button from '@atlaskit/button/new'
 import { Box, xcss } from '@atlaskit/primitives'
 

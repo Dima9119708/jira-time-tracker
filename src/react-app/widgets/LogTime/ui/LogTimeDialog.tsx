@@ -12,8 +12,6 @@ import dayjs from 'dayjs'
 import Image from '@atlaskit/image'
 import Heading from '@atlaskit/heading'
 import TextArea from '@atlaskit/textarea'
-import TrashIcon from '@atlaskit/icon/glyph/trash'
-import { useIssueWorklogPOST, useIssueWorklogDELETE, useIssueWorklogsGET, useIssueWorklogPUT } from 'react-app/entities/IssueWorklogs'
 import CopyIcon from '@atlaskit/icon/glyph/copy'
 import { Worklog } from 'react-app/entities/Worklogs'
 import { DatePicker } from '@atlaskit/datetime-picker'
@@ -22,7 +20,9 @@ import { TimeFormatGuide } from 'react-app/shared/components/TimeFormatGuide'
 import { useWorklogCrud } from 'react-app/features/WorklogCrud'
 import { secondsToUIFormat } from 'react-app/shared/lib/helpers/secondsToUIFormat'
 import { ConfirmDelete } from 'react-app/shared/components/ConfirmDelete'
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { SearchByIssuesExpanded } from 'react-app/features/SearchByIssues'
+import { Issue } from 'react-app/shared/types/Jira/Issues'
 
 export const LogTimeButton = (props: { issueId: string; uniqueNameBoolean: string }) => {
     return (
@@ -52,9 +52,10 @@ const DEFAULT_VALUES: FormValues = {
 }
 
 export const LogTimeDialog = (props: { issueId: string; queryKey: string; uniqueNameBoolean: string }) => {
-    const { issueId, queryKey, uniqueNameBoolean } = props
+    const { issueId: issueIdProps, queryKey, uniqueNameBoolean } = props
     const { setFalse } = useGlobalBoolean()
     const queryClient = useQueryClient()
+    const [issueId, setIssueId] = useState(issueIdProps)
 
     const { handleSubmit, control, setValue, reset, getValues } = useForm<FormValues>({
         mode: 'onBlur',
@@ -70,7 +71,7 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
         worklogPOST: issueWorklogPOST,
         worklogDELETE: issueWorklogDelete,
     } = useWorklogCrud({
-        issueId,
+        issueId: issueId,
         enabledGetWorklogs: false,
         enabledGetIssueWorklogs: true,
         post: {
@@ -104,6 +105,10 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
 
         return ''
     }, [issueWorklogs.data])
+
+    const onChangeIssue = useCallback((issue: Issue) => {
+        setIssueId(issue.id)
+    }, [])
 
     const onSave = (data: FormValues) => {
         if (data.worklog) {
@@ -157,6 +162,13 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                 />
             </ModalHeader>
             <ModalBody>
+                <SearchByIssuesExpanded
+                    issueId={issueId}
+                    onChange={onChangeIssue}
+                />
+
+                <Box xcss={xcss({ marginTop: 'space.100', marginBottom: 'space.100' })} />
+
                 <Controller
                     name="date"
                     control={control}
@@ -293,7 +305,11 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                                                 }
                                             }}
                                         >
-                                            <Flex wrap="wrap" gap="space.100" columnGap="space.250">
+                                            <Flex
+                                                wrap="wrap"
+                                                gap="space.100"
+                                                columnGap="space.250"
+                                            >
                                                 <Flex columnGap="space.100">
                                                     <Text weight="bold">User:</Text>
 
@@ -342,7 +358,9 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                                                     id={`issue-worklog-delete-${worklog.id}`}
                                                     title="Are you sure you want to delete this worklog?"
                                                     stopPropagation
-                                                    isLoading={issueWorklogDelete.variables?.id === worklog.id && issueWorklogDelete.isPending}
+                                                    isLoading={
+                                                        issueWorklogDelete.variables?.id === worklog.id && issueWorklogDelete.isPending
+                                                    }
                                                     onYes={() => {
                                                         issueWorklogDelete.mutate({ issueId, id: worklog.id })
                                                     }}

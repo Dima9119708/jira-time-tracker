@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
-import { Project } from 'react-app/entities/Projects/api/useProjectsGET'
 import { AxiosError } from 'axios'
 import { JQLAutocompleteSuggestionsResponse } from '@atlaskit/jql-editor-autocomplete-rest'
+import { Project } from 'react-app/shared/types/Jira/Issues'
 
 interface PrioritySchemesResponse {
     values: {
@@ -29,6 +29,23 @@ export const usePrioritySchemesGET = (props: { opened: boolean; projectIds?: str
         enabled: opened,
         queryKey: ['priority schemes'],
         queryFn: async () => {
+            const reserveApi = async () => {
+                const response = await axiosInstance.get<JQLAutocompleteSuggestionsResponse>('/jql-search', {
+                    params: {
+                        url: '/rest/api/latest/jql/autocompletedata/suggestions?fieldName=priority',
+                    },
+                })
+
+                return response.data.results.map((result) => {
+                    return {
+                        id: result.value,
+                        iconUrl: '',
+                        name: result.displayName,
+                        statusColor: '',
+                    }
+                }) as PriorityScheme[]
+            }
+
             try {
                 const response = await axiosInstance.get<PrioritySchemesResponse>('/priorityscheme', {
                     params: {
@@ -37,8 +54,7 @@ export const usePrioritySchemesGET = (props: { opened: boolean; projectIds?: str
                 })
 
                 if (response.data.values.length === 0) {
-                    // @ts-ignore
-                    throw new AxiosError(undefined, undefined, undefined, undefined, { status: 403 })
+                    return reserveApi()
                 }
 
                 return response.data.values
@@ -67,20 +83,7 @@ export const usePrioritySchemesGET = (props: { opened: boolean; projectIds?: str
             } catch (e) {
                 if (e instanceof AxiosError) {
                     if (e.response?.status === 403) {
-                        const response = await axiosInstance.get<JQLAutocompleteSuggestionsResponse>('/jql-search', {
-                            params: {
-                                url: '/rest/api/latest/jql/autocompletedata/suggestions?fieldName=priority',
-                            },
-                        })
-
-                        return response.data.results.map((result) => {
-                            return {
-                                id: result.value,
-                                iconUrl: '',
-                                name: result.displayName,
-                                statusColor: '',
-                            }
-                        }) as PriorityScheme[]
+                        return reserveApi()
                     }
                 }
             }

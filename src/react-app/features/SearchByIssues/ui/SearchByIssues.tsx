@@ -1,5 +1,5 @@
 import Textfield from '@atlaskit/textfield'
-import { FormEvent, useCallback, useEffect, useState } from 'react'
+import { FormEvent, memo, useCallback, useEffect, useState } from 'react'
 import { QueryObserver, useQuery, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
 import EditorSearchIcon from '@atlaskit/icon/glyph/editor/search'
@@ -38,11 +38,12 @@ export type SearchData = {
 interface SearchByIssuesProps {
     width?: string
     value?: string
+    isShowExpanded?: boolean
     onChange: (data: SearchData) => void
 }
 
 const SearchByIssues = (props: SearchByIssuesProps) => {
-    const { onChange, width = '40%', value = '' } = props
+    const { onChange, width = '40%', value = '', isShowExpanded = true } = props
 
     const [searchValue, setSearchValue] = useState(value)
     const [previousValue, setPreviousValue] = useState(value)
@@ -88,6 +89,7 @@ const SearchByIssues = (props: SearchByIssuesProps) => {
             return filterDuplicates.size
         },
         enabled: false,
+        gcTime: 0
     })
 
     useEffect(() => {
@@ -107,7 +109,6 @@ const SearchByIssues = (props: SearchByIssuesProps) => {
 
     useEffect(() => {
         if (value === '') {
-            console.log('value =>', value)
             setSearchValue('')
             queryClient.removeQueries({
                 queryKey: ['searchIssues']
@@ -126,7 +127,7 @@ const SearchByIssues = (props: SearchByIssuesProps) => {
                 isCompact
                 elemBeforeInput={<EditorSearchIcon label="search issues" />}
                 elemAfterInput={
-                    <IconButton
+                    isShowExpanded && <IconButton
                         onClick={() => (isFetching ? null : setExpanded((prevState) => !prevState))}
                         icon={isFetching ? Spinner : EditorExpandIcon}
                         label="search issues expand"
@@ -140,4 +141,4 @@ const SearchByIssues = (props: SearchByIssuesProps) => {
     )
 }
 
-export default SearchByIssues
+export default memo(SearchByIssues)

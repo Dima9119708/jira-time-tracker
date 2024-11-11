@@ -1,10 +1,11 @@
 import React, { ReactNode, useState } from 'react'
 import DropdownMenu, { DropdownItemCheckbox } from '@atlaskit/dropdown-menu'
 import { Box, Flex, xcss, Text } from '@atlaskit/primitives'
-import { Project, useProjectsGET } from 'react-app/entities/Projects/api/useProjectsGET'
+import { useProjectsGET } from 'react-app/entities/Projects/api/useProjectsGET'
 import Image from '@atlaskit/image'
 import UserAvatarCircleIcon from '@atlaskit/icon/glyph/user-avatar-circle'
 import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
+import { Project } from 'react-app/shared/types/Jira/Issues'
 
 export type ProjectValue = { id: Project['id']; key: Project['key'] }
 

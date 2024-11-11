@@ -59,18 +59,33 @@ export const useWorklogsGET = ({ to, from, prefetch, enabled }: UseGetWorklogsPr
                         authorIds: [mySelf.accountId],
                         from: dayjs(from).format(DATE_FORMAT),
                         to: dayjs(to).format(DATE_FORMAT),
+                        orderBy: [
+                            {
+                                field: 'START_DATE_TIME',
+                                order: 'DESC',
+                            },
+                        ],
                     }, {
                         signal: context.signal
                     })
 
-                    const issuesResponse = await Promise.all(
-                        tempoWorklogsResponse.data.results.map(({ issue }) =>
-                            axiosInstance.get<Issue>('/issue', { params: { id: issue.id }, signal: context.signal })
-                        )
-                    )
+                    const ids = new Set(tempoWorklogsResponse.data.results.map((worklog) => worklog.issue.id))
+
+                    if (ids.size === 0) {
+                        return []
+                    }
+
+                    const issuesResponse = await axiosInstance.get<IssueResponse>('/issues', {
+                        params: {
+                            jql: `issue in (${Array.from(ids.values()).join(',')})`,
+                            startAt: 0,
+                            maxResults: ids.size,
+                        },
+                        signal: context.signal,
+                    })
 
                     const worklogs = tempoWorklogsResponse.data.results.map((worklog) => {
-                        const issue = issuesResponse.find((issueResponse) => issueResponse.data.id === `${worklog.issue.id}`)!
+                        const issue = issuesResponse.data.issues.find((issueResponse) => issueResponse.id === `${worklog.issue.id}`)!
 
                         return {
                             id: worklog.tempoWorklogId.toString(),
@@ -81,14 +96,14 @@ export const useWorklogsGET = ({ to, from, prefetch, enabled }: UseGetWorklogsPr
                             ),
                             timeSpentSeconds: worklog.timeSpentSeconds,
                             issue: {
-                                icon: issue.data.fields.issuetype.iconUrl,
-                                summary: issue.data.fields.summary,
-                                id: issue.data.id,
-                                key: issue.data.key
+                                icon: issue.fields.issuetype.iconUrl,
+                                summary: issue.fields.summary,
+                                id: issue.id,
+                                key: issue.key
                             },
                             project: {
-                                name: issue.data.fields.project.name,
-                                avatarUrl: issue.data.fields.project.avatarUrls['48x48']
+                                name: issue.fields.project.name,
+                                avatarUrl: issue.fields.project.avatarUrls['48x48']
                             },
                             description: worklog.description.trim() || '==//==',
                             author: {
@@ -140,12 +155,14 @@ export const useWorklogsGET = ({ to, from, prefetch, enabled }: UseGetWorklogsPr
                                         accountId: worklog.author.accountId,
                                     },
                                     date: dateStarted.format(DATE_FORMAT),
+                                    dateCreated: dateStarted
                                 })
                             }
                         })
 
                         return acc
-                    }, [] as Worklog[])
+                    }, [] as (Worklog & { dateCreated: Dayjs })[])
+                        .sort((a, b) => b.dateCreated.isBefore(a.date) ? 1 : -1)
 
                     return Object.entries(Object.groupBy(worklogs, (worklog) => worklog.project.name)) as QueryResult
                 }

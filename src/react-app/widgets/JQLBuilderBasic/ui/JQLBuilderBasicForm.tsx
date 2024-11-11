@@ -62,7 +62,7 @@ const formatJQLSortClause = (sortCriteria: SortCriteria[]): string => {
     return clauses.length > 0 ? `ORDER BY ${clauses.join(', ')}` : ''
 }
 
-const Search = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
+const Search = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const { control, handleSubmit } = useFormContext<JQLBasic>()
 
     const { field } = useController({
@@ -81,7 +81,7 @@ const Search = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
     )
 }
 
-const Statuses = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
+const Statuses = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const { control, handleSubmit } = useFormContext<JQLBasic>()
 
     const projects = useWatch({
@@ -109,7 +109,7 @@ const Statuses = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
     )
 }
 
-const Projects = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
+const Projects = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const { setValue, control, handleSubmit } = useFormContext<JQLBasic>()
 
     const { field } = useController({
@@ -135,7 +135,7 @@ const Projects = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
     )
 }
 
-const Assignees = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
+const Assignees = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const { control, handleSubmit } = useFormContext<JQLBasic>()
 
     const projects = useWatch({
@@ -171,7 +171,7 @@ const Assignees = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
     )
 }
 
-const Priority = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
+const Priority = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const { control, handleSubmit } = useFormContext<JQLBasic>()
 
     const projects = useWatch({
@@ -199,7 +199,7 @@ const Priority = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
     )
 }
 
-const CreatedSort = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
+const CreatedSort = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const [open, setOpen] = useState(false)
     const { setValue, control, handleSubmit } = useFormContext<JQLBasic>()
 
@@ -248,7 +248,7 @@ const CreatedSort = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
     )
 }
 
-const PrioritySort = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
+const PrioritySort = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const [open, setOpen] = useState(false)
 
     const { setValue, control, handleSubmit } = useFormContext<JQLBasic>()
@@ -298,7 +298,7 @@ const PrioritySort = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
     )
 }
 
-const StatusSort = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
+const StatusSort = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const [open, setOpen] = useState(false)
 
     const { handleSubmit, setValue, control } = useFormContext<JQLBasic>()
@@ -348,7 +348,7 @@ const StatusSort = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
     )
 }
 
-const ResetForm = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
+const ResetForm = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const { reset, control, handleSubmit } = useFormContext<JQLBasic>()
 
     const formValues = useWatch({
@@ -367,7 +367,7 @@ const ResetForm = ({ onSubmit } : { onSubmit: SubmitHandler }) => {
     return (
         !formIsEmpty && (
             <Button
-                appearance="subtle"
+                appearance="warning"
                 onClick={() => {
                     reset(DEFAULT_VALUES)
                     handleSubmit(onSubmit)()
@@ -435,7 +435,7 @@ const JQLBuilderBasicForm = () => {
             <FormProvider {...formMethods}>
                 <Search onSubmit={onSubmit} />
                 <Projects onSubmit={onSubmit} />
-                <Statuses onSubmit={onSubmit}  />
+                <Statuses onSubmit={onSubmit} />
                 <Assignees onSubmit={onSubmit} />
                 <Priority onSubmit={onSubmit} />
                 <CreatedSort onSubmit={onSubmit} />

@@ -25,12 +25,182 @@ import Calendar from '@atlaskit/calendar'
 import { useWorklogCrud } from 'react-app/features/WorklogCrud'
 import { TimeFormatGuide } from 'react-app/shared/components/TimeFormatGuide'
 import { TableRowDetail } from 'react-app/shared/ui/Table/ui/Table'
+import { SearchByIssuesExpanded } from 'react-app/features/SearchByIssues'
+import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { AxiosError } from 'axios'
+import { Controller, useForm } from 'react-hook-form'
+import { ErrorMessage, Label } from '@atlaskit/form'
+
+interface LogTimeProps {
+    date: string
+    isLoading: boolean
+    onSave: (data: FormValues) => void
+}
+
+type FormValues = {
+    startDate: string
+    issueId: string
+    timeSpent: string
+    description: string
+}
+
+const DEFAULT_VALUES: FormValues = {
+    startDate: '',
+    issueId: '',
+    timeSpent: '',
+    description: '',
+}
+
+const LogTime = (props: LogTimeProps) => {
+    const { date, isLoading } = props
+    const [isOpen, setOpen] = useState(false)
+    const { control, handleSubmit } = useForm({
+        defaultValues: DEFAULT_VALUES,
+    })
+
+    const onSave = (data: FormValues) => {
+        props.onSave(data)
+        setOpen(false)
+    }
+
+    return (
+        <Popup
+            isOpen={isOpen}
+            onClose={() => setOpen((prevState) => !prevState)}
+            content={() => (
+                <Box
+                    xcss={xcss({
+                        padding: 'space.150',
+                        backgroundColor: 'color.background.neutral',
+                        minWidth: '300px',
+                        maxWidth: '400px',
+                    })}
+                >
+                    <Controller
+                        control={control}
+                        rules={{
+                            required: 'Required',
+                        }}
+                        name="issueId"
+                        render={({ field, fieldState }) => {
+                            return (
+                                <>
+                                    <SearchByIssuesExpanded issueId={field.value} onChange={(issue) => field.onChange(issue.id)} />
+                                    {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                                </>
+                            )
+                        }}
+                    />
+
+                    <Box xcss={xcss({ marginTop: 'space.100', marginBottom: 'space.100' })} />
+
+                    <Controller
+                        control={control}
+                        defaultValue={date}
+                        name="startDate"
+                        render={({ field, fieldState }) => {
+                            return (
+                                <>
+                                    <Label htmlFor="startDate">Date</Label>
+                                    <DatePicker
+                                        value={field.value}
+                                        label="startDate"
+                                        placeholder={DATE_FORMAT}
+                                        dateFormat={DATE_FORMAT}
+                                        onChange={field.onChange}
+                                    />
+                                    {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                                </>
+                            )
+                        }}
+                    />
+
+                    <Box xcss={xcss({ marginTop: 'space.100', marginBottom: 'space.100' })} />
+
+                    <Controller
+                        name="timeSpent"
+                        control={control}
+                        rules={{
+                            required: 'Required',
+                        }}
+                        render={({ field, fieldState }) => {
+                            return (
+                                <>
+                                    <Label htmlFor="timeSpent">Time spent</Label>
+                                    <Textfield
+                                        value={field.value}
+                                        id="timeSpent"
+                                        onChange={field.onChange}
+                                        onBlur={field.onBlur}
+                                        placeholder="Use the format 2w 3d 4h 5m"
+                                    />
+                                    {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                                </>
+                            )
+                        }}
+                    />
+
+                    <Box xcss={xcss({ paddingBottom: 'space.100' })}>
+                        <Controller
+                            name="description"
+                            control={control}
+                            render={({ field }) => {
+                                return (
+                                    <>
+                                        <Label htmlFor="description">Description</Label>
+                                        <TextArea
+                                            resize="vertical"
+                                            value={field.value}
+                                            id="Description"
+                                            onChange={field.onChange}
+                                            onBlur={field.onBlur}
+                                            placeholder="Description"
+                                            onPointerEnterCapture={undefined}
+                                            onPointerLeaveCapture={undefined}
+                                        />
+                                    </>
+                                )
+                            }}
+                        />
+                    </Box>
+
+                    <Flex justifyContent="end" columnGap="space.100">
+                        <Button
+                            appearance="default"
+                            onClick={() => setOpen((prevState) => !prevState)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            isLoading={isLoading}
+                            onClick={handleSubmit(onSave)}
+                            appearance="primary"
+                        >
+                            Save
+                        </Button>
+                    </Flex>
+                </Box>
+            )}
+            shouldRenderToParent
+            trigger={(triggerProps) => (
+                <Button
+                    {...triggerProps}
+                    onClick={() => setOpen((prevState) => !prevState)}
+                    appearance="discovery"
+                >
+                    Log time
+                </Button>
+            )}
+        />
+    )
+}
 
 const Timesheet = () => {
     const { setFalse } = useGlobalBoolean()
     const [date, setDate] = useState(() => dayjs().format(DATE_FORMAT))
+    const notify = useNotifications()
 
-    const { worklogs, worklogPUT, worklogDELETE } = useWorklogCrud({
+    const { worklogs, worklogPUT, worklogDELETE, worklogPOST } = useWorklogCrud({
         from: dayjs(date).startOf('day'),
         to: dayjs(date).endOf('day'),
     })
@@ -55,7 +225,21 @@ const Timesheet = () => {
             onClose={() => setFalse('timesheet')}
         >
             <ModalHeader>
-                <ModalTitle>Timesheet</ModalTitle>
+                <ModalTitle>
+                    <Flex
+                        columnGap="space.100"
+                        alignItems="center"
+                    >
+                        Timesheet
+                        <LogTime
+                            isLoading={worklogPOST.isPending}
+                            date={date}
+                            onSave={(data) => {
+                                worklogPOST.mutate(data)
+                            }}
+                        />
+                    </Flex>
+                </ModalTitle>
                 <IconButton
                     appearance="subtle"
                     icon={CrossIcon}
@@ -65,7 +249,7 @@ const Timesheet = () => {
             </ModalHeader>
             <ModalBody>
                 <Box xcss={xcss({ marginBottom: 'space.250' })}>
-                    <Box xcss={xcss({  display: 'flex', justifyContent: 'center', borderRadius: 'border.radius.200', width: '100%' })}>
+                    <Box xcss={xcss({ display: 'flex', justifyContent: 'center', borderRadius: 'border.radius.200', width: '100%' })}>
                         <Calendar
                             selected={[date]}
                             previouslySelected={[date]}
@@ -228,11 +412,74 @@ const Timesheet = () => {
                                                 </Flex>
                                             </TableCell>
                                             <TableCell>
-                                                <Flex columnGap="space.050" wrap="wrap">
-                                                    <Image src={worklog.issue.icon} />
-                                                    <Text>{worklog.issue.key}</Text>
-                                                    <Text>{worklog.issue.summary}</Text>
-                                                </Flex>
+                                                <WatchController name={`timesheet issue ${worklog.id} `}>
+                                                    {({ localState }) => {
+                                                        const [isOpen, { toggle }] = localState
+
+                                                        return (
+                                                            <Popup
+                                                                isOpen={isOpen}
+                                                                onClose={toggle}
+                                                                placement="bottom-start"
+                                                                content={() => (
+                                                                    <Box
+                                                                        xcss={xcss({
+                                                                            padding: 'space.150',
+                                                                            minWidth: '300px',
+                                                                            maxWidth: '400px',
+                                                                            backgroundColor: 'color.background.neutral',
+                                                                        })}
+                                                                    >
+                                                                        <SearchByIssuesExpanded
+                                                                            placement="top-start"
+                                                                            issueId={worklog.issue.id}
+                                                                            onChange={async (newIssue) => {
+                                                                                toggle()
+                                                                                try {
+                                                                                    await worklogDELETE.mutateAsync({
+                                                                                        issueId: worklog.issue.id,
+                                                                                        id: worklog.id,
+                                                                                        customFields: {
+                                                                                            isRefetchWorklogsAfterDelete: false,
+                                                                                        },
+                                                                                    })
+                                                                                    await worklogPOST.mutateAsync({
+                                                                                        issueId: newIssue.id,
+                                                                                        startDate: worklog.date,
+                                                                                        timeSpent: worklog.timeSpent,
+                                                                                        description: worklog.description,
+                                                                                    })
+                                                                                } catch (e) {
+                                                                                    if (e instanceof AxiosError) {
+                                                                                        notify.error({
+                                                                                            title: JSON.stringify(e.response?.data || ''),
+                                                                                        })
+                                                                                    }
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                    </Box>
+                                                                )}
+                                                                shouldRenderToParent
+                                                                trigger={(triggerProps) => (
+                                                                    <Box
+                                                                        {...triggerProps}
+                                                                        onClick={toggle}
+                                                                    >
+                                                                        <Flex
+                                                                            columnGap="space.050"
+                                                                            wrap="wrap"
+                                                                        >
+                                                                            <Image src={worklog.issue.icon} />
+                                                                            <Text>{worklog.issue.key}</Text>
+                                                                            <Text>{worklog.issue.summary}</Text>
+                                                                        </Flex>
+                                                                    </Box>
+                                                                )}
+                                                            />
+                                                        )
+                                                    }}
+                                                </WatchController>
                                             </TableCell>
                                             <TableCell>
                                                 <WatchController name={`timesheet logged ${worklog.id}`}>
@@ -298,7 +545,15 @@ const Timesheet = () => {
                                             </TableCell>
 
                                             <TableRowDetail>
-                                                <Box xcss={xcss({ gridColumn: '1 / 2', color: 'color.text.subtle', fontWeight: 'font.weight.bold', })}>Description</Box>
+                                                <Box
+                                                    xcss={xcss({
+                                                        gridColumn: '1 / 2',
+                                                        color: 'color.text.subtle',
+                                                        fontWeight: 'font.weight.bold',
+                                                    })}
+                                                >
+                                                    Description
+                                                </Box>
                                                 <WatchController name={`timesheet description ${worklog.id}`}>
                                                     {({ localState }) => {
                                                         const [isOpen, { toggle }] = localState

@@ -7,7 +7,7 @@ import { Box, xcss } from '@atlaskit/primitives'
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
 import Button from '@atlaskit/button/new'
 import { useAssignableSearchByIssueGET } from 'react-app/entities/UserSearch/api/useAssignableSearchByIssueGET'
-import { isActiveUser } from 'react-app/shared/lib/utils/isActiveUser'
+import { isActiveUser } from 'react-app/entities/UserSearch/lib/isActiveUser'
 
 // TODO => bad name component
 const AssignableSearchByIssueDropdown = (props: AssignableSearchByIssueDropdownProps) => {

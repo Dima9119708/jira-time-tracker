@@ -1,5 +1,6 @@
 import SearchByIssues, { SearchData } from './ui/SearchByIssues'
+import SearchByIssuesExpanded from './ui/SearchByIssuesExpanded'
 
-export { SearchByIssues }
+export { SearchByIssues, SearchByIssuesExpanded }
 
 export type { SearchData }

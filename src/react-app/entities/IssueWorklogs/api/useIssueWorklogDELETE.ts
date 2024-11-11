@@ -7,6 +7,9 @@ import { CreateIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssu
 export interface DeleteIssueWorklog extends Partial<CreateIssueWorklog> {
     issueId: string
     id: string
+    customFields?: {
+        isRefetchWorklogsAfterDelete?: boolean
+    }
 }
 
 export interface UseIssueWorklogDELETE<MutateReturn> {

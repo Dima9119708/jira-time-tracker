@@ -1,6 +1,6 @@
 import Timer from 'react-app/shared/components/Timer/ui/Timer'
 import { Box, xcss } from '@atlaskit/primitives'
-import { useLogTimeAuto } from 'react-app/features/LogTimeAuto/api/useLogTimeAuto'
+import { useLogTimeAuto } from '../api/useLogTimeAuto'
 import { ReactNode } from 'react'
 
 interface TimeLogAutoProps {

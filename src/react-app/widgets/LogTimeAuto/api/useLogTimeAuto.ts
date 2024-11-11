@@ -5,8 +5,10 @@ import { produce } from 'immer'
 import { AxiosError } from 'axios'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
-import { useIssueWorklogPOST, useIssueWorklogsGET, useIssueWorklogPUT } from 'react-app/entities/IssueWorklogs'
 import { TimerRef } from 'react-app/shared/components/Timer/ui/Timer'
+import { Issue } from 'react-app/shared/types/Jira/Issues'
+import { useWorklogCrud } from 'react-app/features/WorklogCrud'
+import { CreateIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogPOST'
 
 export const useLogTimeAuto = (issueId: string) => {
     const queryClient = useQueryClient()
@@ -19,22 +21,25 @@ export const useLogTimeAuto = (issueId: string) => {
     const isSystemIdle = useGlobalState((state) => state.isSystemIdle)
 
     const onMutateQuery = useCallback(() => {
-        queryClient.setQueryData(['issues tracking'], (old) => {
-            return produce(old, (draft: any) => {
-                const task = draft.find((issue: any) => issue.id === issueId)
+        queryClient.setQueryData(['issues tracking'], (old: Issue[]) => {
+            return produce(old, (draft) => {
+                const task = draft.find((issue) => issue.id === issueId)
 
                 if (task) {
+                    if (task.fields.timespent === null) {
+                        task.fields.timespent = 0
+                    }
                     task.fields.timespent += settingTimeSecond
                 }
             })
         })
 
         return {
-            oldState: queryClient.getQueryData(['issues tracking']),
+            oldState: queryClient.getQueryData<Issue[]>(['issues tracking']),
         }
     }, [issueId])
 
-    const onError = useCallback((error: AxiosError, context: ReturnType<typeof onMutateQuery> | undefined) => {
+    const onError = useCallback((error: AxiosError, variables: CreateIssueWorklog, context: ReturnType<typeof onMutateQuery> | undefined) => {
         queryClient.setQueryData(['issues tracking'], context!.oldState)
 
         notify.error({
@@ -43,29 +48,25 @@ export const useLogTimeAuto = (issueId: string) => {
         })
     }, [])
 
-    const issueWorklogPUT = useIssueWorklogPUT({
-        onMutate: onMutateQuery,
-        onError: (error, variables, context) => {
-            onError(error, context)
-        },
-    })
-
-    const issueWorklogPOST = useIssueWorklogPOST({
-        onMutate: onMutateQuery,
-        onError: (error, variables, context) => {
-            onError(error, context)
-        },
-    })
-
-    const issueWorklogsGET = useIssueWorklogsGET({
-        issueId: issueId,
+    const { issueWorklogs, worklogPUT, worklogPOST } = useWorklogCrud({
+        issueId,
         from: dayjs().startOf('day'),
         to: dayjs().endOf('day'),
-        enabled: false,
+        enabledAllNotifications: false,
+        enabledGetWorklogs: false,
+        enabledGetIssueWorklogs: false,
+        post: {
+            onMutate: onMutateQuery,
+            onError: onError,
+        },
+        put: {
+            onMutate: onMutateQuery,
+            onError: onError,
+        },
     })
 
     const intervalTriggerCallback = useCallback(() => {
-        issueWorklogsGET
+        issueWorklogs
             .refetch()
             .then((worklogs) => {
                 if (worklogs.data && worklogs.data.length > 0) {
@@ -74,7 +75,7 @@ export const useLogTimeAuto = (issueId: string) => {
 
                     const timeSpentSeconds = worklogSecond + settingTimeSecond
 
-                    issueWorklogPUT.mutate({
+                    worklogPUT.mutate({
                         issueId: issueId,
                         id: worklog.id,
                         startDate: worklog.date,
@@ -84,7 +85,7 @@ export const useLogTimeAuto = (issueId: string) => {
                 } else {
                     const timeSpentSeconds = settingTimeSecond
 
-                    issueWorklogPOST.mutate({
+                    worklogPOST.mutate({
                         issueId: issueId,
                         timeSpentSeconds,
                         timeSpent: '',
