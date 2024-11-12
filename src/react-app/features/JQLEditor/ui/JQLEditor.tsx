@@ -33,6 +33,10 @@ const JQLEditor = () => {
                 if (jast.errors.length === 0 && jast.represents !== useGlobalState.getState().jql) {
                     filterPUT.mutate({
                         jql,
+                        settings: {
+                            jqlUISearchModeSwitcher: 'jql',
+                            jqlBasic: null,
+                        }
                     })
                 }
             }}

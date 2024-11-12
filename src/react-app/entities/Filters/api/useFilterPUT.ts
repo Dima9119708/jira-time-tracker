@@ -4,6 +4,7 @@ import { axiosInstance } from 'react-app/shared/config/api/api'
 import { Filter } from 'react-app/shared/types/Jira/Filter'
 import { UseGlobalState, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { useCallback } from 'react'
 
 interface FilterPUT<TCustomVariable> {
     settings?: Partial<UseGlobalState['settings']>
@@ -23,6 +24,13 @@ export const useFilterPUT = <TCustomVariable>(props?: {
     const titleSuccess = props?.titleSuccess ?? 'Update settings'
     const titleError = props?.titleError ?? 'Update settings'
     const notify = useNotifications()
+
+    const isFormEmpty = useCallback((values: any) => {
+        if (typeof values === 'object' && values !== null) {
+            return Object.values(values).every(isFormEmpty)
+        }
+        return values === ''
+    }, [])
 
     return useMutation<AxiosResponse<Filter>, AxiosError, FilterPUT<TCustomVariable>, Function | undefined>({
         mutationFn: async (data) => {

@@ -1,5 +1,5 @@
 import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
-import { useMutation } from '@tanstack/react-query'
+import { MutationKey, useMutation, UseMutationOptions } from '@tanstack/react-query'
 import { axiosInstance, axiosInstancePlugin } from 'react-app/shared/config/api/api'
 import { AxiosError, AxiosResponse } from 'axios'
 import { CreateIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogPOST'
@@ -12,12 +12,10 @@ export interface DeleteIssueWorklog extends Partial<CreateIssueWorklog> {
     }
 }
 
-export interface UseIssueWorklogDELETE<MutateReturn> {
+export interface UseIssueWorklogDELETE<MutateReturn>  extends UseMutationOptions<AxiosResponse<DeleteIssueWorklog>, AxiosError, DeleteIssueWorklog, MutateReturn> {
     prefetch?: () => Promise<void>
-    onMutate?: (variables: DeleteIssueWorklog) => MutateReturn
-    onSuccess: (data: AxiosResponse<any, any>, variables: DeleteIssueWorklog, context: MutateReturn | undefined) => void
-    onError: (error: AxiosError, variables: DeleteIssueWorklog, context: MutateReturn | undefined) => void
 }
+
 export const useIssueWorklogDELETE = <MutateReturn>(props?: UseIssueWorklogDELETE<MutateReturn>) => {
 
     return useMutation({
@@ -45,8 +43,6 @@ export const useIssueWorklogDELETE = <MutateReturn>(props?: UseIssueWorklogDELET
                 }
             }
         },
-        onMutate: props?.onMutate,
-        onSuccess: props?.onSuccess,
-        onError: props?.onError,
+        ...props
     })
 }

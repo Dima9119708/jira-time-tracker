@@ -6,7 +6,7 @@ import { queryGetIssues } from 'react-app/entities/Issues'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 
 const Issues = () => {
-    const { data, error } = useInfiniteQuery(queryGetIssues({
+    const { data, error } = useInfiniteQuery(queryGetIssues(() => ({
         jql: useGlobalState.getState().jql,
         onFilteringIssues: (data) => {
             const tasksIDS = useGlobalState.getState().getIssueIdsSearchParams()
@@ -16,7 +16,7 @@ const Issues = () => {
                 issues: data.issues.filter((issue) => !tasksIDS.includes(issue.id))
             }
         }
-    }))
+    })))
 
     const notify = useNotifications()
 

@@ -51,7 +51,6 @@ const FavoriteGroupIssues = memo(({ issueIds, name }: { name: string; issueIds: 
                 return acc
             }, [] as Issue[])
         },
-        enabled: false
     })
 
     useEffect(() => {

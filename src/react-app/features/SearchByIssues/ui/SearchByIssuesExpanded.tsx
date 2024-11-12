@@ -78,11 +78,11 @@ const Content = (props: SearchByIssuesExpandedProps & { issueKey: Issue['key'], 
     const queryClient = useQueryClient()
 
     const issueQuery = useInfiniteQuery(
-        queryGetIssues({
+        queryGetIssues(() => ({
             queryKey: ['search issues', jql],
             jql: jql,
             maxResults: 8,
-        })
+        }))
     )
 
     useEffect(() => {

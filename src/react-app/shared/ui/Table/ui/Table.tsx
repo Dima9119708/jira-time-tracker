@@ -22,6 +22,7 @@ const styles = {
         position: 'relative',
     }),
     row: xcss({
+        position: 'relative',
         display: 'grid',
         gridTemplateColumns: 'subgrid',
         gridColumn: '1 / -1',

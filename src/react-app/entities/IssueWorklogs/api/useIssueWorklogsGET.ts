@@ -18,7 +18,7 @@ export interface UseGetIssueWorklogs {
     prefetch?: () => Promise<void>
 }
 
-type IssueWorklogs = Pick<Worklog, 'date' | 'id' | 'timeSpent' | 'description' | 'timeSpentSeconds' | 'author'>
+export type IssueWorklogs = Pick<Worklog, 'date' | 'id' | 'timeSpent' | 'description' | 'timeSpentSeconds' | 'author'>
 
 export const useIssueWorklogsGET = ({ issueId, to, from, enabled, prefetch }: UseGetIssueWorklogs) => {
     const queryClient = useQueryClient()

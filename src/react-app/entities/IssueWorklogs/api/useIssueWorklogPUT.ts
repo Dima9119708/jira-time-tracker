@@ -1,5 +1,5 @@
 import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
-import { useMutation } from '@tanstack/react-query'
+import { MutationKey, useMutation, UseMutationOptions } from '@tanstack/react-query'
 import { axiosInstance, axiosInstancePlugin } from 'react-app/shared/config/api/api'
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from 'react-app/shared/const'
@@ -18,11 +18,8 @@ export interface PutIssueWorklog extends Partial<CreateIssueWorklog> {
     description?: string
 }
 
-export interface UseIssueWorklogPUTProps<MutateReturn> {
+export interface UseIssueWorklogPUTProps<MutateReturn> extends UseMutationOptions<AxiosResponse<PutIssueWorklog>, AxiosError, PutIssueWorklog, MutateReturn>{
     prefetch?: () => Promise<void>
-    onMutate?: (variables: PutIssueWorklog) => MutateReturn
-    onSuccess?: (data: AxiosResponse<any, any>, variables: PutIssueWorklog, context: MutateReturn | undefined) => void
-    onError?: (error: AxiosError, variables: PutIssueWorklog, context: MutateReturn | undefined) => void
 }
 
 export const useIssueWorklogPUT = <MutateReturn>(props?: UseIssueWorklogPUTProps<MutateReturn>) => {
@@ -60,8 +57,6 @@ export const useIssueWorklogPUT = <MutateReturn>(props?: UseIssueWorklogPUTProps
                 }
             }
         },
-        onMutate: props?.onMutate,
-        onSuccess: props?.onSuccess,
-        onError: props?.onError,
+        ...props
     })
 }

@@ -1,7 +1,8 @@
-const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor, session } = require('electron')
 const path = require('path')
 const portfinder = require('portfinder')
 const url = require('url')
+const os = require('os');
 
 require('dotenv').config({
     path: app.isPackaged ? path.join(process.resourcesPath, '.env.production') : path.resolve(process.cwd(), '.env'),
@@ -17,6 +18,17 @@ const { AuthStorage, ThemeStorage, ZoomStorage } = require('./auth/keyService')
 const AuthWindowPlugin = require('./auth/AuthPlugin/AuthPlugin')
 
 const isProd = process.env.NODE_ENV === 'production'
+
+
+const reduxDevToolsPath = path.join(
+    os.homedir(),
+    '.config/google-chrome/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/3.2.7_0'
+);
+
+const reactDevToolsPath = path.join(
+    os.homedir(),
+    '.config/google-chrome/Default/Extensions/gphhapmejobijbbhgpjhcjognlahblep/12_0'
+);
 
 const createChangePort = () => {
     return new Promise((resolve) => {
@@ -186,7 +198,14 @@ const createMainWindow = (port) => {
     return mainWindow
 }
 
-app.whenReady()
+app.whenReady().then(async () => {
+    try {
+        await session.defaultSession.loadExtension(reduxDevToolsPath);
+        await session.defaultSession.loadExtension(reactDevToolsPath);
+    } catch (e) {
+        console.error(e);
+    }
+})
     .then(async () => {
         try {
             portfinder.setBasePort(10000)

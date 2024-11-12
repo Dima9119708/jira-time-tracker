@@ -1,4 +1,11 @@
-import { queryOptions, infiniteQueryOptions, InfiniteData, QueryKey, UseInfiniteQueryOptions } from '@tanstack/react-query'
+import {
+    queryOptions,
+    infiniteQueryOptions,
+    InfiniteData,
+    QueryKey,
+    UseInfiniteQueryOptions,
+    Enabled,
+} from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { AxiosError } from 'axios'
@@ -39,21 +46,23 @@ export const queryGetIssuesTracking = (args: { onReject?: (reject: AxiosError<Er
         },
     })
 
-interface QueryGetIssuesOptions {
+type QueryGetIssuesOptions = () => {
     queryKey?: UseInfiniteQueryOptions['queryKey']
     jql: string,
     onFilteringIssues?: (data: IssueResponse) => IssueResponse
-    enabled?: UseInfiniteQueryOptions['enabled']
+    enabled?: Enabled<IssueResponse, AxiosError<ErrorType, any>, InfiniteData<IssueResponse, number>, QueryKey>
     maxResults?: number,
     gcTime?: UseInfiniteQueryOptions['gcTime']
 }
 
 export const queryGetIssues = (options: QueryGetIssuesOptions) => {
-    const { queryKey = ['issues'], onFilteringIssues, jql, maxResults = 20, ...queryOptions } = options
+    const { queryKey = ['issues'], ...queryOptions } = options()
 
     return infiniteQueryOptions<IssueResponse, AxiosError<ErrorType>, InfiniteData<IssueResponse>, QueryKey, number>({
         queryKey: queryKey,
         queryFn: async (context) => {
+            const { onFilteringIssues, jql, maxResults = 20 } = options()
+
             const MAX_RESULTS = maxResults
 
             const response = await axiosInstance.get<IssueResponse>('/issues', {

@@ -1,7 +1,7 @@
 import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle } from '@atlaskit/modal-dialog'
 import { globalBooleanActions, useGlobalBoolean } from 'use-global-boolean'
 import Button, { IconButton } from '@atlaskit/button/new'
-import { Controller, useForm } from 'react-hook-form'
+import { Control, Controller, FormProvider, useForm, useFormContext } from 'react-hook-form'
 import Textfield from '@atlaskit/textfield'
 import { ErrorMessage, Label } from '@atlaskit/form'
 import CrossIcon from '@atlaskit/icon/glyph/cross'
@@ -20,9 +20,11 @@ import { TimeFormatGuide } from 'react-app/shared/components/TimeFormatGuide'
 import { useWorklogCrud } from 'react-app/features/WorklogCrud'
 import { secondsToUIFormat } from 'react-app/shared/lib/helpers/secondsToUIFormat'
 import { ConfirmDelete } from 'react-app/shared/components/ConfirmDelete'
-import { useCallback, useMemo, useState } from 'react'
+import { forwardRef, memo, Ref, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { SearchByIssuesExpanded } from 'react-app/features/SearchByIssues'
 import { Issue } from 'react-app/shared/types/Jira/Issues'
+import { IssueWorklogs } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogsGET'
+import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 
 export const LogTimeButton = (props: { issueId: string; uniqueNameBoolean: string }) => {
     return (
@@ -41,7 +43,7 @@ type FormValues = {
     date: string
     timeSpent: string
     description: string
-    worklog: Worklog | undefined
+    worklog: IssueWorklogs | undefined
 }
 
 const DEFAULT_VALUES: FormValues = {
@@ -51,25 +53,226 @@ const DEFAULT_VALUES: FormValues = {
     worklog: undefined,
 }
 
+interface RenderWorklogProps {
+    isSelected: boolean
+    isLoading: boolean
+    onSelect: (bool: boolean, id: IssueWorklogs['id']) => void
+    onCopy: (issueId: Issue['id']) => void
+    onDelete: (issueId: Issue['id'], id: IssueWorklogs['id']) => void
+    id: IssueWorklogs['id']
+    authorAvatarUrl: IssueWorklogs['author']['avatarUrls']['16x16']
+    authorDisplayName: IssueWorklogs['author']['displayName']
+    description: IssueWorklogs['description']
+    date: IssueWorklogs['date']
+    issueId: Issue['id']
+    timeSpentSeconds: IssueWorklogs['timeSpentSeconds']
+}
+
+export const RenderWorklog = memo((props: RenderWorklogProps) => {
+    const {
+        id,
+        onCopy,
+        onDelete,
+        onSelect,
+        issueId,
+        isSelected,
+        isLoading,
+        description,
+        timeSpentSeconds,
+        date,
+        authorAvatarUrl,
+        authorDisplayName,
+    } = props
+
+    return (
+        <Box
+            xcss={xcss({
+                boxShadow: 'elevation.shadow.overlay',
+                display: 'grid',
+                gap: 'space.100',
+                borderRadius: 'border.radius.200',
+                marginBottom: 'space.200',
+                padding: 'space.200',
+                cursor: 'pointer',
+                backgroundColor: isSelected ? 'color.background.accent.blue.subtler' : 'color.background.input',
+            })}
+            onClick={() => {
+                if (isSelected) {
+                    onSelect(true, id)
+                } else {
+                    onSelect(false, id)
+                }
+            }}
+        >
+            <Flex
+                wrap="wrap"
+                gap="space.100"
+                columnGap="space.250"
+            >
+                <Flex columnGap="space.100">
+                    <Text weight="bold">User:</Text>
+
+                    <Flex columnGap="space.100">
+                        <Image
+                            src={authorAvatarUrl}
+                            height="20px"
+                            width="20px"
+                        />
+                        <Text weight="regular">{authorDisplayName}</Text>
+                    </Flex>
+                </Flex>
+                <Flex columnGap="space.100">
+                    <Text weight="bold">Date:</Text>
+                    <Text weight="regular">{date}</Text>
+                </Flex>
+                <Flex columnGap="space.100">
+                    <Text weight="bold">Logged:</Text>
+                    <Text weight="regular">{secondsToUIFormat(timeSpentSeconds, true)}</Text>
+                </Flex>
+            </Flex>
+
+            <Flex columnGap="space.100">
+                <Box xcss={xcss({ flexShrink: 0 })}>
+                    <Text weight="bold">Description: </Text>
+                </Box>
+                <Text weight="regular">{description}</Text>
+            </Flex>
+
+            <Flex
+                justifyContent="end"
+                columnGap="space.100"
+            >
+                <IconButton
+                    icon={CopyIcon}
+                    label="Copy"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onCopy(id)
+                    }}
+                />
+
+                <ConfirmDelete
+                    id={`issue-worklog-delete-${issueId}`}
+                    title="Are you sure you want to delete this worklog?"
+                    stopPropagation
+                    isLoading={isLoading}
+                    onYes={() => {
+                        onDelete(issueId, id)
+                    }}
+                />
+            </Flex>
+        </Box>
+    )
+})
+
+export const RenderDate = memo(({ control }: { control: Control<FormValues> }) => {
+
+    return (
+        <Controller
+            name="date"
+            control={control}
+            rules={{
+                required: 'Required',
+            }}
+            render={({ field, fieldState }) => {
+                return (
+                    <>
+                        <Label htmlFor="date">Date</Label>
+                        <DatePicker
+                            value={field.value}
+                            label="date"
+                            placeholder={DATE_FORMAT}
+                            dateFormat={DATE_FORMAT}
+                            onChange={field.onChange}
+                        />
+                        {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                    </>
+                )
+            }}
+        />
+    )
+})
+
+export const RenderTimeSpent = memo(({ control }: { control: Control<FormValues> }) => {
+
+    return (
+       <>
+           <Controller
+               name="timeSpent"
+               control={control}
+               rules={{
+                   required: 'Required',
+               }}
+               render={({ field, fieldState }) => {
+                   return (
+                       <>
+                           <Label htmlFor="timeSpent">Time spent</Label>
+                           <Textfield
+                               value={field.value}
+                               id="timeSpent"
+                               onChange={field.onChange}
+                               onBlur={field.onBlur}
+                               placeholder="Use the format 2w 3d 4h 5m"
+                           />
+                           {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                       </>
+                   )
+               }}
+           />
+
+           <TimeFormatGuide />
+       </>
+    )
+})
+
+export const RenderDescription = memo(({ control }: { control: Control<FormValues> }) => {
+
+    return (
+        <Box xcss={xcss({ paddingBottom: 'space.100' })}>
+            <Controller
+                name="description"
+                control={control}
+                render={({ field }) => {
+                    return (
+                        <>
+                            <Label htmlFor="description">Description</Label>
+                            <TextArea
+                                resize="vertical"
+                                value={field.value}
+                                id="Description"
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                placeholder="Description"
+                                onPointerEnterCapture={undefined}
+                                onPointerLeaveCapture={undefined}
+                            />
+                        </>
+                    )
+                }}
+            />
+        </Box>
+    )
+})
+
 export const LogTimeDialog = (props: { issueId: string; queryKey: string; uniqueNameBoolean: string }) => {
     const { issueId: issueIdProps, queryKey, uniqueNameBoolean } = props
     const { setFalse } = useGlobalBoolean()
+    const [isFetchingOtherQueries, setIsFetchingOtherQueries] = useState(false)
     const queryClient = useQueryClient()
     const [issueId, setIssueId] = useState(issueIdProps)
+    const refIssueWorklogs = useRef<IssueWorklogs[] | null>(null)
 
     const { handleSubmit, control, setValue, reset, getValues } = useForm<FormValues>({
         mode: 'onBlur',
         defaultValues: DEFAULT_VALUES,
     })
-    const notify = useNotifications()
-
-    const { isFetching: isFetchingIssues } = useQuery({ queryKey: [queryKey], notifyOnChangeProps: ['isFetching'], enabled: false })
 
     const {
         worklogPUT: issueWorklogPUT,
         issueWorklogs,
         worklogPOST: issueWorklogPOST,
         worklogDELETE: issueWorklogDelete,
+        wasMutationSuccessfulAndCacheCleared,
     } = useWorklogCrud({
         issueId: issueId,
         enabledGetWorklogs: false,
@@ -96,6 +299,10 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
         },
     })
 
+    useEffect(() => {
+        refIssueWorklogs.current = issueWorklogs.data ?? null
+    }, [issueWorklogs.data]);
+
     const totalTime = useMemo(() => {
         if (issueWorklogs.data) {
             const total = issueWorklogs.data.reduce((acc, worklog) => acc + worklog.timeSpentSeconds, 0)
@@ -110,7 +317,43 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
         setIssueId(issue.id)
     }, [])
 
-    const onSave = (data: FormValues) => {
+    const onSelectWorklog = useCallback((bool: boolean, id: Worklog['id']) => {
+        if (bool) {
+            setValue('worklog', undefined)
+            setValue('timeSpent', '')
+            setValue('description', '')
+            setValue('date', '')
+        } else {
+            if (refIssueWorklogs.current) {
+                const worklog = refIssueWorklogs.current.find((worklog) => worklog.id === id)
+
+                if (worklog) {
+                    setValue('worklog', worklog)
+                    setValue('timeSpent', worklog.timeSpent)
+                    setValue('description', worklog.description)
+                    setValue('date', worklog.date)
+                }
+            }
+        }
+    }, [])
+
+    const onCopy = useCallback((id: IssueWorklogs['id']) => {
+        if (refIssueWorklogs.current) {
+            const worklog = refIssueWorklogs.current.find((worklog) => worklog.id === id)
+
+            if (worklog) {
+                setValue('timeSpent', worklog.timeSpent)
+                setValue('description', worklog.description)
+                setValue('worklog', undefined)
+            }
+        }
+    }, [])
+
+    const onDelete = useCallback((issueId: Issue['id'], id: IssueWorklogs['id']) => {
+        issueWorklogDelete.mutate({ issueId, id })
+    }, [])
+
+    const onSave = useCallback((data: FormValues) => {
         if (data.worklog) {
             issueWorklogPUT.mutate({
                 issueId,
@@ -127,27 +370,30 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                 description: data.description,
             })
         }
-    }
+    }, [])
 
-    const onCancel = () => {
-        if (issueWorklogPOST.isSuccess || issueWorklogPUT.isSuccess || issueWorklogDelete.isSuccess) {
-            queryClient
-                .invalidateQueries({
-                    queryKey: [queryKey],
-                })
-                .then(() => {
-                    setFalse(uniqueNameBoolean)
-                })
-                .catch((error) => {
-                    notify.error({
-                        title: `Error worklog issue`,
-                        description: JSON.stringify(error.response?.data),
+    const onCancel = useCallback(async () => {
+        if (wasMutationSuccessfulAndCacheCleared()) {
+            setIsFetchingOtherQueries(true)
+
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: ['issues'],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: ['issues tracking'],
+                }),
+                ...useGlobalState.getState().settings.favorites.map(({ name }) => {
+                    return queryClient.invalidateQueries({
+                        queryKey: [`favorite group ${name}`],
                     })
-                })
-        } else {
-            setFalse(uniqueNameBoolean)
+                }),
+            ])
+            setIsFetchingOtherQueries(isFetchingOtherQueries)
         }
-    }
+
+        setFalse(uniqueNameBoolean)
+    }, [])
 
     return (
         <Modal onClose={onCancel}>
@@ -155,6 +401,7 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                 <ModalTitle>Log time</ModalTitle>
 
                 <IconButton
+                    isLoading={isFetchingOtherQueries}
                     appearance="subtle"
                     icon={CrossIcon}
                     label="Close Modal"
@@ -169,79 +416,9 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
 
                 <Box xcss={xcss({ marginTop: 'space.100', marginBottom: 'space.100' })} />
 
-                <Controller
-                    name="date"
-                    control={control}
-                    rules={{
-                        required: 'Required',
-                    }}
-                    render={({ field, fieldState }) => {
-                        return (
-                            <>
-                                <Label htmlFor="date">Date</Label>
-                                <DatePicker
-                                    value={field.value}
-                                    label="date"
-                                    placeholder={DATE_FORMAT}
-                                    dateFormat={DATE_FORMAT}
-                                    onChange={field.onChange}
-                                />
-                                {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
-                            </>
-                        )
-                    }}
-                />
-
-                <Box xcss={xcss({ marginTop: 'space.100', marginBottom: 'space.100' })} />
-
-                <Controller
-                    name="timeSpent"
-                    control={control}
-                    rules={{
-                        required: 'Required',
-                    }}
-                    render={({ field, fieldState }) => {
-                        return (
-                            <>
-                                <Label htmlFor="timeSpent">Time spent</Label>
-                                <Textfield
-                                    value={field.value}
-                                    id="timeSpent"
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    placeholder="Use the format 2w 3d 4h 5m"
-                                />
-                                {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
-                            </>
-                        )
-                    }}
-                />
-
-                <TimeFormatGuide />
-
-                <Box xcss={xcss({ paddingBottom: 'space.100' })}>
-                    <Controller
-                        name="description"
-                        control={control}
-                        render={({ field }) => {
-                            return (
-                                <>
-                                    <Label htmlFor="description">Description</Label>
-                                    <TextArea
-                                        resize="vertical"
-                                        value={field.value}
-                                        id="Description"
-                                        onChange={field.onChange}
-                                        onBlur={field.onBlur}
-                                        placeholder="Description"
-                                        onPointerEnterCapture={undefined}
-                                        onPointerLeaveCapture={undefined}
-                                    />
-                                </>
-                            )
-                        }}
-                    />
-                </Box>
+                <RenderDate control={control} />
+                <RenderTimeSpent control={control} />
+                <RenderDescription control={control} />
 
                 <Box xcss={xcss({ paddingTop: 'space.150', paddingBottom: 'space.100' })}>
                     {!!issueWorklogs.data?.length && (
@@ -276,97 +453,21 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                             return (
                                 <>
                                     {issueWorklogs.data?.map((worklog) => (
-                                        <Box
+                                        <RenderWorklog
                                             key={worklog.id}
-                                            xcss={xcss({
-                                                boxShadow: 'elevation.shadow.overlay',
-                                                display: 'grid',
-                                                gap: 'space.100',
-                                                borderRadius: 'border.radius.200',
-                                                marginBottom: 'space.200',
-                                                padding: 'space.200',
-                                                cursor: 'pointer',
-                                                backgroundColor:
-                                                    field.value?.id === worklog.id
-                                                        ? 'color.background.accent.blue.subtler'
-                                                        : 'color.background.input',
-                                            })}
-                                            onClick={() => {
-                                                if (field.value?.id === worklog.id) {
-                                                    field.onChange(undefined)
-                                                    setValue('timeSpent', '')
-                                                    setValue('description', '')
-                                                    setValue('date', '')
-                                                } else {
-                                                    field.onChange(worklog)
-                                                    setValue('timeSpent', worklog.timeSpent)
-                                                    setValue('description', worklog.description)
-                                                    setValue('date', worklog.date)
-                                                }
-                                            }}
-                                        >
-                                            <Flex
-                                                wrap="wrap"
-                                                gap="space.100"
-                                                columnGap="space.250"
-                                            >
-                                                <Flex columnGap="space.100">
-                                                    <Text weight="bold">User:</Text>
-
-                                                    <Flex columnGap="space.100">
-                                                        <Image
-                                                            src={worklog.author.avatarUrls?.['48x48']}
-                                                            height="20px"
-                                                            width="20px"
-                                                        />
-                                                        <Text weight="regular">{worklog.author.displayName}</Text>
-                                                    </Flex>
-                                                </Flex>
-                                                <Flex columnGap="space.100">
-                                                    <Text weight="bold">Date:</Text>
-                                                    <Text weight="regular">{worklog.date}</Text>
-                                                </Flex>
-                                                <Flex columnGap="space.100">
-                                                    <Text weight="bold">Logged:</Text>
-                                                    <Text weight="regular">{secondsToUIFormat(worklog.timeSpentSeconds, true)}</Text>
-                                                </Flex>
-                                            </Flex>
-
-                                            <Flex columnGap="space.100">
-                                                <Box xcss={xcss({ flexShrink: 0 })}>
-                                                    <Text weight="bold">Description: </Text>
-                                                </Box>
-                                                <Text weight="regular">{worklog.description}</Text>
-                                            </Flex>
-
-                                            <Flex
-                                                justifyContent="end"
-                                                columnGap="space.100"
-                                            >
-                                                <IconButton
-                                                    icon={CopyIcon}
-                                                    label="Copy"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        setValue('timeSpent', worklog.timeSpent)
-                                                        setValue('description', worklog.description)
-                                                        setValue('worklog', undefined)
-                                                    }}
-                                                />
-
-                                                <ConfirmDelete
-                                                    id={`issue-worklog-delete-${worklog.id}`}
-                                                    title="Are you sure you want to delete this worklog?"
-                                                    stopPropagation
-                                                    isLoading={
-                                                        issueWorklogDelete.variables?.id === worklog.id && issueWorklogDelete.isPending
-                                                    }
-                                                    onYes={() => {
-                                                        issueWorklogDelete.mutate({ issueId, id: worklog.id })
-                                                    }}
-                                                />
-                                            </Flex>
-                                        </Box>
+                                            id={worklog.id}
+                                            isSelected={field.value?.id === worklog.id}
+                                            isLoading={issueWorklogDelete.variables?.id === worklog.id && issueWorklogDelete.isPending}
+                                            date={worklog.date}
+                                            issueId={issueId}
+                                            timeSpentSeconds={worklog.timeSpentSeconds}
+                                            description={worklog.description}
+                                            authorAvatarUrl={worklog.author.avatarUrls['16x16']}
+                                            authorDisplayName={worklog.author.displayName}
+                                            onDelete={onDelete}
+                                            onCopy={onCopy}
+                                            onSelect={onSelectWorklog}
+                                        />
                                     ))}
                                 </>
                             )
@@ -376,7 +477,7 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
             </ModalBody>
             <ModalFooter>
                 <Button
-                    isLoading={isFetchingIssues}
+                    isLoading={isFetchingOtherQueries}
                     appearance="default"
                     onClick={onCancel}
                 >

@@ -23,10 +23,15 @@ const DetectedSystemIdle = () => {
 
             const onSystemIdleTimeResponse = (event: Electron.IpcRendererEvent, seconds: number) => {
                 const settingsSecond = useGlobalState.getState().settings.systemIdle.second
+                const isSystemIdle = useGlobalState.getState().isSystemIdle
 
                 if (seconds >= settingsSecond) {
+                    if (isSystemIdle === true) return
+
                     useGlobalState.getState().setSystemIdle(true)
                 } else {
+                    if (isSystemIdle === false) return
+
                     useGlobalState.getState().setSystemIdle(false)
                 }
             }

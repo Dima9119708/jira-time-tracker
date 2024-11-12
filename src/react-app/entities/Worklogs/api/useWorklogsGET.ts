@@ -37,10 +37,10 @@ export type Worklog = {
     date: string
 }
 
-type QueryResult = Array<[string, Worklog[]]>
+export type QueryResult = Array<[string, Worklog[]]>
 
 export const useWorklogsGET = ({ to, from, prefetch, enabled }: UseGetWorklogsProps) => {
-
+    const queryKey = ['worklogs', to, from]
     const queryClient = useQueryClient()
 
     return useQuery<QueryResult>({

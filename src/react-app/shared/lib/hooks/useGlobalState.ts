@@ -17,7 +17,7 @@ export interface UseGlobalState {
     settings: {
         plugin: PLUGINS.TEMPO | null
         jqlUISearchModeSwitcher: 'basic' | 'jql'
-        jqlBasic?: JQLBasic
+        jqlBasic: JQLBasic | null
         autoStart: boolean
         favorites: Array<{ name: string; issueIds: string[] }>
         timeLoggingInterval: {
@@ -92,19 +92,7 @@ export const useGlobalState = createStore<UseGlobalState>(
             plugin: null,
             jqlUISearchModeSwitcher: 'basic',
             favorites: [],
-            jqlBasic: {
-                assignees: [],
-                projects: [],
-                statuses: [],
-                priority: [],
-                prioritySort: EnumSortOrder.NONE,
-                createdSort: EnumSortOrder.NONE,
-                statusSort: EnumSortOrder.NONE,
-                search: {
-                    issueIds: [],
-                    value: '',
-                }
-            },
+            jqlBasic: null,
             autoStart: true,
             timeLoggingInterval: {
                 unit: TIME_OPTIONS[0],

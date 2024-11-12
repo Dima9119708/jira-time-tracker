@@ -2,11 +2,11 @@ import { useWorklogsGET } from 'react-app/entities/Worklogs'
 import { useIssueWorklogDELETE, useIssueWorklogPOST, useIssueWorklogPUT, useIssueWorklogsGET } from 'react-app/entities/IssueWorklogs'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { UseGetWorklogsProps } from 'react-app/entities/Worklogs/api/useWorklogsGET'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
 import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useFilterPUT } from 'react-app/entities/Filters'
-import { useCallback } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { UseGetIssueWorklogs } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogsGET'
 import { PutIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogPUT'
 import { DeleteIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogDELETE'
@@ -41,7 +41,7 @@ enum TimeTrackingProviderKeys {
 
 export const useWorklogCrud = <MutatePost = null, MutatePut = null, MutateDelete = null>(props: UseWorklogCrudProps<MutatePost, MutatePut, MutateDelete>) => {
     const { from, to, enabledGetWorklogs = true, enabledGetIssueWorklogs = false, issueId = '', enabledAllNotifications = true } = props
-
+    const queryClient = useQueryClient()
     const notify = useNotifications()
 
     const filterPUT = useFilterPUT({
@@ -108,6 +108,8 @@ export const useWorklogCrud = <MutatePost = null, MutatePut = null, MutateDelete
         enabled: enabledGetWorklogs,
     })
 
+    const mutationKey = 'mutation worklog'
+
     const issueWorklogs = useIssueWorklogsGET({
         from: from,
         to: to,
@@ -117,6 +119,8 @@ export const useWorklogCrud = <MutatePost = null, MutatePut = null, MutateDelete
     })
 
     const worklogPOST = useIssueWorklogPOST({
+        // gcTime: Infinity,
+        mutationKey: [mutationKey],
         prefetch: prefetch,
         onMutate: ((variables) => {
             if (typeof props.post?.onMutate === 'function') {
@@ -178,6 +182,8 @@ export const useWorklogCrud = <MutatePost = null, MutatePut = null, MutateDelete
     })
 
     const worklogPUT = useIssueWorklogPUT({
+        gcTime: Infinity,
+        mutationKey: [mutationKey],
         prefetch: prefetch,
         onMutate: ((variables) => {
             if (typeof props.put?.onMutate === 'function') {
@@ -239,6 +245,8 @@ export const useWorklogCrud = <MutatePost = null, MutatePut = null, MutateDelete
     })
 
     const worklogDELETE = useIssueWorklogDELETE({
+        gcTime: Infinity,
+        mutationKey: [mutationKey],
         prefetch: prefetch,
         onMutate: (variables) => {
             if (typeof props.delete?.onMutate === 'function') {
@@ -300,11 +308,24 @@ export const useWorklogCrud = <MutatePost = null, MutatePut = null, MutateDelete
         },
     })
 
+    const wasMutationSuccessfulAndCacheCleared = useCallback(() => {
+        const mutationCache = queryClient.getMutationCache()
+
+        const allMutations = mutationCache.findAll({ mutationKey: [mutationKey] })
+
+        for (const mutationCacheElement of allMutations) {
+           mutationCache.remove(mutationCacheElement)
+        }
+
+        return allMutations.length > 0
+    }, [mutationKey])
+
     return {
         worklogPOST,
         worklogDELETE,
         worklogPUT,
         worklogs,
         issueWorklogs,
+        wasMutationSuccessfulAndCacheCleared,
     }
 }

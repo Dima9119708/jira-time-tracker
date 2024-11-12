@@ -9,11 +9,11 @@ import { Radio } from '@atlaskit/radio'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { FavoriteButton, FavoriteListLazy } from 'react-app/widgets/FavoriteList'
 import { WatchController } from 'use-global-boolean'
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import Spinner from '@atlaskit/spinner'
 
 const IssuesPage = () => {
-    const jqlUISearchModeSwitcher = useGlobalState((state) => state.settings.jqlUISearchModeSwitcher)
+    const [jqlUISearchModeSwitcher, setJqlUISearchModeSwitcher] = useState(useGlobalState.getState().settings.jqlUISearchModeSwitcher)
 
     return (
         <>
@@ -27,7 +27,7 @@ const IssuesPage = () => {
                         name="basic"
                         testId="radio-default"
                         isChecked={jqlUISearchModeSwitcher === 'basic'}
-                        onChange={useGlobalState.getState().setSearchModeSwitcherBasic}
+                        onChange={() => setJqlUISearchModeSwitcher('basic')}
                         onPointerEnterCapture={undefined}
                         onPointerLeaveCapture={undefined}
                     />
@@ -37,7 +37,7 @@ const IssuesPage = () => {
                         name="jql"
                         testId="radio-disabled"
                         isChecked={jqlUISearchModeSwitcher === 'jql'}
-                        onChange={useGlobalState.getState().setSearchModeSwitcherJQL}
+                        onChange={() => setJqlUISearchModeSwitcher('jql')}
                         onPointerEnterCapture={undefined}
                         onPointerLeaveCapture={undefined}
                     />

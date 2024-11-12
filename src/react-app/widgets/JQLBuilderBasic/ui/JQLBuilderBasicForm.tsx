@@ -15,6 +15,7 @@ import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBa
 import { SearchByIssues, SearchData } from 'react-app/features/SearchByIssues'
 import { Assignee, Priority as PriorityType, Status as StatusType } from 'react-app/shared/types/Jira/Issues'
 import { EnumSortOrder } from 'react-app/shared/types/common'
+import deepmerge from 'react-app/shared/lib/utils/deepMerge'
 
 export type JQLBasic = {
     priority: Array<PriorityType['name']> | undefined
@@ -206,6 +207,7 @@ const CreatedSort = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const { field } = useController({
         control,
         name: 'createdSort',
+        defaultValue: EnumSortOrder.NONE
     })
 
     const onChange = (sort: JQLBasic['createdSort']) => {
@@ -256,6 +258,7 @@ const PrioritySort = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const { field } = useController({
         control,
         name: 'prioritySort',
+        defaultValue: EnumSortOrder.NONE
     })
 
     const onChange = (sort: EnumSortOrder) => {
@@ -306,6 +309,7 @@ const StatusSort = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
     const { field } = useController({
         control,
         name: 'statusSort',
+        defaultValue: EnumSortOrder.NONE
     })
 
     const onChange = (sort: EnumSortOrder) => {
@@ -382,7 +386,7 @@ const ResetForm = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
 const JQLBuilderBasicForm = () => {
     const formMethods = useForm<JQLBasic>({
         mode: 'onChange',
-        defaultValues: useGlobalState.getState().settings.jqlBasic,
+        defaultValues: deepmerge(DEFAULT_VALUES, useGlobalState.getState().settings.jqlBasic),
     })
 
     const queryClient = useQueryClient()
@@ -420,6 +424,7 @@ const JQLBuilderBasicForm = () => {
         filterPUT.mutate({
             settings: {
                 jqlBasic: data,
+                jqlUISearchModeSwitcher: 'basic'
             },
             jql: combinedJQL,
         })

@@ -16,7 +16,7 @@ import { ModalTransition } from '@atlaskit/modal-dialog'
 import { LogTimeAuto } from 'react-app/widgets/LogTimeAuto'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
-import { useFavoriteStore } from 'react-app/features/FavoriteIssue'
+import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
 import { LogTimeIndicator } from 'react-app/features/LogTimeIndicator'
 
 const IssueTracking = (props: IssueProps) => {
@@ -117,6 +117,8 @@ const IssueTracking = (props: IssueProps) => {
                             uniqueNameBoolean={uniqueNameBoolean}
                             issueId={id}
                         />
+
+                        <FavoriteIssue issueId={id} />
                     </Flex>
 
                     <ChangeStatusIssue

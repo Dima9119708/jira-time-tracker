@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { MutationKey, useMutation, UseMutationOptions } from '@tanstack/react-query'
 import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { axiosInstance, axiosInstancePlugin } from 'react-app/shared/config/api/api'
 import dayjs from 'dayjs'
@@ -16,11 +16,8 @@ export interface CreateIssueWorklog {
     description?: string
 }
 
-export interface UseIssueWorklogPOSTProps<MutateReturn> {
+export interface UseIssueWorklogPOSTProps<MutateReturn> extends  UseMutationOptions<AxiosResponse<CreateIssueWorklog>, AxiosError, CreateIssueWorklog, MutateReturn> {
     prefetch?: () => Promise<void>
-    onMutate?: (variables: CreateIssueWorklog) => MutateReturn
-    onSuccess?: (data: AxiosResponse<any, any>, variables: CreateIssueWorklog, context: MutateReturn | undefined) => void
-    onError?: (error: AxiosError, variables: CreateIssueWorklog, context: MutateReturn | undefined) => void
 }
 
 export const useIssueWorklogPOST = <MutateReturn>(props?: UseIssueWorklogPOSTProps<MutateReturn>) => {
@@ -28,6 +25,7 @@ export const useIssueWorklogPOST = <MutateReturn>(props?: UseIssueWorklogPOSTPro
     const workingHoursPerDay = useGlobalState((state) => state.settings.workingHoursPerDay)
 
     return useMutation({
+        mutationKey: props?.mutationKey,
         mutationFn: async (data: CreateIssueWorklog) => {
             await props?.prefetch?.()
 
@@ -58,8 +56,6 @@ export const useIssueWorklogPOST = <MutateReturn>(props?: UseIssueWorklogPOSTPro
                 }
             }
         },
-        onMutate: props?.onMutate,
-        onSuccess: props?.onSuccess,
-        onError: props?.onError,
+        ...props
     })
 }
