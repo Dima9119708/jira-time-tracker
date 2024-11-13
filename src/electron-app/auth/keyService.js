@@ -56,7 +56,7 @@ module.exports = {
             return store.get('theme') || 'auto'
         },
     },
-    ZoomStorage: {
+     ZoomStorage: {
         set: (value) => {
             initStore()
             store.set('zoom', value)

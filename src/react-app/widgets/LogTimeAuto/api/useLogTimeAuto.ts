@@ -1,5 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef } from 'react'
+import { onlineManager, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 import dayjs from 'dayjs'
 import { produce } from 'immer'
 import { AxiosError } from 'axios'
@@ -11,37 +11,43 @@ import { useWorklogCrud } from 'react-app/features/WorklogCrud'
 import { CreateIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogPOST'
 import { useFavoriteStore } from 'react-app/features/FavoriteIssue'
 import { InfiniteData } from '@tanstack/react-query/build/modern/index'
+import { usePersistLostTime } from 'react-app/features/PersistLostTime/model/usePersistLostTime'
 
 export const useLogTimeAuto = (issueId: string) => {
     const queryClient = useQueryClient()
 
     const timerRef = useRef<TimerRef>(null)
+    const prevCurrentOnlineState = useRef<boolean[]>([])
+
+    const { add } = usePersistLostTime(issueId)
 
     const notify = useNotifications()
 
+    const isOnline = useSyncExternalStore(
+        (onStoreChange) => onlineManager.subscribe(onStoreChange),
+        () => onlineManager.isOnline()
+    )
+
     const settingTimeSecond = useGlobalState((state) => state.settings.timeLoggingInterval.second)
-    const isSystemIdle = useGlobalState((state) => state.isSystemIdle)
+    const isTimeLoggingPaused = useGlobalState((state) => state.isTimeLoggingPaused)
+    const isIdleWithInsufficientActivity = useGlobalState((state) => state.isIdleWithInsufficientActivity)
 
     const queryKeys = useCallback(() => {
-        return [
-            ...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`),
-            'issues tracking'
-        ]
+        return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
     }, [])
 
-    const onMutateQuery = useCallback((variables: CreateIssueWorklog) => {
-        const oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]>  = []
+    const onMutateQuery = useCallback(
+        (variables: CreateIssueWorklog) => {
+            const oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]> = []
 
-        for (const queryKey of queryKeys()) {
-            const oldState = queryClient.getQueryData<IssueResponse['issues']>([queryKey])
+            for (const queryKey of queryKeys()) {
+                const oldState = queryClient.getQueryData<IssueResponse['issues']>([queryKey])
 
-            if (oldState) {
-                queryClient.setQueryData(
-                    [queryKey],
-                    (old: IssueResponse['issues']):IssueResponse['issues'] => {
-                       return produce(old, (issues) => {
+                if (oldState) {
+                    queryClient.setQueryData([queryKey], (old: IssueResponse['issues']): IssueResponse['issues'] => {
+                        return produce(old, (issues) => {
                             for (const issue of issues) {
-                                const findIssue = issue.id === variables.issueId;
+                                const findIssue = issue.id === variables.issueId
 
                                 if (findIssue) {
                                     if (issue.fields.timespent === null) {
@@ -53,35 +59,36 @@ export const useLogTimeAuto = (issueId: string) => {
                                 }
                             }
                         })
-                    }
-                )
+                    })
 
-                oldStates.push([queryKey, oldState])
+                    oldStates.push([queryKey, oldState])
+                }
             }
-        }
 
-        return oldStates
-    }, [issueId])
+            return oldStates
+        },
+        [issueId]
+    )
 
-    const onError = useCallback((error: AxiosError, variables: CreateIssueWorklog, context: ReturnType<typeof onMutateQuery> | undefined) => {
-        if (Array.isArray(context)) {
-            for (const [queryKey, oldState] of context) {
-                queryClient.setQueryData(
-                    [queryKey],
-                    (old: IssueResponse['issues']): IssueResponse['issues'] => {
+    const onError = useCallback(
+        (error: AxiosError, variables: CreateIssueWorklog, context: ReturnType<typeof onMutateQuery> | undefined) => {
+            if (Array.isArray(context)) {
+                for (const [queryKey, oldState] of context) {
+                    queryClient.setQueryData([queryKey], (old: IssueResponse['issues']): IssueResponse['issues'] => {
                         return produce(old, (draft) => {
                             Object.assign(draft, oldState)
                         })
-                    }
-                )
+                    })
+                }
             }
-        }
 
-        notify.error({
-            title: `Error worklog issue`,
-            description: JSON.stringify(error.response?.data),
-        })
-    }, [])
+            notify.error({
+                title: `Error worklog issue`,
+                description: JSON.stringify(error.response?.data),
+            })
+        },
+        []
+    )
 
     const { issueWorklogs, worklogPUT, worklogPOST } = useWorklogCrud({
         issueId,
@@ -101,47 +108,66 @@ export const useLogTimeAuto = (issueId: string) => {
     })
 
     const intervalTriggerCallback = useCallback(() => {
-        issueWorklogs
-            .refetch()
-            .then((worklogs) => {
-                if (worklogs.data && worklogs.data.length > 0) {
-                    const worklog = worklogs?.data[0]
-                    const worklogSecond = worklog.timeSpentSeconds
+        add(settingTimeSecond)
 
-                    const timeSpentSeconds = worklogSecond + settingTimeSecond
-
-                    worklogPUT.mutate({
-                        issueId: issueId,
-                        id: worklog.id,
-                        startDate: worklog.date,
-                        timeSpentSeconds,
-                        timeSpent: '',
-                        description: worklog.description,
-                    })
-                } else {
-                    const timeSpentSeconds = settingTimeSecond
-
-                    worklogPOST.mutate({
-                        issueId: issueId,
-                        timeSpentSeconds,
-                        timeSpent: '',
-                    })
-                }
-            })
-            .catch(() => {})
-    }, [])
+        // issueWorklogs
+        //     .refetch()
+        //     .then((worklogs) => {
+        //         if (worklogs.data && worklogs.data.length > 0) {
+        //             const worklog = worklogs?.data[0]
+        //             const worklogSecond = worklog.timeSpentSeconds
+        //
+        //             const timeSpentSeconds = worklogSecond + settingTimeSecond
+        //
+        //             worklogPUT.mutate({
+        //                 issueId: issueId,
+        //                 id: worklog.id,
+        //                 startDate: worklog.date,
+        //                 timeSpentSeconds,
+        //                 timeSpent: '',
+        //                 description: worklog.description,
+        //             })
+        //         } else {
+        //             const timeSpentSeconds = settingTimeSecond
+        //
+        //             worklogPOST.mutate({
+        //                 issueId: issueId,
+        //                 timeSpentSeconds,
+        //                 timeSpent: '',
+        //             })
+        //         }
+        //     })
+        //     .catch(() => {})
+    }, [settingTimeSecond])
 
     useEffect(() => {
         return timerRef.current?.setIntervalTrigger(settingTimeSecond, intervalTriggerCallback)
     }, [settingTimeSecond])
 
     useEffect(() => {
-        if (isSystemIdle) {
+        if (!isOnline || isTimeLoggingPaused) {
             timerRef.current?.pause()
         } else {
-            timerRef.current?.play()
+            if (!prevCurrentOnlineState.current[0] && isIdleWithInsufficientActivity) {
+                timerRef.current?.pause()
+            } else {
+                timerRef.current?.play()
+            }
         }
-    }, [isSystemIdle])
+
+        return () => {
+            if (prevCurrentOnlineState.current.length > 1) {
+                prevCurrentOnlineState.current.splice(0, 1)
+            }
+
+            if (prevCurrentOnlineState.current.length === 0) {
+                prevCurrentOnlineState.current.push(isOnline, isOnline)
+            } else {
+                prevCurrentOnlineState.current.push(isOnline)
+            }
+        }
+
+    }, [isTimeLoggingPaused, isOnline, isIdleWithInsufficientActivity])
 
     return timerRef
 }

@@ -6,8 +6,7 @@ import Textfield from '@atlaskit/textfield'
 import { ErrorMessage, Label } from '@atlaskit/form'
 import CrossIcon from '@atlaskit/icon/glyph/cross'
 import { Box, Flex, Text, xcss } from '@atlaskit/primitives'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import Image from '@atlaskit/image'
 import Heading from '@atlaskit/heading'
@@ -20,37 +19,21 @@ import { TimeFormatGuide } from 'react-app/shared/components/TimeFormatGuide'
 import { useWorklogCrud } from 'react-app/features/WorklogCrud'
 import { secondsToUIFormat } from 'react-app/shared/lib/helpers/secondsToUIFormat'
 import { ConfirmDelete } from 'react-app/shared/components/ConfirmDelete'
-import { forwardRef, memo, Ref, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { SearchByIssuesExpanded } from 'react-app/features/SearchByIssues'
 import { Issue } from 'react-app/shared/types/Jira/Issues'
 import { IssueWorklogs } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogsGET'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
-
-export const LogTimeButton = (props: { issueId: string; uniqueNameBoolean: string }) => {
-    return (
-        <Button
-            appearance="discovery"
-            onClick={() => {
-                globalBooleanActions.setTrue(props.uniqueNameBoolean, props.issueId)
-            }}
-        >
-            Log time
-        </Button>
-    )
-}
+import { LogTimeErrorNotification, usePersistLostTime } from 'react-app/features/PersistLostTime'
+import { Appearance } from '@atlaskit/button/new'
+import { convertJiraTimeToSeconds } from 'react-app/entities/IssueWorklogs'
+import { convertSecondsToJiraTime } from 'react-app/entities/IssueWorklogs/lib/convertJiraTimeToSeconds'
 
 type FormValues = {
     date: string
     timeSpent: string
     description: string
     worklog: IssueWorklogs | undefined
-}
-
-const DEFAULT_VALUES: FormValues = {
-    date: dayjs().format(DATE_FORMAT),
-    timeSpent: '',
-    description: '',
-    worklog: undefined,
 }
 
 interface RenderWorklogProps {
@@ -66,6 +49,26 @@ interface RenderWorklogProps {
     date: IssueWorklogs['date']
     issueId: Issue['id']
     timeSpentSeconds: IssueWorklogs['timeSpentSeconds']
+}
+
+const DEFAULT_VALUES: FormValues = {
+    date: dayjs().format(DATE_FORMAT),
+    timeSpent: '',
+    description: '',
+    worklog: undefined,
+}
+
+export const LogTimeButton = (props: { issueId: string; appearance?: Appearance }) => {
+    return (
+        <Button
+            appearance={props.appearance ?? 'discovery'}
+            onClick={() => {
+                globalBooleanActions.setTrue('LOG_TIME_ISSUE', props.issueId)
+            }}
+        >
+            Log time
+        </Button>
+    )
 }
 
 export const RenderWorklog = memo((props: RenderWorklogProps) => {
@@ -166,7 +169,6 @@ export const RenderWorklog = memo((props: RenderWorklogProps) => {
 })
 
 export const RenderDate = memo(({ control }: { control: Control<FormValues> }) => {
-
     return (
         <Controller
             name="date"
@@ -194,39 +196,37 @@ export const RenderDate = memo(({ control }: { control: Control<FormValues> }) =
 })
 
 export const RenderTimeSpent = memo(({ control }: { control: Control<FormValues> }) => {
-
     return (
-       <>
-           <Controller
-               name="timeSpent"
-               control={control}
-               rules={{
-                   required: 'Required',
-               }}
-               render={({ field, fieldState }) => {
-                   return (
-                       <>
-                           <Label htmlFor="timeSpent">Time spent</Label>
-                           <Textfield
-                               value={field.value}
-                               id="timeSpent"
-                               onChange={field.onChange}
-                               onBlur={field.onBlur}
-                               placeholder="Use the format 2w 3d 4h 5m"
-                           />
-                           {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
-                       </>
-                   )
-               }}
-           />
+        <>
+            <Controller
+                name="timeSpent"
+                control={control}
+                rules={{
+                    required: 'Required',
+                }}
+                render={({ field, fieldState }) => {
+                    return (
+                        <>
+                            <Label htmlFor="timeSpent">Time spent</Label>
+                            <Textfield
+                                value={field.value}
+                                id="timeSpent"
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                placeholder="Use the format 2w 3d 4h 5m"
+                            />
+                            {!!fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                        </>
+                    )
+                }}
+            />
 
-           <TimeFormatGuide />
-       </>
+            <TimeFormatGuide />
+        </>
     )
 })
 
 export const RenderDescription = memo(({ control }: { control: Control<FormValues> }) => {
-
     return (
         <Box xcss={xcss({ paddingBottom: 'space.100' })}>
             <Controller
@@ -254,18 +254,22 @@ export const RenderDescription = memo(({ control }: { control: Control<FormValue
     )
 })
 
-export const LogTimeDialog = (props: { issueId: string; queryKey: string; uniqueNameBoolean: string }) => {
-    const { issueId: issueIdProps, queryKey, uniqueNameBoolean } = props
+export const LogTimeDialog = (props: { issueId: string }) => {
+    const { issueId: issueIdProps } = props
+
     const { setFalse } = useGlobalBoolean()
     const [isFetchingOtherQueries, setIsFetchingOtherQueries] = useState(false)
     const queryClient = useQueryClient()
     const [issueId, setIssueId] = useState(issueIdProps)
     const refIssueWorklogs = useRef<IssueWorklogs[] | null>(null)
+    const isAddToTimeSpentLostTimeRef = useRef(false)
 
     const { handleSubmit, control, setValue, reset, getValues } = useForm<FormValues>({
         mode: 'onBlur',
         defaultValues: DEFAULT_VALUES,
     })
+
+    const { remove } = usePersistLostTime(issueId)
 
     const {
         worklogPUT: issueWorklogPUT,
@@ -277,31 +281,36 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
         issueId: issueId,
         enabledGetWorklogs: false,
         enabledGetIssueWorklogs: true,
+        mutationGcTime: Infinity,
         post: {
             onSuccess: () => {
+                if (isAddToTimeSpentLostTimeRef.current) {
+                    remove(issueId)
+                }
+
                 reset(DEFAULT_VALUES)
             },
         },
         put: {
             onSuccess: () => {
+                if (isAddToTimeSpentLostTimeRef.current) {
+                    remove(issueId)
+                }
                 reset(DEFAULT_VALUES)
             },
         },
         delete: {
             onSuccess: (variables) => {
+                if (isAddToTimeSpentLostTimeRef.current) {
+                    remove(issueId)
+                }
+
                 if (getValues('worklog')?.id === variables.id) {
-                    reset({
-                        ...DEFAULT_VALUES,
-                        worklog: undefined,
-                    })
+                    reset(DEFAULT_VALUES)
                 }
             },
         },
     })
-
-    useEffect(() => {
-        refIssueWorklogs.current = issueWorklogs.data ?? null
-    }, [issueWorklogs.data]);
 
     const totalTime = useMemo(() => {
         if (issueWorklogs.data) {
@@ -392,8 +401,40 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
             setIsFetchingOtherQueries(isFetchingOtherQueries)
         }
 
-        setFalse(uniqueNameBoolean)
+        setFalse('LOG_TIME_ISSUE')
     }, [])
+
+    const onAddToTimeSpentLostTime = useCallback((timeSpentSeconds: number) => {
+        const currentTimeSpent = getValues('timeSpent')
+
+       const workingDaysPerWeek =  useGlobalState.getState().settings.workingDaysPerWeek
+       const workingHoursPerDay =  useGlobalState.getState().settings.workingHoursPerDay
+
+        if (currentTimeSpent) {
+            const currentTimeSpentSeconds = convertJiraTimeToSeconds(
+                currentTimeSpent,
+                workingDaysPerWeek,
+                workingHoursPerDay
+            )
+            setValue('timeSpent', convertSecondsToJiraTime(
+                currentTimeSpentSeconds + timeSpentSeconds,
+                workingDaysPerWeek,
+                workingHoursPerDay
+            ))
+        } else {
+            setValue('timeSpent', convertSecondsToJiraTime(
+                timeSpentSeconds,
+                workingDaysPerWeek,
+                workingHoursPerDay
+            ))
+        }
+
+        isAddToTimeSpentLostTimeRef.current = true
+    }, [])
+
+    useEffect(() => {
+        refIssueWorklogs.current = issueWorklogs.data ?? null
+    }, [issueWorklogs.data])
 
     return (
         <Modal onClose={onCancel}>
@@ -409,15 +450,30 @@ export const LogTimeDialog = (props: { issueId: string; queryKey: string; unique
                 />
             </ModalHeader>
             <ModalBody>
+                <LogTimeErrorNotification
+                    issueId={issueId}
+                    isAddToTimeSpentAction
+                    isLogTimeAction={false}
+                    onAddToTimeSpent={onAddToTimeSpentLostTime}
+                />
+
+                <Box xcss={xcss({ margin: 'space.200' })} />
+
                 <SearchByIssuesExpanded
                     issueId={issueId}
                     onChange={onChangeIssue}
                 />
 
-                <Box xcss={xcss({ marginTop: 'space.100', marginBottom: 'space.100' })} />
+                <Box xcss={xcss({ margin: 'space.150' })} />
 
                 <RenderDate control={control} />
+
+                <Box xcss={xcss({ margin: 'space.150' })} />
+
                 <RenderTimeSpent control={control} />
+
+                <Box xcss={xcss({ margin: 'space.150' })} />
+
                 <RenderDescription control={control} />
 
                 <Box xcss={xcss({ paddingTop: 'space.150', paddingBottom: 'space.100' })}>

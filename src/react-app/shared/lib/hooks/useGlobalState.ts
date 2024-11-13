@@ -13,7 +13,8 @@ export enum PLUGINS {
 export interface UseGlobalState {
     filterId: string
     jql: string
-    isSystemIdle: boolean
+    isIdleWithInsufficientActivity: boolean
+    isTimeLoggingPaused: boolean
     settings: {
         plugin: PLUGINS.TEMPO | null
         jqlUISearchModeSwitcher: 'basic' | 'jql'
@@ -59,13 +60,14 @@ export interface UseGlobalState {
     setWorkingHoursPerWeek: (hours: UseGlobalState['settings']['workingHoursPerDay']) => void
     setWorkingDaysPerWeek: (hours: UseGlobalState['settings']['workingDaysPerWeek']) => void
     updateJQL: (jql: string) => void
-    hasJiraTimeTrackingPermission: boolean,
+    hasJiraTimeTrackingPermission: boolean
     changeIssueIdsSearchParams: (
         type: UseGlobalState['issueIdsSearchParams']['type'],
         value: UseGlobalState['issueIdsSearchParams']['value']
     ) => Promise<void>
     getIssueIdsSearchParams: () => string
-    setSystemIdle: (bool: boolean) => void
+    setIdleWithInsufficientActivity: (bool: boolean) => void
+    setTimeLoggingPaused: (bool: boolean) => void
     setSettings: (settings: Partial<UseGlobalState['settings']>) => void
     setIssueIdsSearchParams: (ids: string) => void
     setSearchModeSwitcherBasic: () => void
@@ -85,7 +87,8 @@ export const useGlobalState = createStore<UseGlobalState>(
     (set, get) => ({
         filterId: '',
         jql: '',
-        isSystemIdle: false,
+        isIdleWithInsufficientActivity: false,
+        isTimeLoggingPaused: false,
         hasJiraTimeTrackingPermission: false,
         openSettings: false,
         settings: {
@@ -133,9 +136,14 @@ export const useGlobalState = createStore<UseGlobalState>(
                 draft.settings = deepmerge(get().settings, settings)
             })
         },
-        setSystemIdle: (bool) => {
+        setIdleWithInsufficientActivity: (bool) => {
             set((draft) => {
-                draft.isSystemIdle = bool
+                draft.isIdleWithInsufficientActivity = bool
+            })
+        },
+        setTimeLoggingPaused: (bool) => {
+            set((draft) => {
+                draft.isTimeLoggingPaused = bool
             })
         },
         setFilterId: (id) => {

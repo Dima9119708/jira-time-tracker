@@ -7,7 +7,7 @@ import { IssueProps } from '../types/types'
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
-import { Flex, xcss } from '@atlaskit/primitives'
+import { Box, Flex, xcss } from '@atlaskit/primitives'
 import { IconButton } from '@atlaskit/button/new'
 import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
 import { LogTimeButton, LogTimeDialog } from 'react-app/widgets/LogTime'
@@ -15,6 +15,9 @@ import { WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'
 import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
+import { Worklog } from 'react-app/shared/types/Jira/Worklogs'
+import { LogTimeErrorNotification } from 'react-app/features/PersistLostTime'
+import { LogTimeAutoBase } from 'react-app/widgets/LogTimeAuto'
 
 const Issue = (props: IssueProps) => {
     const { fields, id, issueKey } = props
@@ -23,10 +26,7 @@ const Issue = (props: IssueProps) => {
     const uniqueNameBoolean = `log time issue ${id}`
 
     const queryKeys = useCallback(() => {
-        return [
-            ...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`),
-            'issues'
-        ]
+        return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues']
     }, [])
 
     const styles = useStatusStyles(fields)
@@ -40,7 +40,7 @@ const Issue = (props: IssueProps) => {
             queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
                 return produce(old, (draft) => {
                     for (const page of issues.pages) {
-                        const issue = page.issues.find((issue) => issue.id === id);
+                        const issue = page.issues.find((issue) => issue.id === id)
                         if (issue) {
                             draft.unshift(issue)
                         }
@@ -51,16 +51,15 @@ const Issue = (props: IssueProps) => {
             queryClient.setQueryData(['issues'], (old: InfiniteData<IssueResponse>): InfiniteData<IssueResponse> => {
                 return produce(old, (draft) => {
                     for (const page of draft.pages) {
-                        const index = page.issues.findIndex((issue) => issue.id === id);
+                        const index = page.issues.findIndex((issue) => issue.id === id)
                         if (index !== -1) {
-                            page.issues.splice(index, 1);
-                            return;
+                            page.issues.splice(index, 1)
+                            return
                         }
                     }
                 })
             })
         }
-
     }
 
     const onSuccessStatusChange = useCallback(() => {
@@ -84,14 +83,14 @@ const Issue = (props: IssueProps) => {
     }, [fields.status.name])
 
     return (
-        <CardIssue
-            active={false}
-        >
+        <CardIssue active={false}>
             <CardIssueHeader
                 summary={fields.summary}
                 timeoriginalestimate={secondsToUIFormat(fields.timeoriginalestimate)}
                 timespent={secondsToUIFormat(fields.timespent)}
             />
+
+            <LogTimeErrorNotification issueId={id} LogTimeAutoComponent={LogTimeAutoBase} />
 
             <CardIssueDetailsBadges
                 issueKey={issueKey}
@@ -127,10 +126,7 @@ const Issue = (props: IssueProps) => {
                         onSuccess={onSuccessAssigneeChange}
                     />
 
-                    <LogTimeButton
-                        uniqueNameBoolean={uniqueNameBoolean}
-                        issueId={id}
-                    />
+                    <LogTimeButton issueId={id} />
 
                     <FavoriteIssue issueId={id} />
                 </Flex>
@@ -155,23 +151,7 @@ const Issue = (props: IssueProps) => {
                 />
             </Flex>
 
-            <WatchController name={uniqueNameBoolean}>
-                {({ localState }) => {
-                    const [open] = localState
 
-                    return (
-                        <ModalTransition>
-                            {open && (
-                                <LogTimeDialog
-                                    issueId={id}
-                                    uniqueNameBoolean={uniqueNameBoolean}
-                                    queryKey="issues"
-                                />
-                            )}
-                        </ModalTransition>
-                    )
-                }}
-            </WatchController>
         </CardIssue>
     )
 }

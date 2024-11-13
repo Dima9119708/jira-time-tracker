@@ -9,13 +9,10 @@ import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/Change
 import { Flex, xcss } from '@atlaskit/primitives'
 import { IconButton } from '@atlaskit/button/new'
 import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
-import { LogTimeButton, LogTimeDialog } from 'react-app/widgets/LogTime'
-import { WatchController } from 'use-global-boolean'
-import { ModalTransition } from '@atlaskit/modal-dialog'
+import { LogTimeButton } from 'react-app/widgets/LogTime'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'
 import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
 import { IssueProps } from 'react-app/pages/Issues/types/types'
-import { token } from '@atlaskit/tokens'
 
 interface FavoriteIssueProps extends IssueProps {
     queryKey: string
@@ -25,8 +22,6 @@ const Issue = (props: FavoriteIssueProps) => {
     const { fields, id, issueKey, queryKey } = props
     const queryClient = useQueryClient()
     const isTrackingIssue = useGlobalState((state) => state.issueIdsSearchParams.currentParams.includes(id))
-
-    const uniqueNameBoolean = `favorite log time issue ${id}`
 
     const queryKeys = useCallback(() => {
         return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
@@ -105,7 +100,6 @@ const Issue = (props: FavoriteIssueProps) => {
                     />
 
                     <LogTimeButton
-                        uniqueNameBoolean={uniqueNameBoolean}
                         issueId={id}
                     />
 
@@ -137,24 +131,6 @@ const Issue = (props: FavoriteIssueProps) => {
                     )}
                 />
             </Flex>
-
-            <WatchController name={uniqueNameBoolean}>
-                {({ localState }) => {
-                    const [open] = localState
-
-                    return (
-                        <ModalTransition>
-                            {open && (
-                                <LogTimeDialog
-                                    issueId={id}
-                                    uniqueNameBoolean={uniqueNameBoolean}
-                                    queryKey="issues"
-                                />
-                            )}
-                        </ModalTransition>
-                    )
-                }}
-            </WatchController>
         </CardIssue>
     )
 }

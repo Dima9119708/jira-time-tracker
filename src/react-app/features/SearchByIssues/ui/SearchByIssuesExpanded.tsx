@@ -8,7 +8,7 @@ import ChevronUpIcon from '@atlaskit/icon/glyph/chevron-up'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { Popup, PopupProps } from '@atlaskit/popup'
 import { SearchByIssues, SearchData } from 'react-app/features/SearchByIssues'
-import { queryGetIssues } from 'react-app/entities/Issues'
+import { useIssuesGET } from 'react-app/entities/Issues'
 import EmptyState from '@atlaskit/empty-state'
 import Spinner from '@atlaskit/spinner'
 import { DropdownItem } from '@atlaskit/dropdown-menu'
@@ -77,13 +77,11 @@ const Content = (props: SearchByIssuesExpandedProps & { issueKey: Issue['key'], 
     const [jql, setJql] = useState('')
     const queryClient = useQueryClient()
 
-    const issueQuery = useInfiniteQuery(
-        queryGetIssues(() => ({
-            queryKey: ['search issues', jql],
-            jql: jql,
-            maxResults: 8,
-        }))
-    )
+    const issueQuery = useIssuesGET({
+        queryKey: ['search issues', jql],
+        jql: jql,
+        maxResults: 8,
+    })
 
     useEffect(() => {
         if (inView && !issueQuery.isFetching) {

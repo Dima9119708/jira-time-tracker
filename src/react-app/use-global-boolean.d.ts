@@ -4,6 +4,6 @@ declare module 'use-global-boolean' {
     interface ListBooleanNames {
         'user settings': string
         timesheet: string
-        'log time': string
+        'LOG_TIME_ISSUE': string
     }
 }

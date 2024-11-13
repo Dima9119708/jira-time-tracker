@@ -1,3 +1,6 @@
-import LogTimeAuto from 'react-app/widgets/LogTimeAuto/ui/LogTimeAuto'
+import LogTimeAuto from './ui/LogTimeAuto'
+import LogTimeAutoBase, { LogTimeAutoBaseProps } from './ui/LogTimeAutoBase'
 
-export { LogTimeAuto }
+export type { LogTimeAutoBaseProps }
+
+export { LogTimeAuto, LogTimeAutoBase }

@@ -772,6 +772,7 @@ const Timesheet = () => {
     const [date, setDate] = useState(() => dayjs().format(DATE_FORMAT))
 
     const { worklogs, wasMutationSuccessfulAndCacheCleared } = useWorklogCrud({
+        mutationGcTime: Infinity,
         from: dayjs(date).startOf('day'),
         to: dayjs(date).endOf('day'),
     })

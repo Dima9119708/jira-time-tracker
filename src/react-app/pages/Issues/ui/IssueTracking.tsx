@@ -1,5 +1,5 @@
-import React, { memo, useCallback, useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import React, { memo, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { onlineManager, useQueryClient } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../../../shared/lib/helpers/secondsToUIFormat'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
 import { IssueProps } from '../types/types'
@@ -10,25 +10,24 @@ import { IconButton } from '@atlaskit/button/new'
 import VidPauseIcon from '@atlaskit/icon/glyph/vid-pause'
 import { Box, Flex, xcss } from '@atlaskit/primitives'
 import SectionMessage from '@atlaskit/section-message'
-import { LogTimeButton, LogTimeDialog } from 'react-app/widgets/LogTime'
-import { WatchController } from 'use-global-boolean'
-import { ModalTransition } from '@atlaskit/modal-dialog'
-import { LogTimeAuto } from 'react-app/widgets/LogTimeAuto'
+import { LogTimeButton } from 'react-app/widgets/LogTime'
+import { LogTimeAuto, LogTimeAutoBase } from 'react-app/widgets/LogTimeAuto'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
 import { LogTimeIndicator } from 'react-app/features/LogTimeIndicator'
+import { LogTimeErrorNotification } from 'react-app/features/PersistLostTime'
 
 const IssueTracking = (props: IssueProps) => {
     const { fields, id, issueKey } = props
     const queryClient = useQueryClient()
     const [isLoading, setLoading] = useState(false)
 
-    const uniqueNameBoolean = `log time issue tracking ${id}`
-
     const queryKeys = useCallback(() => {
         return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
     }, [])
+
+    const isOnline = useSyncExternalStore(onlineManager.subscribe, () => onlineManager.isOnline())
 
     const styles = useStatusStyles(fields)
 
@@ -65,12 +64,26 @@ const IssueTracking = (props: IssueProps) => {
                     }
                 />
 
+                <LogTimeErrorNotification issueId={id} LogTimeAutoComponent={LogTimeAutoBase} />
+
+                {
+                    !isOnline && (
+                        <SectionMessage
+                            title={`Time Logging Paused Due to Internet Absence`}
+                            appearance="error"
+                        >
+                            Time logging has been paused because the internet connection is currently unavailable.
+                            Once the connection is restored, time tracking will resume automatically.
+                        </SectionMessage>
+                    )
+                }
+
                 {!isLoading && fields.status.statusCategory.key !== 'indeterminate' && (
                     <SectionMessage
-                        title={`Warning!`}
+                        title={`Incorrect Issue Status for Time Logging`}
                         appearance="warning"
                     >
-                        This task is not in the "In progress" status please change its status. However, time continues to be logged for it.
+                        This issue is not in the "In Progress" status; please change its status. Currently, time continues to be logged for it.
                     </SectionMessage>
                 )}
 
@@ -113,10 +126,7 @@ const IssueTracking = (props: IssueProps) => {
                             queryKeys={queryKeys}
                         />
 
-                        <LogTimeButton
-                            uniqueNameBoolean={uniqueNameBoolean}
-                            issueId={id}
-                        />
+                        <LogTimeButton issueId={id} />
 
                         <FavoriteIssue issueId={id} />
                     </Flex>
@@ -141,24 +151,6 @@ const IssueTracking = (props: IssueProps) => {
                     />
                 </Flex>
             </CardIssue>
-
-            <WatchController name={uniqueNameBoolean}>
-                {({ localState }) => {
-                    const [open] = localState
-
-                    return (
-                        <ModalTransition>
-                            {open && (
-                                <LogTimeDialog
-                                    uniqueNameBoolean={uniqueNameBoolean}
-                                    issueId={id}
-                                    queryKey="issues tracking"
-                                />
-                            )}
-                        </ModalTransition>
-                    )
-                }}
-            </WatchController>
 
             <Box
                 xcss={xcss({

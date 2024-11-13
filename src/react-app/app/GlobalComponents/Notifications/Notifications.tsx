@@ -35,8 +35,8 @@ const Notifications = () => {
 
                 interval = setInterval(() => {
                     ipcRenderer.send('NOTIFICATION', {
-                        title: 'The task has not been taken into work.',
-                        body: 'The application is running in the background, but no task has been taken into work.',
+                        title: 'The issue has not been taken into work.',
+                        body: 'The application is running in the background, but no issue has been taken into work.'
                     })
 
                     audio.pause()
