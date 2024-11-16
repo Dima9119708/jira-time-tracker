@@ -750,12 +750,14 @@ const RenderTableWorklogs = memo(
 )
 
 const RenderCalendar = memo(({ date, setDate }: { date: string; setDate: React.Dispatch<React.SetStateAction<string>> }) => {
+    const _date = useMemo(() => [date], [date])
+
     return (
         <Box xcss={xcss({ marginBottom: 'space.250' })}>
             <Box xcss={xcss({ display: 'flex', justifyContent: 'center', borderRadius: 'border.radius.200', width: '100%' })}>
                 <Calendar
-                    selected={[date]}
-                    previouslySelected={[date]}
+                    selected={_date}
+                    previouslySelected={_date}
                     onSelect={(newDate) => {
                         setDate(newDate ? newDate.iso : date)
                     }}

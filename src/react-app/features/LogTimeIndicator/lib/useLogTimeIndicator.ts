@@ -239,7 +239,7 @@ export const useLogTimeIndicator = ({ timespent, timeestimate, timeoriginalestim
             return {
                 timeLogged: `${secondsToUIFormat(timespent)} logged`,
                 timeRemaining: `${secondsToUIFormat(timeestimate)} remaining`,
-                timeRemainingFromOriginalEstimate: ``,
+                timeRemainingFromOriginalEstimate: `Original estimate not provided`,
                 timeLoggedWidth: `${logged}%`,
                 overEstimateWidth: `0`,
             }

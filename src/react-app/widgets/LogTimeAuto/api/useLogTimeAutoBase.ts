@@ -1,32 +1,24 @@
 import { useWorklogCrud } from 'react-app/features/WorklogCrud'
 import dayjs from 'dayjs'
-import { Issue, IssueResponse } from 'react-app/shared/types/Jira/Issues'
+import { Issue } from 'react-app/shared/types/Jira/Issues'
 import { useCallback, useState } from 'react'
-import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
+
 import { useQueryClient } from '@tanstack/react-query'
 
-export const useLogTimeAutoBase = (issueId: Issue['id']) => {
+export const useLogTimeAutoBase = (issueId: Issue['id'], invalidateQueries?: () => string[]) => {
     const [isFetching, setIsFetching] = useState(false)
 
     const queryClient = useQueryClient()
 
-    const invalidateQueries = useCallback(async () => {
-        await Promise.all([
-            queryClient.invalidateQueries({
-                queryKey: ['issues'],
-            }),
-            queryClient.invalidateQueries({
-                queryKey: ['issues tracking'],
-            }),
-            ...useGlobalState.getState().settings.favorites.map(({ name }) => {
-                return queryClient.invalidateQueries({
-                    queryKey: [`favorite group ${name}`],
-                })
-            }),
-        ])
+    const invalidateQueriesAfterSuccess = useCallback(async () => {
+        if (typeof invalidateQueries !== 'function') return setIsFetching(false)
+
+        await Promise.all(invalidateQueries().map((queryKey) => queryClient.invalidateQueries({
+            queryKey: [queryKey],
+        })))
 
         setIsFetching(false)
-    }, [])
+    }, [invalidateQueries])
 
     const { issueWorklogs, worklogPUT, worklogPOST } = useWorklogCrud({
         issueId,
@@ -37,7 +29,7 @@ export const useLogTimeAutoBase = (issueId: Issue['id']) => {
         post: {
             onMutate: () => {},
             onSuccess: () => {
-                invalidateQueries()
+                invalidateQueriesAfterSuccess()
             },
             onError: () => {
                 setIsFetching(false)
@@ -46,7 +38,7 @@ export const useLogTimeAutoBase = (issueId: Issue['id']) => {
         put: {
             onMutate: () => {},
             onSuccess: () => {
-                invalidateQueries()
+                invalidateQueriesAfterSuccess()
             },
             onError: () => {
                 setIsFetching(false)

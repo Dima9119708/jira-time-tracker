@@ -15,10 +15,10 @@ import Image from '@atlaskit/image'
 import CheckCircleIcon from '@atlaskit/icon/glyph/check-circle'
 import CrossCircleIcon from '@atlaskit/icon/glyph/cross-circle'
 import { token } from '@atlaskit/tokens'
-import { useNavigate } from 'react-router-dom'
+import { createSearchParams, useNavigate } from 'react-router-dom'
 import { electron } from 'react-app/shared/lib/electron/electron'
 import { useFilterPUT } from 'react-app/entities/Filters'
-import EditorWarningIcon from '@atlaskit/icon/glyph/editor/warning';
+import EditorWarningIcon from '@atlaskit/icon/glyph/editor/warning'
 import Tooltip from '@atlaskit/tooltip'
 
 export type FormValues = UseGlobalState['settings']
@@ -133,41 +133,76 @@ const Settings = () => {
                             control={control}
                             render={({ field }) => {
                                 return (
-                                    <Box
-                                        xcss={xcss({
-                                            marginBottom: 'space.250',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            cursor: 'pointer',
-                                        })}
-                                        onClick={() => {
-                                            if (field.value === PLUGINS.TEMPO) {
-                                                localStorage.removeItem('pluginName')
-                                                field.onChange(null)
-                                            } else {
-                                                navigate('/auth-plugin')
-                                                localStorage.setItem('pluginName', PLUGINS.TEMPO)
-                                                setFalse('user settings')
-                                            }
-                                        }}
+                                    <Flex
+                                        justifyContent="space-between"
+                                        alignItems="center"
+                                        xcss={styles.divider}
                                     >
-                                        <Image
-                                            height="20px"
-                                            src="https://www.tempo.io/images/brand/tempo-full-logo.svg"
-                                            loading="lazy"
-                                        />
+                                        <Flex
+                                            columnGap="space.100"
+                                            alignItems="center"
+                                        >
+                                            <Image
+                                                height="25px"
+                                                width="25px"
+                                                src="https://static.tempo.io/io/non-versioned/img/tempo-logo.png"
+                                                loading="lazy"
+                                            />
+                                            <Flex>
+                                                <Heading size="large">Tempo</Heading>
+
+                                                {field.value === PLUGINS.TEMPO ? (
+                                                    <CheckCircleIcon
+                                                        label="tempo"
+                                                        size="small"
+                                                        primaryColor={token('color.text.accent.green')}
+                                                    />
+                                                ) : (
+                                                    <CrossCircleIcon
+                                                        label="tempo"
+                                                        size="small"
+                                                        primaryColor={token('color.text.accent.red')}
+                                                    />
+                                                )}
+                                            </Flex>
+                                        </Flex>
+
                                         {field.value === PLUGINS.TEMPO ? (
-                                            <CheckCircleIcon
-                                                label="tempo"
-                                                primaryColor={token('color.text.accent.green')}
-                                            />
+                                            <Button
+                                                appearance="danger"
+                                                onClick={() => {
+                                                    localStorage.removeItem('pluginName')
+                                                    field.onChange(null)
+                                                }}
+                                            >
+                                                Disconnect
+                                            </Button>
                                         ) : (
-                                            <CrossCircleIcon
-                                                label="tempo"
-                                                primaryColor={token('color.text.accent.red')}
-                                            />
+                                            <Button
+                                                appearance="primary"
+                                                onClick={() => {
+                                                    navigate({
+                                                        pathname: `/auth-plugin/${PLUGINS.TEMPO}`,
+                                                    })
+                                                    setFalse('user settings')
+                                                }}
+                                            >
+                                                Connect
+                                            </Button>
                                         )}
-                                    </Box>
+
+                                        {/*{field.value === PLUGINS.TEMPO ? (*/}
+                                        {/*    <CheckCircleIcon*/}
+                                        {/*        label="tempo"*/}
+                                        {/*        primaryColor={token('color.text.accent.green')}*/}
+                                        {/*    />*/}
+                                        {/*) : (*/}
+                                        {/*    <CrossCircleIcon*/}
+                                        {/*        label="tempo"*/}
+                                        {/*        primaryColor={token('color.text.accent.red')}*/}
+                                        {/*    />*/}
+                                        {/*)}*/}
+                                    </Flex>
                                 )
                             }}
                         />
@@ -451,11 +486,17 @@ const Settings = () => {
                                     justifyContent="space-between"
                                     alignItems="center"
                                 >
-                                    <Flex columnGap="space.100" alignItems="center">
+                                    <Flex
+                                        columnGap="space.100"
+                                        alignItems="center"
+                                    >
                                         <Tooltip content="You see this field in the settings because you do not have sufficient permissions to automatically retrieve data from Jira. The administrator has not granted you access to retrieve and read this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional permissions for data access.">
                                             {(tooltipProps) => (
                                                 <div {...tooltipProps}>
-                                                    <EditorWarningIcon label="warning" primaryColor={token('color.icon.warning')} />
+                                                    <EditorWarningIcon
+                                                        label="warning"
+                                                        primaryColor={token('color.icon.warning')}
+                                                    />
                                                 </div>
                                             )}
                                         </Tooltip>
@@ -499,12 +540,18 @@ const Settings = () => {
                                     justifyContent="space-between"
                                     alignItems="center"
                                 >
-                                    <Flex columnGap="space.100" alignItems="center">
+                                    <Flex
+                                        columnGap="space.100"
+                                        alignItems="center"
+                                    >
                                         <Tooltip content="You see this field in the settings because you do not have sufficient permissions to automatically retrieve data from Jira. The administrator has not granted you access to retrieve and read this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional permissions for data access.">
                                             {(tooltipProps) => (
-                                               <div {...tooltipProps}>
-                                                   <EditorWarningIcon label="warning" primaryColor={token('color.icon.warning')} />
-                                               </div>
+                                                <div {...tooltipProps}>
+                                                    <EditorWarningIcon
+                                                        label="warning"
+                                                        primaryColor={token('color.icon.warning')}
+                                                    />
+                                                </div>
                                             )}
                                         </Tooltip>
 

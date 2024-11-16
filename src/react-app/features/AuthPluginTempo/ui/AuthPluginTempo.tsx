@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
@@ -16,6 +16,8 @@ import { Label } from '@atlaskit/form'
 import Textfield from '@atlaskit/textfield'
 import Button from '@atlaskit/button/new'
 import { useFilterPUT } from 'react-app/entities/Filters'
+import SectionMessage from '@atlaskit/section-message'
+import Heading from '@atlaskit/heading'
 
 interface AuthTempoForm {
     client_id: string
@@ -29,6 +31,8 @@ export const AuthPluginTempo = () => {
     const notify = useNotifications()
     const [loading, setLoading] = useState(false)
     const [typeAuth, setTypeAuth] = useState<'Api Integration' | 'OAuth2'>('Api Integration')
+
+    const [searchParams] = useSearchParams()
 
     const { handleSubmit, control, getValues } = useForm<AuthTempoForm>({
         defaultValues: async () => {
@@ -135,11 +139,12 @@ export const AuthPluginTempo = () => {
             const tempoURL = new URL(`${authData.jiraSubDomain}/plugins/servlet/ac/io.tempo.jira/oauth-authorize/`)
 
             tempoURL.searchParams.set('client_id', data.client_id)
-            tempoURL.searchParams.set('redirect_uri', '')
+            tempoURL.searchParams.set('redirect_uri', data.redirect_uri)
 
             if (authData.jiraSubDomain) {
                 methods.ipcRenderer.send('OPEN_OAuth2Plugin', {
                     url: tempoURL.toString(),
+                    redirect_uri: data.redirect_uri
                 })
             }
         })
@@ -153,13 +158,28 @@ export const AuthPluginTempo = () => {
 
             <Flex
                 justifyContent="center"
+                alignItems="center"
+                columnGap="space.100"
                 xcss={xcss({ marginBottom: 'space.200' })}
             >
                 <Image
-                    height="20px"
-                    src="https://www.tempo.io/images/brand/tempo-full-logo.svg"
+                    height="35px"
+                    width="35px"
+                    src="https://static.tempo.io/io/non-versioned/img/tempo-logo.png"
+                    loading="lazy"
                 />
+                <Heading size="xxlarge">Tempo</Heading>
             </Flex>
+
+            {
+                searchParams.has('isUnauthorizedPlugin') && (
+                    <SectionMessage title="Plugin Disconnected" appearance="error">
+                        The plugin has been disconnected from the application due to errors. Please log in to the plugin again to restore functionality.
+                    </SectionMessage>
+                )
+            }
+
+            <Box xcss={xcss({ marginBottom: 'space.200' })} />
 
             <Flex justifyContent="end">
                 <Radio

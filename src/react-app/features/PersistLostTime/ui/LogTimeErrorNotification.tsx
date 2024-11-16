@@ -4,19 +4,18 @@ import { secondsToUIFormat } from 'react-app/shared/lib/helpers/secondsToUIForma
 import { globalBooleanActions } from 'use-global-boolean'
 import { usePersistLostTime } from '../model/usePersistLostTime'
 import { ConfirmDelete } from 'react-app/shared/components/ConfirmDelete'
-import { memo, useState } from 'react'
+import React, { FC, memo, useState } from 'react'
 import { useMidnightCountdown } from 'react-app/shared/lib/hooks/useMidnightCountdown'
 import { LogTimeAutoBaseProps } from 'react-app/widgets/LogTimeAuto'
 import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu'
-import { LogTimeAutoBase } from 'react-app/widgets/LogTimeAuto'
 import Spinner from '@atlaskit/spinner'
 
-interface LogTimeErrorNotificationProps {
+interface LogTimeErrorNotificationProps extends Pick<LogTimeAutoBaseProps, 'invalidateQueries'> {
     issueId: Issue['id']
     isLogTimeAction?: boolean
     isAddToTimeSpentAction?: boolean
     onAddToTimeSpent?: (timeSpentSeconds: number) => void
-    LogTimeAutoComponent?: typeof LogTimeAutoBase
+    LogTimeAutoComponent?: FC<LogTimeAutoBaseProps>
 }
 
 interface RenderMessageProps extends LogTimeErrorNotificationProps {
@@ -26,7 +25,7 @@ interface RenderMessageProps extends LogTimeErrorNotificationProps {
 }
 
 const RenderMessage = (props: RenderMessageProps) => {
-    const { issueId, isAddToTimeSpentAction, isLogTimeAction, timeSpentSeconds, onAddToTimeSpent, remove, clear, LogTimeAutoComponent } =
+    const { issueId, isAddToTimeSpentAction, isLogTimeAction, timeSpentSeconds, onAddToTimeSpent, remove, clear, LogTimeAutoComponent, invalidateQueries } =
         props
     const [isAddToTimeSpent, setIsAddToTimeSpent] = useState(false)
     const [isOpenDropdown, setOpenDropdown] = useState(false)
@@ -98,6 +97,7 @@ const RenderMessage = (props: RenderMessageProps) => {
 
                         <LogTimeAutoComponent
                             issueId={issueId}
+                            invalidateQueries={invalidateQueries}
                             onSuccess={() => remove(issueId)}
                         >
                             {({ onLogTime, isLoading }) => (
@@ -124,7 +124,7 @@ const RenderMessage = (props: RenderMessageProps) => {
 }
 
 const LogTimeErrorNotification = (props: LogTimeErrorNotificationProps) => {
-    const { issueId, isLogTimeAction = true } = props
+    const { issueId, isLogTimeAction = true, invalidateQueries } = props
 
     const { lostTime, remove, clear } = usePersistLostTime(issueId)
 
@@ -134,6 +134,7 @@ const LogTimeErrorNotification = (props: LogTimeErrorNotificationProps) => {
                 {...props}
                 remove={remove}
                 clear={clear}
+                invalidateQueries={invalidateQueries}
                 isLogTimeAction={isLogTimeAction}
                 timeSpentSeconds={lostTime.timeSpentSeconds}
             />

@@ -2,7 +2,7 @@ import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { PLUGINS, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useEffect, useRef } from 'react'
 import { useBooleanController } from 'use-global-boolean'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { createSearchParams, useLocation, useNavigate } from 'react-router-dom'
 
 const UnauthorizedPluginHandler = () => {
     const notify = useNotifications()
@@ -25,9 +25,12 @@ const UnauthorizedPluginHandler = () => {
                         title: `The ${PLUGINS.TEMPO} plugin has been disconnected from the application.`,
                     })
 
-                    navigate('/auth-plugin')
-
-                    localStorage.setItem('pluginName', PLUGINS.TEMPO)
+                    navigate({
+                        pathname: `/auth-plugin/${PLUGINS.TEMPO}`,
+                        search: createSearchParams({
+                            isUnauthorizedPlugin: 'true',
+                        }).toString()
+                    })
 
                     break
                 }

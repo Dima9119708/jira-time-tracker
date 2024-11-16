@@ -136,3 +136,4 @@ dist
 .pnp.*
 /storybook-static/
 !/src/react-app/widgets/FavoriteList/ui/FavoriteList.tsx
+!/src/react-app/pages/Issues/ui/Issue.tsx

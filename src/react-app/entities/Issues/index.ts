@@ -5,5 +5,7 @@ import StatusesByIssueDropdown from 'react-app/entities/Issues/ui/StatusesByIssu
 import { useStatusStyles } from 'react-app/entities/Issues/lib/useStatusStyles'
 import { useIssuesTrackingGET } from 'react-app/entities/Issues/api/useIssuesTrackingGET'
 import { useIssuesGET } from 'react-app/entities/Issues/api/useIssuesGET'
+import IssueActivityFeedUIButtons from 'react-app/entities/Issues/ui/IssueActivityFeedUIButtons'
+import { RelatedIssuesRoot, RelatedIssuesWrap, RelatedIssuesNestedWrap } from 'react-app/entities/Issues/ui/RelatedIssues'
 
-export { useIssuesTrackingGET, useIssuesGET, useStatusStyles, CardIssue, CardIssueHeader, CardIssueDetailsBadges, StatusesByIssueDropdown }
+export { useIssuesTrackingGET, useIssuesGET, useStatusStyles, CardIssue, CardIssueHeader, RelatedIssuesNestedWrap, CardIssueDetailsBadges, RelatedIssuesRoot, RelatedIssuesWrap, StatusesByIssueDropdown, IssueActivityFeedUIButtons }

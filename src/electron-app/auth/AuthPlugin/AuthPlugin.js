@@ -18,7 +18,7 @@ const AuthWindowPlugin = (mainWindow) => {
         )
     })
 
-    ipcMain.on('OPEN_OAuth2Plugin', (event, { url }) => {
+    ipcMain.on('OPEN_OAuth2Plugin', (event, { url, redirect_url }) => {
         const oAuthWindow = new BrowserWindow({
             width: 1200,
             height: 800,

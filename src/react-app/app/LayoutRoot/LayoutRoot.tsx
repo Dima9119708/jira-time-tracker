@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import React, { lazy, Suspense, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
 import { Logo } from '../../shared/components/Logo'
@@ -9,17 +9,21 @@ import AutoStart from '../GlobalComponents/AutoStart/AutoStart'
 import { electron } from '../../shared/lib/electron/electron'
 import { Box, Flex, xcss } from '@atlaskit/primitives'
 import SettingsIcon from '@atlaskit/icon/glyph/settings'
-import { IconButton } from '@atlaskit/button/new'
+import Button, { IconButton } from '@atlaskit/button/new'
 import SignOutIcon from '@atlaskit/icon/glyph/sign-out'
 import { TOP_PANEL_HEIGHT } from 'react-app/widgets/TopPanel/ui/TopPanel'
 import { useBooleanController, WatchController } from 'use-global-boolean'
 import { ModalTransition } from '@atlaskit/modal-dialog'
 import RecentIcon from '@atlaskit/icon/glyph/recent'
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
+import CalendarIcon from '@atlaskit/icon/glyph/calendar';
 import UnauthorizedPluginHandler from '../GlobalComponents/UnauthorizedPluginHandler/UnauthorizedPluginHandler'
 import { token } from '@atlaskit/tokens'
 import { useQueryClient } from '@tanstack/react-query'
 import { MySelf } from 'react-app/shared/types/Jira/MySelf'
 import Image from '@atlaskit/image'
+import Tooltip from '@atlaskit/tooltip'
+import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 
 const Settings = lazy(() => import('../../widgets/Settings/ui/Settings'))
 const Timesheet = lazy(() => import('../../widgets/Timesheet'))
@@ -55,6 +59,7 @@ const LayoutRoot = () => {
     const navigate = useNavigate()
     const [isUnauthorized, { toggle }] = useBooleanController('UNAUTHORIZED')
     const queryClient = useQueryClient()
+    const notify = useNotifications()
 
     const myself = queryClient.getQueryData<MySelf>(['myself'])
     const avatarUrl = myself?.avatarUrls?.['16x16'] ?? ''
@@ -92,16 +97,44 @@ const LayoutRoot = () => {
 
                     <Flex columnGap="space.100">
                         <Flex alignItems="center">
-                            <Image src={avatarUrl} height="25px" width="25px" />
+                            <Tooltip content={myself?.displayName || ''}>
+                                {(tooltipProps) => (
+                                    <div  {...tooltipProps}>
+                                        <Flex alignItems="center" >
+                                            <Image src={avatarUrl} height="25px" width="25px" />
+                                        </Flex>
+                                    </div>
+
+                                )}
+                            </Tooltip>
                         </Flex>
 
+                        <IconButton
+                            icon={RefreshIcon}
+                            label="refresh"
+                            isTooltipDisabled={false}
+                            tooltip={{
+                                content: 'Refresh',
+                            }}
+                            onClick={async () => {
+                               const dismissFn = notify.loading({
+                                    title: 'Refreshing',
+                               })
+                               await queryClient.invalidateQueries()
+                                dismissFn()
+                            }}
+                        />
 
                         <WatchController>
                             {({ globalMethods }) => {
                                 return (
                                     <IconButton
-                                        icon={RecentIcon}
+                                        icon={CalendarIcon}
                                         label="timesheet"
+                                        isTooltipDisabled={false}
+                                        tooltip={{
+                                            content: 'Timesheet',
+                                        }}
                                         onClick={() => globalMethods.setTrue('timesheet')}
                                     />
                                 )
@@ -113,6 +146,10 @@ const LayoutRoot = () => {
                                     <IconButton
                                         icon={SettingsIcon}
                                         label="Settings"
+                                        isTooltipDisabled={false}
+                                        tooltip={{
+                                            content: 'Settings',
+                                        }}
                                         onClick={() => globalMethods.setTrue('user settings')}
                                     />
                                 )
@@ -123,6 +160,10 @@ const LayoutRoot = () => {
                             icon={SignOutIcon}
                             label="Sign out"
                             onClick={onLogout}
+                            isTooltipDisabled={false}
+                            tooltip={{
+                                content: 'Log out of your account'
+                            }}
                         />
                     </Flex>
                 </Flex>

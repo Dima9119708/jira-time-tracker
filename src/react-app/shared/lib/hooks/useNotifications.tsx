@@ -36,7 +36,7 @@ export const useNotifications = () => {
             ...args,
             title: args?.title || 'Error',
             description: args?.description,
-            icon: <ErrorIcon label="error" />,
+            icon: <ErrorIcon label="error" secondaryColor={token('color.background.danger.bold')}  />,
             appearance: 'error',
             isAutoDismiss: true,
         })

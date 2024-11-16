@@ -4,6 +4,7 @@ import Image from '@atlaskit/image'
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from 'react-app/shared/const'
 import React, { memo, useMemo } from 'react'
+import Tooltip from '@atlaskit/tooltip'
 
 interface CardDetailsBadgesProps {
     avatarUrl: string
@@ -28,7 +29,15 @@ const styles = {
 const CardDetailsBadges = (props: CardDetailsBadgesProps) => {
     const { priorityIconUrl, issueKey, priorityName, projectName, avatarUrl, issueTypeIconUrl, issueTypeName, created } = props
 
-    const dateFormat = useMemo(() => dayjs(created).format(`${DATE_FORMAT} HH:mm:ss`), [created])
+    const dateFormat = useMemo(() => {
+        const relativeTimeString = dayjs(created).fromNow();
+        const exactDate = dayjs(created).format('YYYY-MM-DD HH:mm:ss');
+
+        return {
+            relativeTimeString,
+            exactDate
+        }
+    }, [created])
 
     return (
         <Flex
@@ -85,14 +94,15 @@ const CardDetailsBadges = (props: CardDetailsBadgesProps) => {
             </Badge>
 
             <Badge appearance="default">
-                <Flex xcss={styles.badgeInner}>
-                    <Text
-                        weight="bold"
-                        size="small"
-                    >
-                        created: {dateFormat}
-                    </Text>
-                </Flex>
+                <Tooltip content={dateFormat.exactDate}>
+                        <Text
+                            weight="bold"
+                            size="small"
+                        >
+                            CREATED: {dateFormat.relativeTimeString}
+                        </Text>
+                </Tooltip>
+
             </Badge>
         </Flex>
     )

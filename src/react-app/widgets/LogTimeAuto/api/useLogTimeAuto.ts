@@ -21,8 +21,6 @@ export const useLogTimeAuto = (issueId: string) => {
 
     const { add } = usePersistLostTime(issueId)
 
-    const notify = useNotifications()
-
     const isOnline = useSyncExternalStore(
         (onStoreChange) => onlineManager.subscribe(onStoreChange),
         () => onlineManager.isOnline()
@@ -39,6 +37,7 @@ export const useLogTimeAuto = (issueId: string) => {
     const onMutateQuery = useCallback(
         (variables: CreateIssueWorklog) => {
             const oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]> = []
+
 
             for (const queryKey of queryKeys()) {
                 const oldState = queryClient.getQueryData<IssueResponse['issues']>([queryKey])
@@ -81,11 +80,6 @@ export const useLogTimeAuto = (issueId: string) => {
                     })
                 }
             }
-
-            notify.error({
-                title: `Error worklog issue`,
-                description: JSON.stringify(error.response?.data),
-            })
         },
         []
     )
@@ -107,37 +101,44 @@ export const useLogTimeAuto = (issueId: string) => {
         },
     })
 
-    const intervalTriggerCallback = useCallback(() => {
-        add(settingTimeSecond)
+    useEffect(() => {
+        if (worklogPUT.error !== null || worklogPOST.error !== null) {
+            add(settingTimeSecond)
+        }
+    }, [worklogPUT.error, worklogPOST.error, settingTimeSecond])
 
-        // issueWorklogs
-        //     .refetch()
-        //     .then((worklogs) => {
-        //         if (worklogs.data && worklogs.data.length > 0) {
-        //             const worklog = worklogs?.data[0]
-        //             const worklogSecond = worklog.timeSpentSeconds
-        //
-        //             const timeSpentSeconds = worklogSecond + settingTimeSecond
-        //
-        //             worklogPUT.mutate({
-        //                 issueId: issueId,
-        //                 id: worklog.id,
-        //                 startDate: worklog.date,
-        //                 timeSpentSeconds,
-        //                 timeSpent: '',
-        //                 description: worklog.description,
-        //             })
-        //         } else {
-        //             const timeSpentSeconds = settingTimeSecond
-        //
-        //             worklogPOST.mutate({
-        //                 issueId: issueId,
-        //                 timeSpentSeconds,
-        //                 timeSpent: '',
-        //             })
-        //         }
-        //     })
-        //     .catch(() => {})
+    const intervalTriggerCallback = useCallback(async () => {
+       await issueWorklogs
+            .refetch()
+            .then((worklogs) => {
+                console.log('worklogs =>', worklogs)
+                if (worklogs.error !== null) return add(settingTimeSecond)
+
+                if (worklogs.data && worklogs.data.length > 0) {
+                    const worklog = worklogs?.data[0]
+                    const worklogSecond = worklog.timeSpentSeconds
+
+                    const timeSpentSeconds = worklogSecond + settingTimeSecond
+
+                    worklogPUT.mutate({
+                        issueId: issueId,
+                        id: worklog.id,
+                        startDate: worklog.date,
+                        timeSpentSeconds,
+                        timeSpent: '',
+                        description: worklog.description,
+                    })
+                } else {
+                    const timeSpentSeconds = settingTimeSecond
+
+                    worklogPOST.mutate({
+                        issueId: issueId,
+                        timeSpentSeconds,
+                        timeSpent: '',
+                    })
+                }
+            })
+            .catch(() => {})
     }, [settingTimeSecond])
 
     useEffect(() => {

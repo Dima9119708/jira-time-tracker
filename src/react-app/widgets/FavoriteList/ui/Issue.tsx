@@ -23,7 +23,7 @@ const Issue = (props: FavoriteIssueProps) => {
     const queryClient = useQueryClient()
     const isTrackingIssue = useGlobalState((state) => state.issueIdsSearchParams.currentParams.includes(id))
 
-    const queryKeys = useCallback(() => {
+    const invalidateQueries = useCallback(() => {
         return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
     }, [queryKey])
 
@@ -63,8 +63,9 @@ const Issue = (props: FavoriteIssueProps) => {
         <CardIssue active={false}>
             <CardIssueHeader
                 summary={fields.summary}
-                timeoriginalestimate={secondsToUIFormat(fields.timeoriginalestimate)}
-                timespent={secondsToUIFormat(fields.timespent)}
+                timeoriginalestimate={fields.timeoriginalestimate}
+                timespent={fields.timespent}
+                duedate={fields.duedate}
             />
 
             <CardIssueDetailsBadges
@@ -80,14 +81,15 @@ const Issue = (props: FavoriteIssueProps) => {
 
             <Flex
                 justifyContent="space-between"
-                columnGap="space.100"
+                gap="space.100"
+                wrap="wrap"
             >
-                <Flex columnGap="space.200">
+                <Flex gap="space.100" wrap="wrap">
                     <ChangeStatusIssue
                         issueId={id}
                         issueName={fields.summary}
                         status={fields.status}
-                        queryKeys={queryKeys}
+                        queryKeys={invalidateQueries}
                         trigger={fields.status.name}
                         xcss={styles.STATUTES_DROPDOWN_BUTTON}
                     />
@@ -96,7 +98,7 @@ const Issue = (props: FavoriteIssueProps) => {
                         assignee={fields.assignee}
                         issueName={fields.summary}
                         issueKey={issueKey}
-                        queryKeys={queryKeys}
+                        queryKeys={invalidateQueries}
                     />
 
                     <LogTimeButton
@@ -115,10 +117,9 @@ const Issue = (props: FavoriteIssueProps) => {
                     issueId={id}
                     issueName={fields.summary}
                     status={fields.status}
-                    queryKeys={queryKeys}
+                    queryKeys={invalidateQueries}
                     position="left"
                     onMutate={() => onPlayTracking()}
-                    disabled={fields.status.statusCategory.key === 'indeterminate'}
                     trigger={(triggerButtonProps) => (
                         <IconButton
                             {...triggerButtonProps}
@@ -126,7 +127,6 @@ const Issue = (props: FavoriteIssueProps) => {
                             icon={VidPlayIcon}
                             label="Play"
                             isDisabled={isTrackingIssue}
-                            {...(fields.status.statusCategory.key === 'indeterminate' && { onClick: onPlayTracking })}
                         />
                     )}
                 />

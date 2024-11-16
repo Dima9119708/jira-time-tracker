@@ -1,8 +1,9 @@
 import { StatusesByIssueDropdownProps } from 'react-app/entities/Issues/types/types'
+import { Transition } from 'react-app/shared/types/Jira/Issues'
 
-export interface ChangeStatusTaskProps extends Omit<StatusesByIssueDropdownProps, 'onChange'> {
+export interface ChangeStatusTaskProps extends Omit<StatusesByIssueDropdownProps, 'onChange' | 'isPending'> {
     queryKeys: () => string[]
-    onMutate?: () => void
+    onMutate?: (transition: Transition) => void
     onSuccess?: () => void
     issueName: string
 }

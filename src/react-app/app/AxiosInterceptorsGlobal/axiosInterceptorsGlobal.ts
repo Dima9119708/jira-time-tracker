@@ -43,5 +43,9 @@ axiosInstancePlugin.interceptors.response.use(undefined, async function (error) 
         }
     }
 
+    if (error.response.status === 401 && originalRequest._retry) {
+        globalBooleanActions.setTrue('UNAUTHORIZED PLUGIN')
+    }
+
     return Promise.reject(error)
 })

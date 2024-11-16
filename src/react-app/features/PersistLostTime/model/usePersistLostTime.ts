@@ -2,7 +2,7 @@ import { Issue } from 'react-app/shared/types/Jira/Issues'
 import { Worklog } from 'react-app/shared/types/Jira/Worklogs'
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from 'react-app/shared/const'
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
 interface PersistLostTimeItem {
     issueId: Issue['id']
@@ -47,7 +47,7 @@ export const usePersistLostTime = (issueId: Issue['id']) => {
         }
     }, [issueId])
 
-    useEffect(() => {
+    const initialize = useCallback(() => {
         clear()
 
         const parsedIssuesLostTime = readFromLocalStorage()
@@ -60,7 +60,9 @@ export const usePersistLostTime = (issueId: Issue['id']) => {
                 lostTimeMap.set(issueId, null)
             }
         }
-    }, [issueId])
+    }, [clear])
+
+    useLayoutEffect(initialize, [issueId, initialize])
 
     const remove = useCallback(
         (_issueId: Issue['id']) => {
@@ -147,6 +149,7 @@ export const usePersistLostTime = (issueId: Issue['id']) => {
 
             const onStorage = (ev: StorageEvent) => {
                 if (ev.key === LS_KEY) {
+                    initialize()
                     listeners.get(issueId)?.forEach((listener) => listener())
                 }
             }

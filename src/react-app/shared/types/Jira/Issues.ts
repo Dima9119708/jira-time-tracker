@@ -18,6 +18,21 @@ export interface Issue {
     fields: IssueFields
 }
 
+export interface IssueLink {
+    id: string;
+    self: string;
+    type: {
+        id: string;
+        name: string;
+        inward: string;
+        outward: string;
+        self: string;
+    };
+    inwardIssue?: Issue
+    outwardIssue?: Issue
+}
+
+
 export interface IssueFields {
     statuscategorychangedate: string
     issuetype: IssueType
@@ -36,7 +51,7 @@ export interface IssueFields {
     timeestimate: number | null
     timespent: number | null
     versions: any[]
-    issuelinks: any[]
+    issuelinks: IssueLink[]
     assignee: Assignee | null
     updated: string
     status: Status
@@ -47,11 +62,11 @@ export interface IssueFields {
     aggregatetimeestimate: number
     summary: string
     creator: User
-    subtasks: any[]
+    subtasks: Issue[]
     reporter: User
     aggregateprogress: Progress
     environment: any
-    duedate: any
+    duedate: string | null
     progress: Progress
     votes: Votes
     worklog: WorklogResponse

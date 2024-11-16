@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react'
+import React, { lazy, memo, useCallback, useMemo } from 'react'
 import { useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { secondsToUIFormat } from '../../../shared/lib/helpers/secondsToUIFormat'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
@@ -7,25 +7,21 @@ import { IssueProps } from '../types/types'
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
-import { Box, Flex, xcss } from '@atlaskit/primitives'
+import { Flex } from '@atlaskit/primitives'
 import { IconButton } from '@atlaskit/button/new'
 import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
-import { LogTimeButton, LogTimeDialog } from 'react-app/widgets/LogTime'
-import { WatchController } from 'use-global-boolean'
-import { ModalTransition } from '@atlaskit/modal-dialog'
-import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'
+import { LogTimeButton } from 'react-app/widgets/LogTime'
+import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles, IssueActivityFeedUIButtons } from 'react-app/entities/Issues'
 import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
-import { Worklog } from 'react-app/shared/types/Jira/Worklogs'
 import { LogTimeErrorNotification } from 'react-app/features/PersistLostTime'
 import { LogTimeAutoBase } from 'react-app/widgets/LogTimeAuto'
+import { ChildIssues, isInwardIssue, LinkedIssues } from 'react-app/widgets/RelatedIssues'
 
 const Issue = (props: IssueProps) => {
     const { fields, id, issueKey } = props
     const queryClient = useQueryClient()
 
-    const uniqueNameBoolean = `log time issue ${id}`
-
-    const queryKeys = useCallback(() => {
+    const invalidateQueries = useCallback(() => {
         return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues']
     }, [])
 
@@ -86,11 +82,16 @@ const Issue = (props: IssueProps) => {
         <CardIssue active={false}>
             <CardIssueHeader
                 summary={fields.summary}
-                timeoriginalestimate={secondsToUIFormat(fields.timeoriginalestimate)}
-                timespent={secondsToUIFormat(fields.timespent)}
+                timeoriginalestimate={fields.timeoriginalestimate}
+                timespent={fields.timespent}
+                duedate={fields.duedate}
             />
 
-            <LogTimeErrorNotification issueId={id} LogTimeAutoComponent={LogTimeAutoBase} />
+            <LogTimeErrorNotification
+                issueId={id}
+                LogTimeAutoComponent={LogTimeAutoBase}
+                invalidateQueries={invalidateQueries}
+            />
 
             <CardIssueDetailsBadges
                 issueKey={issueKey}
@@ -105,14 +106,18 @@ const Issue = (props: IssueProps) => {
 
             <Flex
                 justifyContent="space-between"
-                columnGap="space.100"
+                gap="space.100"
+                wrap="wrap"
             >
-                <Flex columnGap="space.200">
+                <Flex
+                    gap="space.100"
+                    wrap="wrap"
+                >
                     <ChangeStatusIssue
                         issueId={id}
                         issueName={fields.summary}
                         status={fields.status}
-                        queryKeys={queryKeys}
+                        queryKeys={invalidateQueries}
                         trigger={fields.status.name}
                         xcss={styles.STATUTES_DROPDOWN_BUTTON}
                         onSuccess={onSuccessStatusChange}
@@ -122,7 +127,7 @@ const Issue = (props: IssueProps) => {
                         assignee={fields.assignee}
                         issueName={fields.summary}
                         issueKey={issueKey}
-                        queryKeys={queryKeys}
+                        queryKeys={invalidateQueries}
                         onSuccess={onSuccessAssigneeChange}
                     />
 
@@ -135,23 +140,39 @@ const Issue = (props: IssueProps) => {
                     issueId={id}
                     issueName={fields.summary}
                     status={fields.status}
-                    queryKeys={queryKeys}
+                    queryKeys={invalidateQueries}
                     position="left"
-                    onMutate={() => onPlayTracking()}
-                    disabled={fields.status.statusCategory.key === 'indeterminate'}
+                    onMutate={onPlayTracking}
+                    disabled={false}
                     trigger={(triggerButtonProps) => (
                         <IconButton
                             {...triggerButtonProps}
                             ref={triggerButtonProps.triggerRef}
                             icon={VidPlayIcon}
                             label="Play"
-                            {...(fields.status.statusCategory.key === 'indeterminate' && { onClick: onPlayTracking })}
                         />
                     )}
                 />
             </Flex>
 
+            <IssueActivityFeedUIButtons
+                isShowLinkedIssues={fields.issuelinks.length > 0}
+                isShowChildIssues={fields.subtasks.length > 0}
+                countChildIssues={fields.subtasks.length}
+                countLinkedIssues={fields.issuelinks.length}
+            >
+                {({ activityFeed }) => {
+                    if (activityFeed === 'Linked issues') {
+                        return <LinkedIssues issueId={id} />
+                    }
 
+                    if (activityFeed === 'Child issues') {
+                        return <ChildIssues issueId={id} />
+                    }
+
+                    return null
+                }}
+            </IssueActivityFeedUIButtons>
         </CardIssue>
     )
 }

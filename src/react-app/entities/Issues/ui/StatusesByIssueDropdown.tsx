@@ -7,7 +7,7 @@ import { token } from '@atlaskit/tokens'
 import { useStatutesByIssueGET } from 'react-app/entities/Issues/api/useStatutesByIssueGET'
 
 const StatusesByIssueDropdown = (props: StatusesByIssueDropdownProps) => {
-    const { issueId, onChange, trigger, status, position = 'bottom-start', disabled, xcss } = props
+    const { issueId, onChange, trigger, status, position = 'bottom-start', disabled, xcss, isPending } = props
     const [open, setOpen] = useState(false)
 
     const { data, isLoading } = useStatutesByIssueGET({
@@ -22,7 +22,7 @@ const StatusesByIssueDropdown = (props: StatusesByIssueDropdownProps) => {
                 isOpen={disabled === true ? false : open}
                 onOpenChange={() => setOpen(!open)}
                 placement={position}
-                trigger={trigger}
+                trigger={typeof trigger === 'string' ? trigger : (triggerButtonProps) => trigger(triggerButtonProps, isPending)}
             >
                 <DropdownItemGroup>
                     {!isLoading &&

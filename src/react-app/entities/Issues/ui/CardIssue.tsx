@@ -10,14 +10,12 @@ interface CardIssueProps {
 
 const BORDER_COLORS: (keyof typeof tokensMap['borderColor'])[] = [
     'color.border.accent.lime',
-    'color.border.accent.red',
     'color.border.accent.orange',
     'color.border.accent.yellow',
     'color.border.accent.green',
     'color.border.accent.teal',
     'color.border.accent.blue',
     'color.border.accent.purple',
-    'color.border.accent.magenta',
 ]
 
 const styles = {

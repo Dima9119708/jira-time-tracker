@@ -31,7 +31,7 @@ const Timer = (props: TimerProps, ref: Ref<TimerRef>) => {
             if (control.current.pause) return
 
             setDate((prevDate) => prevDate.add(1, 'second'))
-        }, 50)
+        }, 1000)
 
         return () => clearInterval(intervalId)
     }, [])
@@ -51,7 +51,7 @@ const Timer = (props: TimerProps, ref: Ref<TimerRef>) => {
                     nextTriggerTime += seconds
                     fn()
                 }
-            }, 50)
+            }, 1000)
 
             return () => {
                 setDate(dayjs().startOf('day'))

@@ -59,6 +59,9 @@ const Notifications = () => {
     }, [])
 
     useEffect(() => {
+
+        console.log('CLEAR => isUnauthorizedPlugin', isUnauthorizedPlugin)
+
         if (isUnauthorizedPlugin) {
             let interval: NodeJS.Timeout
 
@@ -69,9 +72,9 @@ const Notifications = () => {
 
                 if (isFocused) return
 
-                const pluginLogoutAlertsEnabled = !useGlobalState.getState().settings.pluginLogoutAlerts.enabled
+                const pluginLogoutAlertsEnabled = useGlobalState.getState().settings.pluginLogoutAlerts.enabled
 
-                if (pluginLogoutAlertsEnabled) {
+                if (!pluginLogoutAlertsEnabled) {
                     clearInterval(interval)
                     return
                 }
@@ -81,6 +84,7 @@ const Notifications = () => {
 
                     if (isFocused) {
                         clearInterval(interval)
+                        return
                     }
 
                     ipcRenderer.send('NOTIFICATION', {
@@ -97,12 +101,9 @@ const Notifications = () => {
                 sendNotify()
 
                 interval = setInterval(sendNotify, useGlobalState.getState().settings.pluginLogoutAlerts.millisecond)
-
-                return () => {
-                    clearInterval(interval)
-                }
             })
         }
+
     }, [isUnauthorizedPlugin])
 
     return null

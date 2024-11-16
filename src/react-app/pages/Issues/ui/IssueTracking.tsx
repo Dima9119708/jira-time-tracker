@@ -12,18 +12,25 @@ import { Box, Flex, xcss } from '@atlaskit/primitives'
 import SectionMessage from '@atlaskit/section-message'
 import { LogTimeButton } from 'react-app/widgets/LogTime'
 import { LogTimeAuto, LogTimeAutoBase } from 'react-app/widgets/LogTimeAuto'
-import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles } from 'react-app/entities/Issues'
+import {
+    CardIssueDetailsBadges,
+    CardIssueHeader,
+    CardIssue,
+    useStatusStyles,
+    IssueActivityFeedUIButtons,
+} from 'react-app/entities/Issues'
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
 import { LogTimeIndicator } from 'react-app/features/LogTimeIndicator'
 import { LogTimeErrorNotification } from 'react-app/features/PersistLostTime'
+import { ChildIssues, isInwardIssue, LinkedIssues } from 'react-app/widgets/RelatedIssues'
 
 const IssueTracking = (props: IssueProps) => {
     const { fields, id, issueKey } = props
     const queryClient = useQueryClient()
     const [isLoading, setLoading] = useState(false)
 
-    const queryKeys = useCallback(() => {
+    const invalidateQueries = useCallback(() => {
         return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
     }, [])
 
@@ -36,7 +43,7 @@ const IssueTracking = (props: IssueProps) => {
 
         await useGlobalState.getState().changeIssueIdsSearchParams('delete', id)
 
-        await queryClient.invalidateQueries({ queryKey: ['issues'] })
+        await queryClient.invalidateQueries()
 
         queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
             return produce(old, (draft) => {
@@ -64,7 +71,7 @@ const IssueTracking = (props: IssueProps) => {
                     }
                 />
 
-                <LogTimeErrorNotification issueId={id} LogTimeAutoComponent={LogTimeAutoBase} />
+                <LogTimeErrorNotification issueId={id} LogTimeAutoComponent={LogTimeAutoBase} invalidateQueries={invalidateQueries} />
 
                 {
                     !isOnline && (
@@ -89,8 +96,9 @@ const IssueTracking = (props: IssueProps) => {
 
                 <CardIssueHeader
                     summary={fields.summary}
-                    timeoriginalestimate={secondsToUIFormat(fields.timeoriginalestimate)}
-                    timespent={secondsToUIFormat(fields.timespent)}
+                    timeoriginalestimate={fields.timeoriginalestimate}
+                    timespent={fields.timespent}
+                    duedate={fields.duedate}
                 />
 
                 <CardIssueDetailsBadges
@@ -107,14 +115,15 @@ const IssueTracking = (props: IssueProps) => {
                 <Flex
                     justifyContent="space-between"
                     alignItems="center"
-                    columnGap="space.100"
+                    gap="space.100"
+                    wrap="wrap"
                 >
-                    <Flex columnGap="space.200">
+                    <Flex gap="space.100" wrap="wrap">
                         <ChangeStatusIssue
                             issueId={id}
                             issueName={fields.summary}
                             status={fields.status}
-                            queryKeys={queryKeys}
+                            queryKeys={invalidateQueries}
                             trigger={fields.status.name}
                             xcss={styles.STATUTES_DROPDOWN_BUTTON}
                         />
@@ -123,7 +132,7 @@ const IssueTracking = (props: IssueProps) => {
                             assignee={fields.assignee}
                             issueName={fields.summary}
                             issueKey={issueKey}
-                            queryKeys={queryKeys}
+                            queryKeys={invalidateQueries}
                         />
 
                         <LogTimeButton issueId={id} />
@@ -135,21 +144,38 @@ const IssueTracking = (props: IssueProps) => {
                         issueId={id}
                         issueName={fields.summary}
                         status={fields.status}
-                        queryKeys={queryKeys}
-                        onMutate={onStopTracking}
-                        disabled={fields.status.statusCategory.key === 'done'}
-                        trigger={(triggerButtonProps) => (
+                        queryKeys={() => []}
+                        onSuccess={onStopTracking}
+                        trigger={(triggerButtonProps, isPending) => (
                             <IconButton
                                 {...triggerButtonProps}
                                 ref={triggerButtonProps.triggerRef}
-                                isLoading={isLoading}
+                                isLoading={isLoading || isPending}
                                 icon={VidPauseIcon}
                                 label="Stop tracking"
-                                {...(fields.status.statusCategory.key === 'done' && { onClick: onStopTracking })}
                             />
                         )}
                     />
                 </Flex>
+
+                <IssueActivityFeedUIButtons
+                    isShowLinkedIssues={fields.issuelinks.length > 0}
+                    isShowChildIssues={fields.subtasks.length > 0}
+                    countChildIssues={fields.subtasks.length}
+                    countLinkedIssues={fields.issuelinks.length}
+                >
+                    {({ activityFeed }) => {
+                        if (activityFeed === 'Linked issues') {
+                            return <LinkedIssues issueId={id} />
+                        }
+
+                        if (activityFeed === 'Child issues') {
+                            return <ChildIssues issueId={id} />
+                        }
+
+                        return null
+                    }}
+                </IssueActivityFeedUIButtons>
             </CardIssue>
 
             <Box

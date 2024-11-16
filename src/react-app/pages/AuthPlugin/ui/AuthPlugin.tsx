@@ -1,4 +1,4 @@
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { IconButton } from '@atlaskit/button/new'
 import ArrowLeftCircleIcon from '@atlaskit/icon/glyph/arrow-left-circle'
 import { Box } from '@atlaskit/primitives'
@@ -10,7 +10,7 @@ const AuthTempo = lazy(() => import('../../../features/AuthPluginTempo'))
 
 const AuthPlugin = () => {
     const navigate = useNavigate()
-    const pluginName = localStorage.getItem('pluginName') as UseGlobalState['settings']['plugin']
+    const { pluginName } = useParams()
 
     return (
         <Box>

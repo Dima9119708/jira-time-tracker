@@ -5,11 +5,8 @@ import { AxiosError, AxiosResponse } from 'axios'
 import { ErrorType } from '../../../shared/types/Jira/ErrorType'
 import { ChangeStatusTaskProps } from '../types/types'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
-import { Issue, IssueResponse, Status, Transition } from 'react-app/shared/types/Jira/Issues'
+import { IssueResponse, Status, Transition } from 'react-app/shared/types/Jira/Issues'
 import { StatusesByIssueDropdown } from 'react-app/entities/Issues'
-import { useMemo } from 'react'
-import { xcss } from '@atlaskit/primitives'
-import { token } from '@atlaskit/tokens'
 
 const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
     const { issueId, queryKeys, status, issueName, position, disabled, trigger, onMutate, xcss, onSuccess } = props
@@ -18,7 +15,7 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
 
     const notify = useNotifications()
 
-    const { mutate } = useMutation<
+    const { mutate, isPending } = useMutation<
         AxiosResponse<Status>,
         AxiosError<ErrorType>,
         Transition,
@@ -70,7 +67,7 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
             }
 
             if (typeof onMutate === 'function') {
-                onMutate()
+                onMutate(variables)
             }
             const notificationMessage = `from ${status.name} to ${variables.name}`
             const dismissFn = notify.loading({
@@ -127,6 +124,7 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
             onChange={(status) => mutate(status)}
             trigger={trigger}
             xcss={xcss}
+            isPending={isPending}
         />
     )
 }

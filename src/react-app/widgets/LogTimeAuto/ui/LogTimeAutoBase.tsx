@@ -6,11 +6,12 @@ export interface LogTimeAutoBaseProps {
     issueId: Issue['id'],
     onSuccess?: () => void
     children: FunctionComponent<ReturnType<typeof useLogTimeAutoBase>>,
+    invalidateQueries?: () => string[]
 }
 
 const LogTimeAutoBase = (props: LogTimeAutoBaseProps) => {
-    const { onSuccess } = props
-    const { onLogTime, isLoading, isMutationSuccess } = useLogTimeAutoBase(props.issueId)
+    const { onSuccess, invalidateQueries } = props
+    const { onLogTime, isLoading, isMutationSuccess } = useLogTimeAutoBase(props.issueId, invalidateQueries)
 
     useEffect(() => {
         if (isMutationSuccess) {
