@@ -114,6 +114,10 @@ export const RenderRelatedIssue = memo(
                                     isDisabled={isTrackingIssue}
                                     isLoading={isPending}
                                     icon={VidPlayIcon}
+                                    isTooltipDisabled={false}
+                                    tooltip={{
+                                        content: isTrackingIssue ? 'Already tracking' : 'Play',
+                                    }}
                                     label="Play"
                                     spacing="compact"
                                 />

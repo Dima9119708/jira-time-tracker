@@ -61,6 +61,19 @@ const GlobalStateUrlSync = () => {
         useGlobalState.getState().setIssueIdsSearchParams(new URLSearchParams(location.search).get('ids') ?? '')
     }, [location.search])
 
+    useEffect(() => {
+        return () => {
+            if (location.pathname !== '/issues') {
+                useGlobalState.setState((state) => {
+                    state.issueIdsSearchParams.currentParams = ''
+                    state.issueIdsSearchParams.type = null
+                    state.issueIdsSearchParams.value = ''
+                })
+
+            }
+        }
+    }, [location.pathname])
+
     return null
 }
 

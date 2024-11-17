@@ -10,7 +10,18 @@ import { StatusesByIssueDropdown } from 'react-app/entities/Issues'
 import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
-    const { issueId, queryKeys, status, issueName, position, disabled, trigger, onMutate, xcss, onSuccess } = props
+    const {
+        issueId,
+        queryKeys,
+        status,
+        issueName,
+        position,
+        disabled,
+        trigger,
+        onMutate,
+        xcss,
+        onSuccess,
+    } = props
 
     const queryClient = useQueryClient()
 
@@ -22,7 +33,11 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
         AxiosResponse<Status>,
         AxiosError<ErrorType>,
         Transition,
-        { dismissFn: Function; oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]> | undefined; notificationMessage: string }
+        {
+            dismissFn: Function
+            oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]> | undefined
+            notificationMessage: string
+        }
     >({
         mutationFn: (variables) =>
             axiosInstance.post('/change-status-task', {
@@ -30,8 +45,7 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 transitionId: variables.id,
             }),
         onMutate: async (variables) => {
-
-            const oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]>  = []
+            const oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]> = []
 
             for (const queryKey of queryKeys()) {
                 await queryClient.cancelQueries({ queryKey: [queryKey] })
@@ -41,7 +55,9 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 if (oldState) {
                     queryClient.setQueryData(
                         [queryKey],
-                        (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
+                        (
+                            old: InfiniteData<IssueResponse> | IssueResponse['issues']
+                        ): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
                             if (Array.isArray(old)) {
                                 return produce(old, (draft) => {
                                     const issue = draft.find(({ id }) => id === issueId)
@@ -53,11 +69,11 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                             } else {
                                 return produce(old, (draft) => {
                                     for (const page of draft.pages) {
-                                        const issue = page.issues.find(({ id }) => id === issueId);
+                                        const issue = page.issues.find(({ id }) => id === issueId)
 
                                         if (issue) {
-                                            issue.fields.status = variables.to;
-                                            break;
+                                            issue.fields.status = variables.to
+                                            break
                                         }
                                     }
                                 })
@@ -70,7 +86,7 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
             }
 
             if (typeof onMutate === 'function') {
-              await onMutate(variables)
+                await onMutate(variables)
             }
             const notificationMessage = `from ${status.name} to ${variables.name}`
             const dismissFn = notify.loading({
@@ -92,7 +108,7 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
             })
 
             if (typeof onSuccess === 'function') {
-               await onSuccess()
+                await onSuccess()
             }
 
             queryClient.invalidateQueries()
@@ -106,7 +122,9 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 for (const [queryKey, oldState] of context.oldStates) {
                     queryClient.setQueryData(
                         [queryKey],
-                        (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
+                        (
+                            old: InfiniteData<IssueResponse> | IssueResponse['issues']
+                        ): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
                             return produce(old, (draft) => {
                                 Object.assign(draft, oldState)
                             })

@@ -19,7 +19,6 @@ interface FavoriteIssueProps extends IssueProps {
 
 const Issue = (props: FavoriteIssueProps) => {
     const { fields, id, issueKey, queryKey } = props
-    const queryClient = useQueryClient()
     const isTrackingIssue = useGlobalState((state) => state.issueIdsSearchParams.currentParams.includes(id))
 
     const invalidateQueries = useCallback(() => {
@@ -30,32 +29,6 @@ const Issue = (props: FavoriteIssueProps) => {
 
     const onPlayTracking = async () => {
         await useGlobalState.getState().changeIssueIdsSearchParams('add', id)
-
-        const issues = queryClient.getQueryData<IssueResponse['issues']>([queryKey])
-
-        if (issues) {
-            const issue = issues.find((issue) => issue.id === id)
-
-            if (issue) {
-                queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
-                    return produce(old, (draft) => {
-                        draft.unshift(issue)
-                    })
-                })
-
-                queryClient.setQueryData(['issues'], (old: InfiniteData<IssueResponse>): InfiniteData<IssueResponse> => {
-                    return produce(old, (draft) => {
-                        for (const page of draft.pages) {
-                            const index = page.issues.findIndex((issue) => issue.id === id)
-                            if (index !== -1) {
-                                page.issues.splice(index, 1)
-                                return
-                            }
-                        }
-                    })
-                })
-            }
-        }
     }
 
     return (
@@ -115,13 +88,18 @@ const Issue = (props: FavoriteIssueProps) => {
                     queryKeys={invalidateQueries}
                     position="left"
                     onMutate={onPlayTracking}
-                    trigger={(triggerButtonProps) => (
+                    trigger={(triggerButtonProps, isPending) => (
                         <IconButton
                             {...triggerButtonProps}
                             ref={triggerButtonProps.triggerRef}
                             icon={VidPlayIcon}
                             label="Play"
+                            isLoading={isPending}
                             isDisabled={isTrackingIssue}
+                            isTooltipDisabled={false}
+                            tooltip={{
+                                content: isTrackingIssue ? 'Already tracking' : 'Play',
+                            }}
                         />
                     )}
                 />

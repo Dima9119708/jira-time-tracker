@@ -1,9 +1,6 @@
 import React, { memo, useCallback } from 'react'
-import { useQueryClient, InfiniteData } from '@tanstack/react-query'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
-import { produce } from 'immer'
 import { IssueProps } from '../types/types'
-import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
 import { Flex } from '@atlaskit/primitives'
@@ -18,8 +15,7 @@ import { ChildIssues, LinkedIssues } from 'react-app/widgets/RelatedIssues'
 
 const Issue = (props: IssueProps) => {
     const { fields, id, issueKey } = props
-    const queryClient = useQueryClient()
-
+    const isTrackingIssue = useGlobalState((state) => state.issueIdsSearchParams.currentParams.includes(id))
     const invalidateQueries = useCallback(() => {
         return ['issues']
     }, [])
@@ -28,33 +24,6 @@ const Issue = (props: IssueProps) => {
 
     const onPlayTracking = async () => {
         await useGlobalState.getState().changeIssueIdsSearchParams('add', id)
-
-        const issues = queryClient.getQueryData<InfiniteData<IssueResponse>>(['issues'])
-
-        if (issues) {
-            queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
-                return produce(old, (draft) => {
-                    for (const page of issues.pages) {
-                        const issue = page.issues.find((issue) => issue.id === id)
-                        if (issue) {
-                            draft.unshift(issue)
-                        }
-                    }
-                })
-            })
-
-            queryClient.setQueryData(['issues'], (old: InfiniteData<IssueResponse>): InfiniteData<IssueResponse> => {
-                return produce(old, (draft) => {
-                    for (const page of draft.pages) {
-                        const index = page.issues.findIndex((issue) => issue.id === id)
-                        if (index !== -1) {
-                            page.issues.splice(index, 1)
-                            return
-                        }
-                    }
-                })
-            })
-        }
     }
 
     return (
@@ -116,10 +85,16 @@ const Issue = (props: IssueProps) => {
                     position="left"
                     onMutate={onPlayTracking}
                     disabled={false}
-                    trigger={(triggerButtonProps) => (
+                    trigger={(triggerButtonProps, isPending) => (
                         <IconButton
                             {...triggerButtonProps}
+                            isLoading={isPending}
+                            isDisabled={isTrackingIssue}
                             ref={triggerButtonProps.triggerRef}
+                            isTooltipDisabled={false}
+                            tooltip={{
+                                content: isTrackingIssue ? 'Already tracking' : 'Play',
+                            }}
                             icon={VidPlayIcon}
                             label="Play"
                         />

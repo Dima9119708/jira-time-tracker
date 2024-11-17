@@ -14,7 +14,7 @@ interface UseIssuesGetProps {
 }
 
 export const useIssuesGET = (props: UseIssuesGetProps) => {
-    const { onFilteringIssues, queryKey = ['issues'], jql, maxResults = 20, ...queryOptions } = props
+    const { queryKey = ['issues'], jql, maxResults = 20, ...queryOptions } = props
 
     return useInfiniteQuery({
         queryKey: queryKey,
@@ -29,10 +29,6 @@ export const useIssuesGET = (props: UseIssuesGetProps) => {
                 },
                 signal: context.signal,
             })
-
-            if (typeof onFilteringIssues === 'function') {
-                return onFilteringIssues(response.data)
-            }
 
             return response.data
         },

@@ -1,6 +1,5 @@
 import Issue from './Issue'
 import { useEffect } from 'react'
-import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useIssuesGET } from 'react-app/entities/Issues'
 import { Box, xcss } from '@atlaskit/primitives'
@@ -13,18 +12,9 @@ import Spinner from '@atlaskit/spinner'
 
 const Issues = () => {
     const { ref, inView } = useInView()
-    const notify = useNotifications()
 
     const { data, error, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } = useIssuesGET({
         jql: () => useGlobalState.getState().jql,
-        onFilteringIssues: (data) => {
-            const tasksIDS = useGlobalState.getState().getIssueIdsSearchParams()
-
-            return {
-                ...data,
-                issues: data.issues.filter((issue) => !tasksIDS.includes(issue.id)),
-            }
-        },
     })
 
     const aaaa = useErrorNotifier(error)
