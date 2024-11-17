@@ -1,25 +1,28 @@
 import { InfiniteData, useMutation, useQueryClient } from '@tanstack/react-query'
-import { StatusesIssue, TStatusTask } from '../../../entities/StatusesIssue'
 import { axiosInstance } from '../../../shared/config/api/api'
 import { produce } from 'immer'
-import { IssueResponse, IssuesTrackingResponse } from '../../../pages/Issues/types/types'
 import { AxiosError, AxiosResponse } from 'axios'
-import { ErrorType } from '../../../shared/types/jiraTypes'
+import { ErrorType } from '../../../shared/types/Jira/ErrorType'
 import { ChangeStatusTaskProps } from '../types/types'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { IssueResponse, Status, Transition } from 'react-app/shared/types/Jira/Issues'
+import { StatusesByIssueDropdown } from 'react-app/entities/Issues'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
-    const { issueId, queryKey, status, issueName, position, disabled, idxPage, idxIssue, trigger, onChange } = props
+    const { issueId, queryKeys, status, issueName, position, disabled, trigger, onMutate, xcss, onSuccess } = props
 
     const queryClient = useQueryClient()
 
     const notify = useNotifications()
 
-    const { mutate } = useMutation<
-        AxiosResponse<TStatusTask>,
+    const handleAxiosError = useErrorNotifier()
+
+    const { mutate, isPending } = useMutation<
+        AxiosResponse<Status>,
         AxiosError<ErrorType>,
-        TStatusTask,
-        { dismissFn: Function; oldState: InfiniteData<IssueResponse> | IssuesTrackingResponse | undefined; notificationMessage: string }
+        Transition,
+        { dismissFn: Function; oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]> | undefined; notificationMessage: string }
     >({
         mutationFn: (variables) =>
             axiosInstance.post('/change-status-task', {
@@ -27,25 +30,47 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 transitionId: variables.id,
             }),
         onMutate: async (variables) => {
-            await queryClient.cancelQueries({ queryKey: [queryKey] })
 
-            queryClient.setQueryData(
-                [queryKey],
-                (old: InfiniteData<IssueResponse> | IssuesTrackingResponse): InfiniteData<IssueResponse> | IssuesTrackingResponse => {
-                    if (Array.isArray(old)) {
-                        return produce(old, (draft) => {
-                            draft[idxIssue].fields.status = variables.to
-                        })
-                    } else {
-                        return produce(old, (draft) => {
-                            draft.pages[idxPage!].issues[idxIssue].fields.status = variables.to
-                        })
-                    }
+            const oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]>  = []
+
+            for (const queryKey of queryKeys()) {
+                await queryClient.cancelQueries({ queryKey: [queryKey] })
+
+                const oldState = queryClient.getQueryData<InfiniteData<IssueResponse> | IssueResponse['issues']>([queryKey])
+
+                if (oldState) {
+                    queryClient.setQueryData(
+                        [queryKey],
+                        (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
+                            if (Array.isArray(old)) {
+                                return produce(old, (draft) => {
+                                    const issue = draft.find(({ id }) => id === issueId)
+
+                                    if (issue) {
+                                        issue.fields.status = variables.to
+                                    }
+                                })
+                            } else {
+                                return produce(old, (draft) => {
+                                    for (const page of draft.pages) {
+                                        const issue = page.issues.find(({ id }) => id === issueId);
+
+                                        if (issue) {
+                                            issue.fields.status = variables.to;
+                                            break;
+                                        }
+                                    }
+                                })
+                            }
+                        }
+                    )
+
+                    oldStates.push([queryKey, oldState])
                 }
-            )
+            }
 
-            if (typeof onChange === 'function') {
-                onChange()
+            if (typeof onMutate === 'function') {
+              await onMutate(variables)
             }
             const notificationMessage = `from ${status.name} to ${variables.name}`
             const dismissFn = notify.loading({
@@ -56,39 +81,52 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
             return {
                 dismissFn,
                 notificationMessage,
-                oldState: queryClient.getQueryData<InfiniteData<IssueResponse> | IssuesTrackingResponse>([queryKey]),
+                oldStates: oldStates,
             }
         },
-        onSuccess: (data, variables, context) => {
+        onSuccess: async (data, variables, context) => {
             context?.dismissFn()
             notify.success({
                 title: 'Status changes',
                 description: context!.notificationMessage,
             })
 
-            // TODO => ???
-            // queryClient.invalidateQueries({ queryKey: [queryKey] })
+            if (typeof onSuccess === 'function') {
+               await onSuccess()
+            }
+
+            queryClient.invalidateQueries()
         },
         onError: (error, variables, context) => {
             context?.dismissFn()
 
-            notify.error({
-                title: `Error issue ${issueName}`,
-                description: JSON.stringify(error.response?.data),
-            })
+            handleAxiosError(error)
 
-            queryClient.setQueryData([queryKey], context!.oldState)
+            if (Array.isArray(context?.oldStates)) {
+                for (const [queryKey, oldState] of context.oldStates) {
+                    queryClient.setQueryData(
+                        [queryKey],
+                        (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
+                            return produce(old, (draft) => {
+                                Object.assign(draft, oldState)
+                            })
+                        }
+                    )
+                }
+            }
         },
     })
 
     return (
-        <StatusesIssue
+        <StatusesByIssueDropdown
             issueId={issueId}
             status={status}
             position={position}
             disabled={disabled}
             onChange={(status) => mutate(status)}
             trigger={trigger}
+            xcss={xcss}
+            isPending={isPending}
         />
     )
 }

@@ -4,38 +4,75 @@ import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 
 const DetectedSystemIdle = () => {
     useEffect(() => {
-        let interval: NodeJS.Timeout
-
         const unsubscribe = electron(({ ipcRenderer }) => {
-            interval = setInterval(() => {
-                if (!useGlobalState.getState().settings.systemIdle.enabled) return
-
+            let interval = setInterval(() => {
                 ipcRenderer.send('GET-SYSTEM-IDLE-TIME')
             }, 1000)
 
             const onSuspend = () => {
-                useGlobalState.getState().setSystemIdle(true)
+                useGlobalState.getState().setTimeLoggingPaused(true)
             }
 
             const onResume = () => {
-                useGlobalState.getState().setSystemIdle(false)
+                useGlobalState.getState().setTimeLoggingPaused(false)
+            }
+
+            const onTimeLoggingPaused = (seconds: number) => {
+                if (useGlobalState.getState().settings.systemIdle.enabled) {
+                    const settingsSecond = useGlobalState.getState().settings.systemIdle.second
+                    const isTimeLoggingPaused = useGlobalState.getState().isTimeLoggingPaused
+
+                    if (seconds >= settingsSecond) {
+                        if (isTimeLoggingPaused === true) return
+
+                        useGlobalState.getState().setTimeLoggingPaused(true)
+                    } else {
+                        if (isTimeLoggingPaused === false) return
+
+                        useGlobalState.getState().setTimeLoggingPaused(false)
+                    }
+                }
+
+            }
+
+            let activeTime = 0
+            let preSeconds = 0
+
+            const onIdleWithInsufficientActivity = (seconds: number) => {
+                const isIdleWithInsufficientActivity = useGlobalState.getState().isIdleWithInsufficientActivity
+
+                if (seconds === 0 && preSeconds === 0) {
+                    activeTime += 1
+                }
+
+                if (seconds === 0 && preSeconds > 0) {
+                    activeTime = 0
+                }
+
+                preSeconds = seconds
+
+
+                if (activeTime < 60 && seconds > 60) {
+                    if (isIdleWithInsufficientActivity === true) return
+                    useGlobalState.getState().setIdleWithInsufficientActivity(true)
+                } else {
+                    if (isIdleWithInsufficientActivity === false) return
+                    useGlobalState.getState().setIdleWithInsufficientActivity(false)
+                }
+
+
             }
 
             const onSystemIdleTimeResponse = (event: Electron.IpcRendererEvent, seconds: number) => {
-                const settingsSecond = useGlobalState.getState().settings.systemIdle.second
-
-                if (seconds >= settingsSecond) {
-                    useGlobalState.getState().setSystemIdle(true)
-                } else {
-                    useGlobalState.getState().setSystemIdle(false)
-                }
+                onTimeLoggingPaused(seconds)
+                onIdleWithInsufficientActivity(seconds)
             }
 
             ipcRenderer.on('SYSTEM-IDLE-TIME-RESPONSE', onSystemIdleTimeResponse)
             ipcRenderer.on('SUSPEND', onSuspend)
             ipcRenderer.on('RESUME', onResume)
-
             return () => {
+                clearInterval(interval)
                 ipcRenderer.removeListener('SUSPEND', onSuspend)
                 ipcRenderer.removeListener('RESUME', onResume)
                 ipcRenderer.removeListener('SYSTEM-IDLE-TIME-RESPONSE', onSystemIdleTimeResponse)
@@ -43,7 +80,6 @@ const DetectedSystemIdle = () => {
         })
 
         return () => {
-            clearInterval(interval)
             unsubscribe()
         }
     }, [])

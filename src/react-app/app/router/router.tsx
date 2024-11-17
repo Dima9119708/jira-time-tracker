@@ -1,10 +1,10 @@
 import { createHashRouter, createBrowserRouter, Navigate, RouteObject } from 'react-router-dom'
 import AuthPage from '../../pages/Auth/ui/AuthPage'
 import { queryClient } from '../QueryClientProvide/QueryClientProvide'
-import { loaderAuth } from '../../features/AuthByEmailAndToken'
 import LayoutRoot from '../LayoutRoot/LayoutRoot'
 import { ChangePort } from '../../pages/ChangePort'
 import { TopPanel } from 'react-app/widgets/TopPanel'
+import { loaderAuthAppInitial } from 'react-app/features/AuthInitialApp'
 
 const createRouter = (routes: RouteObject[]) => {
     return __BUILD_ENV__ === 'browser'
@@ -20,7 +20,7 @@ export const router = createRouter([
             {
                 path: '/',
                 Component: LayoutRoot,
-                loader: loaderAuth(queryClient),
+                loader: loaderAuthAppInitial(queryClient),
                 shouldRevalidate: () => false,
                 children: [
                     {
@@ -28,11 +28,23 @@ export const router = createRouter([
                         path: 'issues',
                         shouldRevalidate: () => false,
                         lazy: async () => {
-                            const { loaderIssues, IssuesPage, ErrorBoundary } = await import('../../pages/Issues')
+                            const { IssuesPage, ErrorBoundary } = await import('../../pages/Issues')
 
                             return {
-                                loader: loaderIssues,
                                 Component: IssuesPage,
+                                errorElement: <ErrorBoundary />,
+                            }
+                        },
+                    },
+                    {
+                        path: 'auth-plugin/:pluginName',
+                        shouldRevalidate: () => false,
+                        lazy: async () => {
+                            const { ErrorBoundary } = await import('../../pages/Issues')
+                            const { AuthPlugin } = await import('../../pages/AuthPlugin')
+
+                            return {
+                                Component: AuthPlugin,
                                 errorElement: <ErrorBoundary />,
                             }
                         },

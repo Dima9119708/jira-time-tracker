@@ -1,7 +1,8 @@
-const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor, session, Tray, Menu } = require('electron')
 const path = require('path')
 const portfinder = require('portfinder')
 const url = require('url')
+const os = require('os');
 
 require('dotenv').config({
     path: app.isPackaged ? path.join(process.resourcesPath, '.env.production') : path.resolve(process.cwd(), '.env'),
@@ -10,10 +11,11 @@ require('dotenv').config({
 const OAuth2Window = require('./auth/oAuth2/OAuth2')
 const BasicAuth = require('./auth/BasicAuth')
 const ControllerAuth = require('./auth/ControllerAuth')
-
+const ControllerAuthPlugin = require('./auth/ControllerAuthPlugin')
 const { server } = require('./server')
 const { AUTH_DATA } = require('./constans')
-const { AuthStorage, ThemeStorage } = require('./auth/keyService')
+const { AuthStorage, ThemeStorage, ZoomStorage } = require('./auth/keyService')
+const AuthWindowPlugin = require('./auth/AuthPlugin/AuthPlugin')
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -109,6 +111,15 @@ const createMainWindow = (port) => {
         event.returnValue = port
     })
 
+    ipcMain.on('GET_ZOOM', (event) => {
+        event.returnValue = ZoomStorage.get()
+    })
+
+    ipcMain.on('SET_ZOOM', (event, zoom) => {
+        ZoomStorage.set(zoom)
+        mainWindow.webContents.setZoomFactor(zoom)
+    })
+
     powerMonitor.on('suspend', () => {
         mainWindow.webContents.send('SUSPEND')
     })
@@ -152,6 +163,10 @@ const createMainWindow = (port) => {
         mainWindow.webContents.send('FOCUS')
     })
 
+    ipcMain.on('IS_FOCUSED', (event) => {
+        event.returnValue = mainWindow.isFocused()
+    })
+
     mainWindow.on('blur', () => {
         mainWindow.webContents.send('BLUR')
     })
@@ -167,10 +182,57 @@ const createMainWindow = (port) => {
         mainWindow.webContents.openDevTools()
     }
 
+    const tray = new Tray(path.join(__dirname, 'build', 'icons', '512x512.png'));
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: 'Open',
+            click: () => {
+                mainWindow.show();
+            }
+        },
+        {
+            label: 'Quit',
+            click: () => {
+                app.quit();
+            }
+        }
+    ]);
+
+    tray.setToolTip('Time Tracking');
+    tray.setContextMenu(contextMenu);
+
+    mainWindow.on('close', (event) => {
+        if (!mainWindow.isVisible()) {
+            return;
+        }
+        event.preventDefault();
+        mainWindow.hide();
+    });
+
+
     return mainWindow
 }
 
-app.whenReady()
+app.whenReady().then(async () => {
+    if (!isProd) {
+        try {
+            const reduxDevToolsPath = path.join(
+                os.homedir(),
+                '.config/google-chrome/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/3.2.7_0'
+            );
+
+            const reactDevToolsPath = path.join(
+                os.homedir(),
+                '.config/google-chrome/Default/Extensions/gphhapmejobijbbhgpjhcjognlahblep/12_0'
+            );
+
+            await session.defaultSession.loadExtension(reduxDevToolsPath);
+            await session.defaultSession.loadExtension(reactDevToolsPath);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+})
     .then(async () => {
         try {
             portfinder.setBasePort(10000)
@@ -199,7 +261,9 @@ app.whenReady()
         const mainWindow = createMainWindow(port)
 
         ControllerAuth()
+        ControllerAuthPlugin()
         OAuth2Window(mainWindow)
+        AuthWindowPlugin(mainWindow)
         BasicAuth()
 
         app.on('activate', () => {
@@ -216,4 +280,10 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit()
     }
+})
+
+app.on('web-contents-created', (event, contents) => {
+    contents.on('did-finish-load', () => {
+        contents.setZoomFactor(ZoomStorage.get())
+    })
 })

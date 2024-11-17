@@ -1,8 +1,8 @@
-import { AssignableIssueProps } from '../../../entities/AssignableIssue/types/types'
+import { AssignableSearchByIssueDropdownProps } from 'react-app/entities/UserSearch/types/types'
 
-export interface ChangeAssigneeProps extends Omit<AssignableIssueProps, 'onChange'> {
-    queryKey: string
-    idxPage?: number
-    idxIssue: number
+export interface ChangeAssigneeProps extends Omit<AssignableSearchByIssueDropdownProps, 'onChange'> {
+    queryKeys: () => string[]
+    onSuccess?: () => void
     issueName: string
+    issueKey: string
 }

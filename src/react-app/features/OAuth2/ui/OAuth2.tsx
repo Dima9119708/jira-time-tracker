@@ -8,6 +8,7 @@ import Spinner from '@atlaskit/spinner'
 import { Box, Flex, xcss, Text } from '@atlaskit/primitives'
 
 import { JiraLogo } from '@atlaskit/logo'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const styles = {
     wrap: xcss({
@@ -40,6 +41,7 @@ const OAuth2 = () => {
 
     const navigate = useNavigate()
     const queryClient = useQueryClient()
+    const handleError = useErrorNotifier()
 
     useEffect(() => {
         const unsubscribe = electron((methods) => {
@@ -55,21 +57,24 @@ const OAuth2 = () => {
                     })
 
                     const client_id = resAccessibleResources.data[0].id
+                    const jiraSubDomain = resAccessibleResources.data[0].url
 
                     await methods.ipcRenderer.invoke('SAVE_DATA_OAuth2', {
                         access_token: resOAuthToken.data.access_token,
                         refresh_token: resOAuthToken.data.refresh_token,
                         client_id,
+                        jiraSubDomain,
                     })
 
-                    const resLogin = await axiosInstance.get('/login')
+                    const resLogin = await axiosInstance.get('/myself')
 
-                    queryClient.setQueryData(['login'], resLogin.data)
+                    queryClient.setQueryData(['myself'], resLogin.data)
 
                     navigate('/issues')
 
                     setLoading(false)
                 } catch (e) {
+                    handleError(e)
                     setLoading(false)
                 }
             }

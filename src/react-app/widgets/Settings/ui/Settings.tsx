@@ -1,22 +1,28 @@
 import { useForm, Controller, SubmitHandler } from 'react-hook-form'
 import dayjs from 'dayjs'
-import { useMutation } from '@tanstack/react-query'
-import { AxiosError, AxiosResponse } from 'axios'
-import { FilterDetails } from '../../../pages/Issues/types/types'
-import { ErrorType } from '../../../shared/types/jiraTypes'
-import { axiosInstance } from '../../../shared/config/api/api'
-import { TIME_OPTIONS, UseGlobalState, useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
-import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog'
+import { PLUGINS, TIME_OPTIONS, UseGlobalState, useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
+import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle } from '@atlaskit/modal-dialog'
 import Button, { IconButton } from '@atlaskit/button/new'
 import CrossIcon from '@atlaskit/icon/glyph/cross'
-import { Flex, xcss, Box } from '@atlaskit/primitives'
+import { Flex, xcss, Box, Text } from '@atlaskit/primitives'
 import Toggle from '@atlaskit/toggle'
 import Textfield from '@atlaskit/textfield'
 import Select from '@atlaskit/select'
 import Heading from '@atlaskit/heading'
-import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { ErrorMessage } from '@atlaskit/form'
 import { useGlobalBoolean } from 'use-global-boolean'
+import Image from '@atlaskit/image'
+import CheckCircleIcon from '@atlaskit/icon/glyph/check-circle'
+import CrossCircleIcon from '@atlaskit/icon/glyph/cross-circle'
+import { token } from '@atlaskit/tokens'
+import { createSearchParams, useNavigate } from 'react-router-dom'
+import { electron } from 'react-app/shared/lib/electron/electron'
+import { useFilterPUT } from 'react-app/entities/Filters'
+import EditorWarningIcon from '@atlaskit/icon/glyph/editor/warning'
+import EditorInfoIcon from '@atlaskit/icon/glyph/editor/info';
+import Tooltip from '@atlaskit/tooltip'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
+import Checkbox from '@atlaskit/checkbox'
 
 export type FormValues = UseGlobalState['settings']
 
@@ -41,12 +47,13 @@ const styles = {
 
 const Settings = () => {
     const { watchBoolean, setFalse } = useGlobalBoolean()
+    const navigate = useNavigate()
 
     const opened = watchBoolean('user settings')
 
-    const notify = useNotifications()
+    const hasJiraTimeTrackingPermission = useGlobalState((state) => state.hasJiraTimeTrackingPermission)
 
-    const { control, handleSubmit, watch } = useForm<FormValues>({
+    const { control, handleSubmit, watch, getValues } = useForm<FormValues>({
         mode: 'onBlur',
         defaultValues: useGlobalState.getState().settings,
     })
@@ -54,55 +61,23 @@ const Settings = () => {
     const sendInactiveNotificationEnabled = !watch('sendInactiveNotification.enabled')
     const systemIdleEnabled = !watch('systemIdle.enabled')
 
-    const { mutate, isPending } = useMutation<
-        AxiosResponse<FilterDetails>,
-        AxiosError<ErrorType>,
-        string,
-        { dismissFn: Function; title: string }
-    >({
-        mutationFn: (variables) =>
-            axiosInstance.put<FilterDetails>(
-                '/filter-details',
-                {
-                    description: variables,
-                },
-                {
-                    params: {
-                        id: useGlobalState.getState().filterId,
-                    },
-                }
-            ),
-        onMutate: () => {
-            const title = 'Update settings'
-
-            const dismissFn = notify.loading({
-                title: title,
-            })
-
-            return {
-                dismissFn,
-                title,
+    const filterPUT = useFilterPUT({
+        onSuccess: () => {
+            if (typeof getValues('plugin') !== 'string') {
+                electron(async (methods) => {
+                    await methods.ipcRenderer.invoke('DELETE_AUTH_PLUGIN_DATA')
+                })
             }
-        },
-        onSuccess: (data, variables, context) => {
-            context?.dismissFn()
-
-            notify.success({
-                title: context!.title,
-            })
 
             setFalse('user settings')
         },
-        onError: (error) => {
-            notify.error({
-                title: `Error loading issue`,
-                description: JSON.stringify(error.response?.data),
-            })
-        },
     })
 
+    useErrorNotifier(filterPUT.error)
+
     const onSave: SubmitHandler<FormValues> = (data) => {
-        const newSettings: UseGlobalState['settings'] = {
+        const newSettings: Partial<UseGlobalState['settings']> = {
+            plugin: data.plugin,
             autoStart: data.autoStart,
             timeLoggingInterval: {
                 unit: data.timeLoggingInterval.unit,
@@ -130,10 +105,20 @@ const Settings = () => {
                         ? dayjs.duration(data.systemIdle.displayTime, 'minutes').asSeconds()
                         : dayjs.duration(data.systemIdle.displayTime, 'hours').asSeconds(),
             },
+            pluginLogoutAlerts: {
+                displayTime: data.pluginLogoutAlerts.displayTime,
+                enabled: data.pluginLogoutAlerts.enabled,
+                millisecond: dayjs.duration(data.pluginLogoutAlerts.displayTime, 'minutes').asMilliseconds(),
+            },
+            workingHoursPerDay: data.workingHoursPerDay,
+            workingDaysPerWeek: data.workingDaysPerWeek,
+            storyPointField: data.storyPointField,
+            useStoryPointsAsTimeEstimate: data.useStoryPointsAsTimeEstimate,
         }
 
-        useGlobalState.getState().setSettings(newSettings)
-        mutate(JSON.stringify(newSettings))
+        filterPUT.mutate({
+            settings: newSettings,
+        })
     }
 
     return (
@@ -150,6 +135,73 @@ const Settings = () => {
                         />
                     </ModalHeader>
                     <ModalBody>
+                        <Controller
+                            name="plugin"
+                            control={control}
+                            render={({ field }) => {
+                                return (
+                                    <Flex
+                                        justifyContent="space-between"
+                                        alignItems="center"
+                                        xcss={styles.divider}
+                                    >
+                                        <Flex
+                                            columnGap="space.100"
+                                            alignItems="center"
+                                        >
+                                            <Image
+                                                height="25px"
+                                                width="25px"
+                                                src="https://static.tempo.io/io/non-versioned/img/tempo-logo.png"
+                                                loading="lazy"
+                                            />
+                                            <Flex>
+                                                <Heading size="large">Tempo</Heading>
+
+                                                {field.value === PLUGINS.TEMPO ? (
+                                                    <CheckCircleIcon
+                                                        label="tempo"
+                                                        size="small"
+                                                        primaryColor={token('color.text.accent.green')}
+                                                    />
+                                                ) : (
+                                                    <CrossCircleIcon
+                                                        label="tempo"
+                                                        size="small"
+                                                        primaryColor={token('color.text.accent.red')}
+                                                    />
+                                                )}
+                                            </Flex>
+                                        </Flex>
+
+                                        {field.value === PLUGINS.TEMPO ? (
+                                            <Button
+                                                appearance="danger"
+                                                onClick={() => {
+                                                    localStorage.removeItem('pluginName')
+                                                    field.onChange(null)
+                                                }}
+                                            >
+                                                Disconnect
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                appearance="primary"
+                                                onClick={() => {
+                                                    navigate({
+                                                        pathname: `/auth-plugin/${PLUGINS.TEMPO}`,
+                                                    })
+                                                    setFalse('user settings')
+                                                }}
+                                            >
+                                                Connect
+                                            </Button>
+                                        )}
+                                    </Flex>
+                                )
+                            }}
+                        />
+
                         <Flex
                             justifyContent="space-between"
                             alignItems="center"
@@ -303,6 +355,75 @@ const Settings = () => {
                             justifyContent="space-between"
                             alignItems="center"
                         >
+                            <Flex
+                                columnGap="space.100"
+                                alignItems="center"
+                            >
+                                <Tooltip content="Enable notifications to alert you when a connected plugin (e.g., Tempo) loses access due to a session timeout.">
+                                    {(tooltipProps) => (
+                                        <div {...tooltipProps}>
+                                            <EditorInfoIcon
+                                                label="information"
+                                                primaryColor={token('color.icon.information')}
+                                            />
+                                        </div>
+                                    )}
+                                </Tooltip>
+
+                                <Heading size="small">Plugin logout alerts</Heading>
+                            </Flex>
+
+
+
+                            <Flex
+                                wrap="nowrap"
+                                alignItems="center"
+                                columnGap="space.100"
+                            >
+                                <Controller
+                                    name="pluginLogoutAlerts.enabled"
+                                    control={control}
+                                    render={({ field }) => {
+                                        return (
+                                            <Box xcss={styles.toggleWarp}>
+                                                <Toggle
+                                                    isChecked={field.value}
+                                                    onChange={field.onChange}
+                                                />
+                                            </Box>
+                                        )
+                                    }}
+                                />
+
+                                <Controller
+                                    name="pluginLogoutAlerts.displayTime"
+                                    control={control}
+                                    rules={{ required: 'Required' }}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box xcss={styles.inputWarp}>
+                                                <Textfield
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                    type="number"
+                                                />
+
+                                                {fieldState.error?.message && <ErrorMessage>{fieldState.error?.message}</ErrorMessage>}
+                                            </Box>
+                                        )
+                                    }}
+                                />
+
+                                <Text>Minutes</Text>
+                            </Flex>
+                        </Flex>
+
+                        <Flex
+                            xcss={styles.divider}
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
                             <Heading size="small">To stop logging the time when the system is in a waiting state.</Heading>
 
                             <Flex
@@ -370,6 +491,219 @@ const Settings = () => {
                                 />
                             </Flex>
                         </Flex>
+
+                        {!hasJiraTimeTrackingPermission && (
+                            <>
+                                <Flex
+                                    xcss={styles.divider}
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                >
+                                    <Flex
+                                        columnGap="space.100"
+                                        alignItems="center"
+                                    >
+                                        <Tooltip content="You see this field in the settings because you do not have sufficient permissions to automatically retrieve data from Jira. The administrator has not granted you access to retrieve and read this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional permissions for data access.">
+                                            {(tooltipProps) => (
+                                                <div {...tooltipProps}>
+                                                    <EditorWarningIcon
+                                                        label="warning"
+                                                        primaryColor={token('color.icon.warning')}
+                                                    />
+                                                </div>
+                                            )}
+                                        </Tooltip>
+
+                                        <Heading size="small">Working hours per day</Heading>
+                                    </Flex>
+
+                                    <Flex
+                                        wrap="nowrap"
+                                        alignItems="center"
+                                        columnGap="space.100"
+                                    >
+                                        <Controller
+                                            name="workingHoursPerDay"
+                                            control={control}
+                                            rules={{ required: 'Required' }}
+                                            render={({ field, fieldState }) => {
+                                                return (
+                                                    <Box xcss={styles.inputWarp}>
+                                                        <Textfield
+                                                            value={field.value}
+                                                            onChange={field.onChange}
+                                                            onBlur={field.onBlur}
+                                                            type="number"
+                                                        />
+
+                                                        {fieldState.error?.message && (
+                                                            <ErrorMessage>{fieldState.error?.message}</ErrorMessage>
+                                                        )}
+                                                    </Box>
+                                                )
+                                            }}
+                                        />
+
+                                        <Text>Hours</Text>
+                                    </Flex>
+                                </Flex>
+
+                                <Flex
+                                    xcss={styles.divider}
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                >
+                                    <Flex
+                                        columnGap="space.100"
+                                        alignItems="center"
+                                    >
+                                        <Tooltip content="You see this field in the settings because you do not have sufficient permissions to automatically retrieve data from Jira. The administrator has not granted you access to retrieve and read this data. Please ask your team for the value of this field and set it manually. Alternatively, request the administrator to grant you additional permissions for data access.">
+                                            {(tooltipProps) => (
+                                                <div {...tooltipProps}>
+                                                    <EditorWarningIcon
+                                                        label="warning"
+                                                        primaryColor={token('color.icon.warning')}
+                                                    />
+                                                </div>
+                                            )}
+                                        </Tooltip>
+
+                                        <Heading size="small">Working days per week</Heading>
+                                    </Flex>
+
+                                    <Flex
+                                        wrap="nowrap"
+                                        alignItems="center"
+                                        columnGap="space.100"
+                                    >
+                                        <Controller
+                                            name="workingDaysPerWeek"
+                                            control={control}
+                                            rules={{ required: 'Required' }}
+                                            render={({ field, fieldState }) => {
+                                                return (
+                                                    <Box xcss={styles.inputWarp}>
+                                                        <Textfield
+                                                            value={field.value}
+                                                            onChange={field.onChange}
+                                                            onBlur={field.onBlur}
+                                                            type="number"
+                                                        />
+
+                                                        {fieldState.error?.message && (
+                                                            <ErrorMessage>{fieldState.error?.message}</ErrorMessage>
+                                                        )}
+                                                    </Box>
+                                                )
+                                            }}
+                                        />
+
+                                        <Text>Days</Text>
+                                    </Flex>
+                                </Flex>
+                            </>
+                        )}
+
+                        <Flex
+                            xcss={styles.divider}
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
+                            <Flex
+                                columnGap="space.100"
+                                alignItems="center"
+                            >
+                                <Tooltip content="This setting allows you to specify the custom field key used for Story Points in Jira. By default, Story Points might be located in a custom field (e.g., customfield_10016). If your Jira administrator has configured Story Points to use a different custom field, you can update the key here to ensure proper functionality.">
+                                    {(tooltipProps) => (
+                                        <div {...tooltipProps}>
+                                            <EditorInfoIcon
+                                                label="information"
+                                                primaryColor={token('color.icon.information')}
+                                            />
+                                        </div>
+                                    )}
+                                </Tooltip>
+
+                                <Heading size="small">Custom field for story points</Heading>
+                            </Flex>
+
+                            <Flex
+                                wrap="nowrap"
+                                alignItems="center"
+                                columnGap="space.100"
+                            >
+                                <Controller
+                                    name="storyPointField"
+                                    control={control}
+                                    rules={{ required: 'Required' }}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box>
+                                                <Textfield
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                />
+
+                                                {fieldState.error?.message && (
+                                                    <ErrorMessage>{fieldState.error?.message}</ErrorMessage>
+                                                )}
+                                            </Box>
+                                        )
+                                    }}
+                                />
+                            </Flex>
+                        </Flex>
+
+                        <Flex
+                            xcss={styles.divider}
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
+                            <Flex
+                                columnGap="space.100"
+                                alignItems="center"
+                            >
+                                <Tooltip content="Enable the use of story points as an equivalent to time estimation (e.g., hours or minutes) for tasks. When enabled, story points will be treated as a time value for tracking and planning purposes.">
+                                    {(tooltipProps) => (
+                                        <div {...tooltipProps}>
+                                            <EditorInfoIcon
+                                                label="information"
+                                                primaryColor={token('color.icon.information')}
+                                            />
+                                        </div>
+                                    )}
+                                </Tooltip>
+
+                                <Heading size="small">Use story points as time estimate</Heading>
+                            </Flex>
+
+                            <Flex
+                                wrap="nowrap"
+                                alignItems="center"
+                                columnGap="space.100"
+                            >
+                                <Controller
+                                    name="useStoryPointsAsTimeEstimate"
+                                    control={control}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box>
+                                                <Checkbox
+                                                    isChecked={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                />
+
+                                                {fieldState.error?.message && (
+                                                    <ErrorMessage>{fieldState.error?.message}</ErrorMessage>
+                                                )}
+                                            </Box>
+                                        )
+                                    }}
+                                />
+                            </Flex>
+                        </Flex>
                     </ModalBody>
                     <ModalFooter>
                         <Button
@@ -380,7 +714,7 @@ const Settings = () => {
                         </Button>
                         <Button
                             appearance="primary"
-                            isLoading={isPending}
+                            isLoading={filterPUT.isPending}
                             onClick={handleSubmit(onSave)}
                         >
                             Save

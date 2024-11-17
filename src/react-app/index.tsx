@@ -5,6 +5,9 @@ import '@atlaskit/css-reset'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import isToday from 'dayjs/plugin/isToday'
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter"
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore"
+import relativeTime from "dayjs/plugin/relativeTime"
 import QueryClientProvide from './app/QueryClientProvide/QueryClientProvide'
 import { RouterProvider } from 'react-router-dom'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -19,6 +22,9 @@ import { Box, xcss } from '@atlaskit/primitives'
 
 dayjs.extend(duration)
 dayjs.extend(isToday)
+dayjs.extend(isSameOrAfter)
+dayjs.extend(isSameOrBefore)
+dayjs.extend(relativeTime);
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 

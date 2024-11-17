@@ -1,6 +1,6 @@
 import { useRouteError } from 'react-router-dom'
 import { AxiosError } from 'axios'
-import { ErrorType } from '../../../shared/types/jiraTypes'
+import { ErrorType } from '../../../shared/types/Jira/ErrorType'
 import SectionMessage from '@atlaskit/section-message'
 
 const ErrorBoundary = () => {

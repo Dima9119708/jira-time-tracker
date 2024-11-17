@@ -6,13 +6,14 @@ const atlassianURL = require('./createAtlassianURL')
 const { AuthStorage } = require('../keyService')
 
 const OAuth2Window = (mainWindow) => {
-    ipcMain.handle('SAVE_DATA_OAuth2', async (event, { access_token, refresh_token, client_id }) => {
+    ipcMain.handle('SAVE_DATA_OAuth2', async (event, { access_token, refresh_token, client_id, jiraSubDomain }) => {
         return AuthStorage.set(
             AUTH_DATA,
             JSON.stringify({
                 access_token: access_token,
                 refresh_token: refresh_token,
                 client_id,
+                jiraSubDomain,
                 type: OAUTH2,
             })
         )

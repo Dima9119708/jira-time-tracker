@@ -1,46 +1,71 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../../../shared/config/api/api'
-import AssignableIssue from '../../../entities/AssignableIssue/ui/AssignableIssue'
-import { Assignee, IssueResponse, IssuesTrackingResponse } from '../../../pages/Issues/types/types'
+import AssignableSearchByIssueDropdown from 'react-app/entities/UserSearch/ui/AssignableSearchByIssueDropdown'
 import { AxiosError, AxiosResponse } from 'axios'
-import { ErrorType } from '../../../shared/types/jiraTypes'
+import { ErrorType } from '../../../shared/types/Jira/ErrorType'
 import { InfiniteData } from '@tanstack/react-query/build/modern/index'
 import { produce } from 'immer'
 import { ChangeAssigneeProps } from '../types/types'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { Assignee, IssueResponse } from 'react-app/shared/types/Jira/Issues'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
-    const { issueKey, idxIssue, issueName, idxPage, assignee, queryKey, position = 'bottom-start' } = props
+    const { issueKey, assignee, queryKeys, position = 'bottom-start', onSuccess } = props
 
     const queryClient = useQueryClient()
 
     const notify = useNotifications()
 
+    const handleAxiosError = useErrorNotifier()
+
     const { mutate } = useMutation<
         AxiosResponse<Assignee>,
         AxiosError<ErrorType>,
         Assignee,
-        { dismissFn: Function; oldState: InfiniteData<IssueResponse> | IssuesTrackingResponse | undefined; notificationMessage: string }
+        { dismissFn: Function; oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]> | undefined; notificationMessage: string }
     >({
-        mutationFn: (variables) =>
-            axiosInstance.put<Assignee>('/issue-assignee', { accountId: variables.accountId }, { params: { id: issueKey } }),
+        mutationFn: (variables, ) =>
+            axiosInstance.put<Assignee>('/issue-assignee', { accountId: variables.accountId }, { params: { issueKey: issueKey } }),
         onMutate: async (variables) => {
-            await queryClient.cancelQueries({ queryKey: [queryKey] })
 
-            queryClient.setQueryData(
-                [queryKey],
-                (old: InfiniteData<IssueResponse> | IssuesTrackingResponse): InfiniteData<IssueResponse> | IssuesTrackingResponse => {
-                    if (Array.isArray(old)) {
-                        return produce(old, (draft) => {
-                            draft[idxIssue].fields.assignee = variables
-                        })
-                    } else {
-                        return produce(old, (draft) => {
-                            draft.pages[idxPage!].issues[idxIssue].fields.assignee = variables
-                        })
-                    }
+            const oldStates: Array<[string, InfiniteData<IssueResponse> | IssueResponse['issues']]>  = []
+
+            for (const queryKey of queryKeys()) {
+                await queryClient.cancelQueries({ queryKey: [queryKey] })
+
+                const oldState = queryClient.getQueryData<InfiniteData<IssueResponse> | IssueResponse['issues']>([queryKey])
+
+                if (oldState) {
+                    queryClient.setQueryData(
+                        [queryKey],
+                        (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
+                            if (Array.isArray(old)) {
+                                return produce(old, (draft) => {
+                                    const issue = draft.find(({ key }) => key === issueKey)
+
+                                    if (issue) {
+                                        issue.fields.assignee = variables
+                                    }
+                                })
+                            } else {
+                                return produce(old, (draft) => {
+                                    for (const page of draft.pages) {
+                                        const issue = page.issues.find(({ key }) => key === issueKey);
+
+                                        if (issue) {
+                                            issue.fields.assignee = variables;
+                                            break;
+                                        }
+                                    }
+                                })
+                            }
+                        }
+                    )
+
+                    oldStates.push([queryKey, oldState])
                 }
-            )
+            }
 
             const notificationMessage = `from ${assignee?.displayName ?? 'Unassigned'} to ${variables.displayName}`
 
@@ -50,7 +75,7 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
             })
 
             return {
-                oldState: queryClient.getQueryData<InfiniteData<IssueResponse> | IssuesTrackingResponse>([queryKey]),
+                oldStates,
                 dismissFn,
                 notificationMessage,
             }
@@ -62,23 +87,34 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
                 description: context!.notificationMessage,
             })
 
-            //  TODO ????
-            // queryClient.invalidateQueries({ queryKey: [queryKey] })
+            if (typeof onSuccess === 'function') {
+                onSuccess()
+            }
+
+            queryClient.invalidateQueries()
         },
         onError: (error, variables, context) => {
             context!.dismissFn()
 
-            notify.error({
-                title: 'Assignee changes',
-                description: JSON.stringify(error.response?.data),
-            })
+            handleAxiosError(error)
 
-            queryClient.setQueryData([queryKey], context!.oldState)
+            if (Array.isArray(context?.oldStates)) {
+                for (const [queryKey, oldState] of context.oldStates) {
+                    queryClient.setQueryData(
+                        [queryKey],
+                        (old: InfiniteData<IssueResponse> | IssueResponse['issues']): InfiniteData<IssueResponse> | IssueResponse['issues'] => {
+                            return produce(old, (draft) => {
+                                Object.assign(draft, oldState)
+                            })
+                        }
+                    )
+                }
+            }
         },
     })
 
     return (
-        <AssignableIssue
+        <AssignableSearchByIssueDropdown
             assignee={assignee}
             issueKey={issueKey}
             onChange={mutate}

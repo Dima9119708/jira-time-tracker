@@ -60,13 +60,13 @@ const AuthByEmailAndToken = () => {
                     await ipcRenderer.invoke('DELETE_REMEMBER_DATA_BASIC_AUTH')
                 }
 
-                return ipcRenderer.invoke('SAVE_DATA_BASIC_AUTH', variables)
+                return await ipcRenderer.invoke('SAVE_DATA_BASIC_AUTH', variables)
             })
 
-            return axiosInstance.get('/login')
+            return axiosInstance.get('/myself')
         },
         onSuccess: (data) => {
-            queryClient.setQueryData(['login'], data)
+            queryClient.setQueryData(['myself'], data)
             navigate('/issues')
         },
     })

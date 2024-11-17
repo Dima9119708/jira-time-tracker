@@ -1,36 +1,85 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
-import { queryGetIssues } from '../model/queryOptions'
-import Task from './Issue'
+import Issue from './Issue'
 import { useEffect } from 'react'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
+import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
+import { useIssuesGET } from 'react-app/entities/Issues'
+import { Box, xcss } from '@atlaskit/primitives'
+import Button from '@atlaskit/button/new'
+import { useInView } from 'react-intersection-observer'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
+import { AxiosError } from 'axios'
+import EmptyState from '@atlaskit/empty-state'
+import Spinner from '@atlaskit/spinner'
 
 const Issues = () => {
-    const { data, error } = useInfiniteQuery(queryGetIssues())
-
+    const { ref, inView } = useInView()
     const notify = useNotifications()
 
+    const { data, error, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } = useIssuesGET({
+        jql: () => useGlobalState.getState().jql,
+        onFilteringIssues: (data) => {
+            const tasksIDS = useGlobalState.getState().getIssueIdsSearchParams()
+
+            return {
+                ...data,
+                issues: data.issues.filter((issue) => !tasksIDS.includes(issue.id)),
+            }
+        },
+    })
+
+    const aaaa = useErrorNotifier(error)
+
     useEffect(() => {
-        if (error) {
-            notify.error({
-                title: `Error loading task`,
-                description: JSON.stringify(error.response?.data),
-            })
+        aaaa(AxiosError)
+    }, [])
+
+    useEffect(() => {
+        if (inView && !isFetching) {
+            fetchNextPage()
         }
-    }, [error])
+    }, [inView, isFetching])
 
     return (
         <>
-            {data?.pages.map((page, idxPage) =>
-                page.issues.map((task, idxIssue) => (
-                    <Task
+            {isFetching && (data?.pages[0]?.issues.length === 0) && (
+                <EmptyState
+                    header=""
+                    description={<Spinner />}
+                />
+            )}
+            {!isLoading && !isFetching && (data?.pages[0]?.issues.length === 0 || !data?.pages.length) && (
+                <EmptyState
+                    header="No Issues Found"
+                    description="There are no issues matching your criteria. Please check your filters or search settings, or try again later."
+                />
+            )}
+            {data?.pages.map((page) =>
+                page.issues.map((task) => (
+                    <Issue
                         key={task.id}
                         issueKey={task.key}
-                        idxPage={idxPage}
-                        idxIssue={idxIssue}
                         fields={task.fields}
                         id={task.id}
                     />
                 ))
+            )}
+
+            {!isLoading && data?.pages && (data?.pages[0]?.issues.length > 0) && (
+                <Box xcss={xcss({ marginTop: 'space.400' })}>
+                    <Button
+                        appearance={isFetchingNextPage ? 'default' : hasNextPage ? 'primary' : 'default'}
+                        onClick={() => fetchNextPage()}
+                        shouldFitContainer
+                    >
+                        {isFetchingNextPage ? 'Loading more...' : hasNextPage ? 'Load More' : 'Nothing more to load'}
+                        <Box
+                            ref={ref}
+                            xcss={xcss({
+                                display: isFetchingNextPage ? 'none' : 'block',
+                            })}
+                        />
+                    </Button>
+                </Box>
             )}
         </>
     )

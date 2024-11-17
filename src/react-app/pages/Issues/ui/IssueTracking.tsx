@@ -1,203 +1,164 @@
-import React, { memo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { secondsToUIFormat } from '../lib/dateHelper'
+import React, { memo, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { onlineManager, useQueryClient } from '@tanstack/react-query'
+import { secondsToUIFormat } from '../../../shared/lib/helpers/secondsToUIFormat'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
-import { Timer } from '../../../features/Timer'
-import { TaskProps, IssuesTrackingResponse } from '../types/types'
+import { IssueProps } from '../types/types'
 import { produce } from 'immer'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
-import { useWorklogQuery } from '../lib/useWorklogQuery'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
 import { IconButton } from '@atlaskit/button/new'
 import VidPauseIcon from '@atlaskit/icon/glyph/vid-pause'
-import { Box, Flex, Text, xcss } from '@atlaskit/primitives'
-import Badge from '@atlaskit/badge'
-import Heading from '@atlaskit/heading'
+import { Box, Flex, xcss } from '@atlaskit/primitives'
 import SectionMessage from '@atlaskit/section-message'
-import Image from '@atlaskit/image'
+import { LogTimeButton } from 'react-app/widgets/LogTime'
+import { LogTimeAuto, LogTimeAutoBase } from 'react-app/widgets/LogTimeAuto'
+import {
+    CardIssueDetailsBadges,
+    CardIssueHeader,
+    CardIssue,
+    useStatusStyles,
+    IssueActivityFeedUIButtons,
+} from 'react-app/entities/Issues'
+import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
+import { LogTimeIndicator } from 'react-app/features/LogTimeIndicator'
+import { LogTimeErrorNotification } from 'react-app/features/PersistLostTime'
+import { ChildIssues, isInwardIssue, LinkedIssues } from 'react-app/widgets/RelatedIssues'
 
-const IssueTracking = (props: TaskProps) => {
-    const { fields, id, idxIssue, issueKey } = props
-    const queryClient = useQueryClient()
+const IssueTracking = (props: IssueProps) => {
+    const { fields, id, issueKey } = props
     const [isLoading, setLoading] = useState(false)
 
-    const timerRef = useWorklogQuery({
-        taskId: id,
-    })
+    const invalidateQueries = useCallback(() => {
+        return ['issues tracking']
+    }, [])
+
+    const isOnline = useSyncExternalStore(onlineManager.subscribe, () => onlineManager.isOnline())
+
+    const styles = useStatusStyles(fields)
 
     const onStopTracking = async () => {
         setLoading(true)
 
         await useGlobalState.getState().changeIssueIdsSearchParams('delete', id)
 
-        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
-
-        queryClient.setQueryData(['tasks tracking'], (old: IssuesTrackingResponse): IssuesTrackingResponse => {
-            return produce(old, (draft) => {
-                const idx = draft.findIndex((a) => a.id === id)
-                draft.splice(idx, 1)
-            })
-        })
-
         setLoading(false)
     }
 
     return (
         <>
-            <Box
-                xcss={xcss({
-                    display: 'flex',
-                    flexDirection: 'column',
-                    rowGap: 'space.200',
-                    padding: 'space.200',
-                    borderRadius: 'border.radius.200',
-                    boxShadow: 'elevation.shadow.overflow',
-                    backgroundColor: 'color.background.accent.blue.subtlest',
-                })}
-            >
-                <Timer ref={timerRef} />
+            <CardIssue active>
+                <LogTimeAuto
+                    issueId={id}
+                    indicatorSlot={
+                        <LogTimeIndicator
+                            fields={fields}
+                        />
+                    }
+                />
+
+                <LogTimeErrorNotification issueId={id} LogTimeAutoComponent={LogTimeAutoBase} invalidateQueries={invalidateQueries} />
+
+                {
+                    !isOnline && (
+                        <SectionMessage
+                            title={`Time Logging Paused Due to Internet Absence`}
+                            appearance="error"
+                        >
+                            Time logging has been paused because the internet connection is currently unavailable.
+                            Once the connection is restored, time tracking will resume automatically.
+                        </SectionMessage>
+                    )
+                }
 
                 {!isLoading && fields.status.statusCategory.key !== 'indeterminate' && (
                     <SectionMessage
-                        title={`Warning!`}
+                        title={`Incorrect Issue Status for Time Logging`}
                         appearance="warning"
                     >
-                        This task is not in the "In progress" status please change its status. However, time continues to be logged for it.
+                        This issue is not in the "In Progress" status; please change its status. Currently, time continues to be logged for it.
                     </SectionMessage>
                 )}
 
-                <Flex justifyContent="space-between">
-                    <Heading size="medium">{fields.summary}</Heading>
+                <CardIssueHeader
+                    fields={fields}
+                />
 
-                    <Badge appearance="primary">
-                        <Box
-                            as="span"
-                            xcss={xcss({ padding: 'space.050' })}
-                        >
-                            <Box
-                                as="span"
-                                xcss={xcss({ marginRight: 'space.075' })}
-                            >
-                                <Text weight="bold">{secondsToUIFormat(fields.timespent)}</Text>
-                            </Box>
-                            <Box
-                                as="span"
-                                xcss={xcss({ marginRight: 'space.075' })}
-                            >
-                                <Text weight="bold">/</Text>
-                            </Box>
-                            <Box as="span">
-                                <Text weight="bold">{secondsToUIFormat(fields.timeoriginalestimate)}</Text>
-                            </Box>
-                        </Box>
-                    </Badge>
-                </Flex>
-
-                <Flex
-                    gap="space.100"
-                    alignItems="center"
-                    wrap="wrap"
-                >
-                    <Badge appearance="default">
-                        <Flex
-                            xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', alignItems: 'center', columnGap: 'space.075' })}
-                        >
-                            <Image
-                                src={fields.project.avatarUrls['32x32']}
-                                height="15px"
-                                width="15px"
-                            />
-                            <Text
-                                weight="bold"
-                                size="small"
-                            >
-                                Project: {fields.project.name}
-                            </Text>
-                        </Flex>
-                    </Badge>
-
-                    <Badge appearance="default">
-                        <Flex
-                            xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}
-                        >
-                            <Image
-                                src={fields.priority.iconUrl}
-                                height="15px"
-                                width="15px"
-                            />
-                            <Text
-                                weight="bold"
-                                size="small"
-                            >
-                                priority: {fields.priority.name}
-                            </Text>
-                        </Flex>
-                    </Badge>
-
-                    <Badge appearance="default">
-                        <Flex
-                            xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}
-                        >
-                            <Image
-                                src={fields.issuetype.iconUrl}
-                                height="15px"
-                                width="15px"
-                            />
-                            <Text
-                                weight="bold"
-                                size="small"
-                            >
-                                {fields.issuetype.name} ({issueKey})
-                            </Text>
-                        </Flex>
-                    </Badge>
-                </Flex>
+                <CardIssueDetailsBadges
+                    issueKey={issueKey}
+                    created={fields.created}
+                    issueTypeIconUrl={fields.issuetype.iconUrl}
+                    issueTypeName={fields.issuetype.name}
+                    projectName={fields.project.name}
+                    priorityIconUrl={fields.priority.iconUrl}
+                    avatarUrl={fields.project.avatarUrls['32x32']}
+                    priorityName={fields.priority.name}
+                />
 
                 <Flex
                     justifyContent="space-between"
                     alignItems="center"
-                    columnGap="space.100"
+                    gap="space.100"
+                    wrap="wrap"
                 >
-                    <Flex columnGap="space.200">
+                    <Flex gap="space.100" wrap="wrap">
                         <ChangeStatusIssue
                             issueId={id}
                             issueName={fields.summary}
                             status={fields.status}
-                            idxIssue={idxIssue}
-                            queryKey="tasks tracking"
+                            queryKeys={invalidateQueries}
                             trigger={fields.status.name}
+                            xcss={styles.STATUTES_DROPDOWN_BUTTON}
                         />
 
                         <ChangeAssigneeIssue
                             assignee={fields.assignee}
                             issueName={fields.summary}
                             issueKey={issueKey}
-                            idxIssue={idxIssue}
-                            queryKey="tasks tracking"
+                            queryKeys={invalidateQueries}
                         />
+
+                        <LogTimeButton issueId={id} />
+
+                        <FavoriteIssue issueId={id} />
                     </Flex>
 
                     <ChangeStatusIssue
                         issueId={id}
                         issueName={fields.summary}
                         status={fields.status}
-                        idxIssue={idxIssue}
-                        queryKey="tasks tracking"
-                        onChange={onStopTracking}
-                        disabled={fields.status.statusCategory.key === 'done'}
-                        trigger={(triggerButtonProps) => (
+                        queryKeys={() => []}
+                        onSuccess={onStopTracking}
+                        trigger={(triggerButtonProps, isPending) => (
                             <IconButton
                                 {...triggerButtonProps}
                                 ref={triggerButtonProps.triggerRef}
-                                isLoading={isLoading}
+                                isLoading={isLoading || isPending}
                                 icon={VidPauseIcon}
                                 label="Stop tracking"
-                                {...(fields.status.statusCategory.key === 'done' && { onClick: onStopTracking })}
                             />
                         )}
                     />
                 </Flex>
-            </Box>
+
+                <IssueActivityFeedUIButtons
+                    isShowLinkedIssues={fields.issuelinks.length > 0}
+                    isShowChildIssues={fields.subtasks.length > 0}
+                    countChildIssues={fields.subtasks.length}
+                    countLinkedIssues={fields.issuelinks.length}
+                >
+                    {({ activityFeed }) => {
+                        if (activityFeed === 'Linked issues') {
+                            return <LinkedIssues issueId={id} />
+                        }
+
+                        if (activityFeed === 'Child issues') {
+                            return <ChildIssues issueId={id} />
+                        }
+
+                        return null
+                    }}
+                </IssueActivityFeedUIButtons>
+            </CardIssue>
 
             <Box
                 xcss={xcss({

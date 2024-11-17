@@ -1,183 +1,151 @@
-import React, { memo } from 'react'
+import React, { memo, useCallback } from 'react'
 import { useQueryClient, InfiniteData } from '@tanstack/react-query'
-import { secondsToUIFormat } from '../lib/dateHelper'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
 import { produce } from 'immer'
-import { TaskProps, IssueResponse, IssuesTrackingResponse } from '../types/types'
+import { IssueProps } from '../types/types'
+import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import ChangeAssigneeIssue from '../../../features/ChangeAssigneeIssue/ui/ChangeAssigneeIssue'
-import { Box, Flex, xcss, Text } from '@atlaskit/primitives'
-import Heading from '@atlaskit/heading'
-import Badge from '@atlaskit/badge'
-import Image from '@atlaskit/image'
+import { Flex } from '@atlaskit/primitives'
 import { IconButton } from '@atlaskit/button/new'
 import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
+import { LogTimeButton } from 'react-app/widgets/LogTime'
+import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles, IssueActivityFeedUIButtons } from 'react-app/entities/Issues'
+import { FavoriteIssue } from 'react-app/features/FavoriteIssue'
+import { LogTimeErrorNotification } from 'react-app/features/PersistLostTime'
+import { LogTimeAutoBase } from 'react-app/widgets/LogTimeAuto'
+import { ChildIssues, LinkedIssues } from 'react-app/widgets/RelatedIssues'
 
-const Issue = (props: TaskProps) => {
-    const { fields, id, idxPage, idxIssue, issueKey } = props
+const Issue = (props: IssueProps) => {
+    const { fields, id, issueKey } = props
     const queryClient = useQueryClient()
 
-    const onPlayTracking = () => {
-        useGlobalState.getState().changeIssueIdsSearchParams('add', id)
+    const invalidateQueries = useCallback(() => {
+        return ['issues']
+    }, [])
 
-        queryClient.setQueryData(['tasks tracking'], (old: IssuesTrackingResponse): IssuesTrackingResponse => {
-            const tasks = queryClient.getQueryData<InfiniteData<IssueResponse>>(['tasks'])
+    const styles = useStatusStyles(fields)
 
-            return produce(old, (draft) => {
-                if (tasks) {
-                    draft.unshift(tasks.pages[idxPage!].issues[idxIssue])
-                }
+    const onPlayTracking = async () => {
+        await useGlobalState.getState().changeIssueIdsSearchParams('add', id)
+
+        const issues = queryClient.getQueryData<InfiniteData<IssueResponse>>(['issues'])
+
+        if (issues) {
+            queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
+                return produce(old, (draft) => {
+                    for (const page of issues.pages) {
+                        const issue = page.issues.find((issue) => issue.id === id)
+                        if (issue) {
+                            draft.unshift(issue)
+                        }
+                    }
+                })
             })
-        })
 
-        queryClient.setQueryData(['tasks'], (old: InfiniteData<IssueResponse>): InfiniteData<IssueResponse> => {
-            return produce(old, (draft) => {
-                draft.pages[idxPage!].issues.splice(idxIssue, 1)
+            queryClient.setQueryData(['issues'], (old: InfiniteData<IssueResponse>): InfiniteData<IssueResponse> => {
+                return produce(old, (draft) => {
+                    for (const page of draft.pages) {
+                        const index = page.issues.findIndex((issue) => issue.id === id)
+                        if (index !== -1) {
+                            page.issues.splice(index, 1)
+                            return
+                        }
+                    }
+                })
             })
-        })
+        }
     }
 
     return (
-        <Box
-            xcss={xcss({
-                display: 'flex',
-                flexDirection: 'column',
-                rowGap: 'space.200',
-                padding: 'space.200',
-                borderRadius: 'border.radius.200',
-                boxShadow: 'elevation.shadow.overflow',
-                backgroundColor: 'color.background.input',
-                marginBottom: 'space.250',
-            })}
-        >
-            <Flex justifyContent="space-between">
-                <Heading size="medium">{fields.summary}</Heading>
+        <CardIssue active={false}>
+            <CardIssueHeader fields={fields} />
 
-                <Badge appearance="primary">
-                    <Box
-                        as="span"
-                        xcss={xcss({ padding: 'space.050' })}
-                    >
-                        <Box
-                            as="span"
-                            xcss={xcss({ marginRight: 'space.075' })}
-                        >
-                            <Text weight="bold">{secondsToUIFormat(fields.timespent)}</Text>
-                        </Box>
-                        <Box
-                            as="span"
-                            xcss={xcss({ marginRight: 'space.075' })}
-                        >
-                            <Text weight="bold">/</Text>
-                        </Box>
-                        <Box as="span">
-                            <Text weight="bold">{secondsToUIFormat(fields.timeoriginalestimate)}</Text>
-                        </Box>
-                    </Box>
-                </Badge>
-            </Flex>
+            <LogTimeErrorNotification
+                issueId={id}
+                LogTimeAutoComponent={LogTimeAutoBase}
+                invalidateQueries={invalidateQueries}
+            />
 
-            <Flex
-                gap="space.100"
-                alignItems="center"
-                wrap="wrap"
-            >
-                <Badge appearance="default">
-                    <Flex xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', alignItems: 'center', columnGap: 'space.075' })}>
-                        <Image
-                            src={fields.project.avatarUrls['32x32']}
-                            height="15px"
-                            width="15px"
-                        />
-                        <Text
-                            weight="bold"
-                            size="small"
-                        >
-                            Project: {fields.project.name}
-                        </Text>
-                    </Flex>
-                </Badge>
-
-                <Badge appearance="default">
-                    <Flex xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}>
-                        <Image
-                            src={fields.priority.iconUrl}
-                            height="15px"
-                            width="15px"
-                        />
-                        <Text
-                            weight="bold"
-                            size="small"
-                        >
-                            priority: {fields.priority.name}
-                        </Text>
-                    </Flex>
-                </Badge>
-
-                <Badge appearance="default">
-                    <Flex xcss={xcss({ padding: 'space.050', textTransform: 'uppercase', columnGap: 'space.075', alignItems: 'center' })}>
-                        <Image
-                            src={fields.issuetype.iconUrl}
-                            height="15px"
-                            width="15px"
-                        />
-                        <Text
-                            weight="bold"
-                            size="small"
-                        >
-                            {fields.issuetype.name} ({issueKey})
-                        </Text>
-                    </Flex>
-                </Badge>
-            </Flex>
+            <CardIssueDetailsBadges
+                issueKey={issueKey}
+                created={fields.created}
+                issueTypeIconUrl={fields.issuetype.iconUrl}
+                issueTypeName={fields.issuetype.name}
+                projectName={fields.project.name}
+                priorityIconUrl={fields.priority.iconUrl}
+                avatarUrl={fields.project.avatarUrls['32x32']}
+                priorityName={fields.priority.name}
+            />
 
             <Flex
                 justifyContent="space-between"
-                columnGap="space.100"
+                gap="space.100"
+                wrap="wrap"
             >
-                <Flex columnGap="space.200">
+                <Flex
+                    gap="space.100"
+                    wrap="wrap"
+                >
                     <ChangeStatusIssue
                         issueId={id}
                         issueName={fields.summary}
                         status={fields.status}
-                        idxPage={idxPage}
-                        idxIssue={idxIssue}
-                        queryKey="tasks"
+                        queryKeys={invalidateQueries}
                         trigger={fields.status.name}
+                        xcss={styles.STATUTES_DROPDOWN_BUTTON}
                     />
 
                     <ChangeAssigneeIssue
                         assignee={fields.assignee}
                         issueName={fields.summary}
                         issueKey={issueKey}
-                        idxPage={idxPage}
-                        idxIssue={idxIssue}
-                        queryKey="tasks"
+                        queryKeys={invalidateQueries}
                     />
+
+                    <LogTimeButton issueId={id} />
+
+                    <FavoriteIssue issueId={id} />
                 </Flex>
 
                 <ChangeStatusIssue
                     issueId={id}
                     issueName={fields.summary}
                     status={fields.status}
-                    idxPage={idxPage}
-                    idxIssue={idxIssue}
-                    queryKey="tasks"
+                    queryKeys={invalidateQueries}
                     position="left"
-                    onChange={() => onPlayTracking()}
-                    disabled={fields.status.statusCategory.key === 'indeterminate'}
+                    onMutate={onPlayTracking}
+                    disabled={false}
                     trigger={(triggerButtonProps) => (
                         <IconButton
                             {...triggerButtonProps}
                             ref={triggerButtonProps.triggerRef}
                             icon={VidPlayIcon}
                             label="Play"
-                            {...(fields.status.statusCategory.key === 'indeterminate' && { onClick: onPlayTracking })}
                         />
                     )}
                 />
             </Flex>
-        </Box>
+
+            <IssueActivityFeedUIButtons
+                isShowLinkedIssues={fields.issuelinks.length > 0}
+                isShowChildIssues={fields.subtasks.length > 0}
+                countChildIssues={fields.subtasks.length}
+                countLinkedIssues={fields.issuelinks.length}
+            >
+                {({ activityFeed }) => {
+                    if (activityFeed === 'Linked issues') {
+                        return <LinkedIssues issueId={id} />
+                    }
+
+                    if (activityFeed === 'Child issues') {
+                        return <ChildIssues issueId={id} />
+                    }
+
+                    return null
+                }}
+            </IssueActivityFeedUIButtons>
+        </CardIssue>
     )
 }
 

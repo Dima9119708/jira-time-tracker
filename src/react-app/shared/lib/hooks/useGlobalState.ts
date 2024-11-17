@@ -1,15 +1,28 @@
 import { createStore } from '../../config/store/store'
-import { ConfigurationTimeTrackingOptions } from '../../../pages/Issues/types/types'
 import deepmerge from '../utils/deepMerge'
+import { JQLBasic } from 'react-app/widgets/JQLBuilderBasic/ui/JQLBuilderBasicForm'
+import { ConfigurationTimeTrackingOptions } from 'react-app/shared/types/Jira/TimeTracking'
+import { EnumSortOrder } from 'react-app/shared/types/common'
 
 type Unit = { label: 'Minutes' | 'Hours'; value: 'minutes' | 'hours' }
+
+export enum PLUGINS {
+    TEMPO = 'TEMPO',
+}
 
 export interface UseGlobalState {
     filterId: string
     jql: string
-    isSystemIdle: boolean
+    isIdleWithInsufficientActivity: boolean
+    isTimeLoggingPaused: boolean
     settings: {
+        plugin: PLUGINS.TEMPO | null
+        jqlUISearchModeSwitcher: 'basic' | 'jql'
+        jqlBasic: JQLBasic | null
         autoStart: boolean
+        favorites: Array<{ name: string; issueIds: string[] }>
+        storyPointField: string,
+        useStoryPointsAsTimeEstimate: boolean,
         timeLoggingInterval: {
             unit: Unit
             displayTime: number
@@ -29,8 +42,16 @@ export interface UseGlobalState {
             displayTime: number
             second: number
         }
+
+        pluginLogoutAlerts: {
+            enabled: boolean
+            displayTime: number
+            millisecond: number
+        }
+
+        workingHoursPerDay: ConfigurationTimeTrackingOptions['workingHoursPerDay']
+        workingDaysPerWeek: ConfigurationTimeTrackingOptions['workingDaysPerWeek']
     }
-    workHoursPerWeek: ConfigurationTimeTrackingOptions['workingHoursPerDay']
     issueIdsSearchParams: {
         type: 'add' | 'delete' | null
         value: string
@@ -38,16 +59,22 @@ export interface UseGlobalState {
     }
     setFilterId: (id: string) => void
     parseAndSaveSetting: (string: string) => void
-    setWorkHoursPerWeek: (hours: UseGlobalState['workHoursPerWeek']) => void
+    setWorkingHoursPerWeek: (hours: UseGlobalState['settings']['workingHoursPerDay']) => void
+    setWorkingDaysPerWeek: (hours: UseGlobalState['settings']['workingDaysPerWeek']) => void
     updateJQL: (jql: string) => void
+    hasJiraTimeTrackingPermission: boolean
     changeIssueIdsSearchParams: (
         type: UseGlobalState['issueIdsSearchParams']['type'],
         value: UseGlobalState['issueIdsSearchParams']['value']
     ) => Promise<void>
     getIssueIdsSearchParams: () => string
-    setSystemIdle: (bool: boolean) => void
-    setSettings: (settings: UseGlobalState['settings']) => void
+    setIdleWithInsufficientActivity: (bool: boolean) => void
+    setTimeLoggingPaused: (bool: boolean) => void
+    setSettings: (settings: Partial<UseGlobalState['settings']>) => void
     setIssueIdsSearchParams: (ids: string) => void
+    setSearchModeSwitcherBasic: () => void
+    setSearchModeSwitcherJQL: () => void
+    getSettingsString: () => string
 }
 
 export const TIME_OPTIONS: Unit[] = [
@@ -55,15 +82,25 @@ export const TIME_OPTIONS: Unit[] = [
     { label: 'Hours', value: 'hours' },
 ]
 
+export const DEFAULT_WORKING_HOURS_PER_DAY = 8
+export const DEFAULT_WORKING_DAYS_PER_WEEK = 5
+
 export const useGlobalState = createStore<UseGlobalState>(
     (set, get) => ({
         filterId: '',
         jql: '',
-        isSystemIdle: false,
-        workHoursPerWeek: 8,
+        isIdleWithInsufficientActivity: false,
+        isTimeLoggingPaused: false,
+        hasJiraTimeTrackingPermission: false,
         openSettings: false,
         settings: {
+            plugin: null,
+            jqlUISearchModeSwitcher: 'basic',
+            favorites: [],
+            jqlBasic: null,
             autoStart: true,
+            storyPointField: 'customfield_10016',
+            useStoryPointsAsTimeEstimate: false,
             timeLoggingInterval: {
                 unit: TIME_OPTIONS[0],
                 displayTime: 1,
@@ -83,6 +120,15 @@ export const useGlobalState = createStore<UseGlobalState>(
                 displayTime: 5,
                 second: 300,
             },
+
+            pluginLogoutAlerts: {
+                enabled: true,
+                displayTime: 1,
+                millisecond: 60_000,
+            },
+
+            workingHoursPerDay: DEFAULT_WORKING_HOURS_PER_DAY,
+            workingDaysPerWeek: DEFAULT_WORKING_DAYS_PER_WEEK,
         },
         issueIdsSearchParams: {
             type: null,
@@ -91,12 +137,17 @@ export const useGlobalState = createStore<UseGlobalState>(
         },
         setSettings: (settings) => {
             set((draft) => {
-                draft.settings = settings
+                draft.settings = deepmerge(get().settings, settings)
             })
         },
-        setSystemIdle: (bool) => {
+        setIdleWithInsufficientActivity: (bool) => {
             set((draft) => {
-                draft.isSystemIdle = bool
+                draft.isIdleWithInsufficientActivity = bool
+            })
+        },
+        setTimeLoggingPaused: (bool) => {
+            set((draft) => {
+                draft.isTimeLoggingPaused = bool
             })
         },
         setFilterId: (id) => {
@@ -112,9 +163,14 @@ export const useGlobalState = createStore<UseGlobalState>(
         getIssueIdsSearchParams: () => {
             return get().issueIdsSearchParams.currentParams
         },
-        setWorkHoursPerWeek: (hours) => {
+        setWorkingHoursPerWeek: (hours) => {
             set((draft) => {
-                draft.workHoursPerWeek = hours
+                draft.settings.workingHoursPerDay = hours
+            })
+        },
+        setWorkingDaysPerWeek: (hours) => {
+            set((draft) => {
+                draft.settings.workingDaysPerWeek = hours
             })
         },
         parseAndSaveSetting: (string) => {
@@ -150,6 +206,17 @@ export const useGlobalState = createStore<UseGlobalState>(
                 state.jql = jql
             })
         },
+        setSearchModeSwitcherBasic: () => {
+            set((state) => {
+                state.settings.jqlUISearchModeSwitcher = 'basic'
+            })
+        },
+        setSearchModeSwitcherJQL: () => {
+            set((state) => {
+                state.settings.jqlUISearchModeSwitcher = 'jql'
+            })
+        },
+        getSettingsString: () => JSON.stringify(get().settings),
     }),
     { name: 'Global Store' }
 )

@@ -32,6 +32,10 @@ atlassianURL.searchParams.set(
         'read:issue.time-tracking:jira',
         'read:jql:jira',
         'read:user-configuration:jira',
+        'delete:issue-worklog:jira',
+        'delete:issue-worklog.property:jira',
+        'write:issue.time-tracking:jira',
+        'read:workflow:jira',
     ].join(' ')
 )
 atlassianURL.searchParams.set('redirect_uri', process.env.REDIRECT_URL)
