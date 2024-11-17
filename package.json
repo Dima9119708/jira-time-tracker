@@ -20,7 +20,8 @@
     "test:unit": "jest"
   },
   "build": {
-    "appId": "com.example.jiratimetracker",
+    "appId": "com.example.time-tracking",
+    "productName": "Time Tracking",
     "extraResources": [
       ".env.production"
     ],
