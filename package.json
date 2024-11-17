@@ -1,6 +1,6 @@
 {
   "name": "jira-time-tracker",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "private": true,
   "main": "src/electron-app/main.js",
   "homepage": "https://github.com/Dima9119708/jira-time-tracker",
