@@ -8,6 +8,10 @@ import { IconButton } from '@atlaskit/button/new'
 import { Box, xcss } from '@atlaskit/primitives'
 import debounce from 'lodash.debounce'
 import Spinner from '@atlaskit/spinner'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
+import EditorErrorIcon from '@atlaskit/icon/glyph/editor/error';
+import ErrorIcon from '@atlaskit/icon/glyph/error';
+import { token } from '@atlaskit/tokens'
 
 interface Issue {
     id: number;
@@ -50,7 +54,7 @@ const SearchByIssues = (props: SearchByIssuesProps) => {
     const [expanded, setExpanded] = useState(false)
     const queryClient = useQueryClient()
 
-    const { refetch, isFetching, data } = useQuery({
+    const { refetch, isFetching, data, error } = useQuery({
         queryKey: ['searchIssues'],
         queryFn: async ({ signal }) => {
             if (searchValue === '') {
@@ -92,6 +96,8 @@ const SearchByIssues = (props: SearchByIssuesProps) => {
         gcTime: 0
     })
 
+    useErrorNotifier(error)
+
     useEffect(() => {
         const debouncedRefetch = debounce(() => {
             if (searchValue !== previousValue) {
@@ -125,11 +131,19 @@ const SearchByIssues = (props: SearchByIssuesProps) => {
             <Textfield
                 isInvalid={data === 0}
                 isCompact
-                elemBeforeInput={<EditorSearchIcon label="search issues" />}
+                elemBeforeInput={data === 0 ? <ErrorIcon label="search issues" primaryColor={token('color.text.danger')} /> : <EditorSearchIcon label="search issues" />}
                 elemAfterInput={
                     isShowExpanded && <IconButton
-                        onClick={() => (isFetching ? null : setExpanded((prevState) => !prevState))}
-                        icon={isFetching ? Spinner : EditorExpandIcon}
+                        onClick={() => {
+                            if (isFetching) return
+
+                            if (searchValue.length > 0) {
+                               return setSearchValue('')
+                            }
+
+                            setExpanded((prevState) => !prevState)
+                        }}
+                        icon={searchValue ? EditorErrorIcon : isFetching ? Spinner : EditorExpandIcon}
                         label="search issues expand"
                     />
                 }

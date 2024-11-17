@@ -5,6 +5,7 @@ import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { produce } from 'immer'
 import { EnumReasonLoading, FavoriteIssueProps, FavoriteItemProps } from '../types/types'
 import { useFavoriteStore } from '../lib/useFavotiveStore'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 export const useFavoriteControl = () => {
     const favorites = useFavoriteStore((state) => state.favorites)
@@ -31,6 +32,8 @@ export const useFavoriteControl = () => {
             })
         },
     })
+
+    useErrorNotifier(filterPUT.error)
 
     const hasFavorite = useCallback((issueId: FavoriteIssueProps['issueId']) => {
         return favorites.some(({ issueIds }) => issueIds.includes(issueId))

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
-import { Issue } from 'react-app/shared/types/Jira/Issues'
+import { Issue, IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import EmptyState from '@atlaskit/empty-state'
 import Spinner from '@atlaskit/spinner'
@@ -12,35 +12,36 @@ import StarIcon from '@atlaskit/icon/glyph/star'
 import { memo, useEffect, useState } from 'react'
 import { useFavoriteControl, useFavoriteStore, EnumReasonLoading } from 'react-app/features/FavoriteIssue'
 import { IconButton } from '@atlaskit/button/new'
-import TrashIcon from '@atlaskit/icon/glyph/trash'
 import InlineEdit from '@atlaskit/inline-edit'
 import Textfield from '@atlaskit/textfield'
-import EditFilledIcon from '@atlaskit/icon/glyph/edit-filled'
 import EditorEditIcon from '@atlaskit/icon/glyph/editor/edit';
 import EditorRemoveIcon from '@atlaskit/icon/glyph/editor/remove';
 import IssueComponent from './Issue'
 import { ConfirmDelete } from 'react-app/shared/components/ConfirmDelete'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const FavoriteGroupIssues = memo(({ issueIds, name }: { name: string; issueIds: Issue['id'][] }) => {
     const queryKey = `favorite group ${name}`
 
-    const { data, isFetching, refetch } = useQuery<Issue[]>({
+    const { data, isFetching, refetch, error } = useQuery<Issue[]>({
         queryKey: [queryKey],
         queryFn: async (context) => {
             const filteringDuplicates = new Set(issueIds)
 
-            const response = await Promise.allSettled(
-                filteringDuplicates
-                    .entries()
-                    .map(([, id]) => axiosInstance.get<Issue>('/issue', { params: { id }, signal: context.signal }))
-            )
+            const ids = Array.from(filteringDuplicates)
+
+            const responses = await axiosInstance.get<IssueResponse>('/issues', {
+                params: {
+                    jql: `issue in (${ids.join(',')})`,
+                    maxResults: ids.length,
+                },
+                signal: context.signal,
+            })
 
             const issueMap = new Map<Issue['id'], Issue>()
 
-            response.forEach((value) => {
-                if (value.status === 'fulfilled') {
-                    issueMap.set(value.value.data.id, value.value.data)
-                }
+            responses.data?.issues.forEach((issue) => {
+                issueMap.set(issue.id, issue)
             })
 
             return issueIds.reduce((acc, id) => {
@@ -52,6 +53,8 @@ const FavoriteGroupIssues = memo(({ issueIds, name }: { name: string; issueIds: 
             }, [] as Issue[])
         },
     })
+
+    useErrorNotifier(error)
 
     useEffect(() => {
         refetch()

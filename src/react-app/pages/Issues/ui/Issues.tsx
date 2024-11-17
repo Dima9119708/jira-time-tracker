@@ -6,6 +6,10 @@ import { useIssuesGET } from 'react-app/entities/Issues'
 import { Box, xcss } from '@atlaskit/primitives'
 import Button from '@atlaskit/button/new'
 import { useInView } from 'react-intersection-observer'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
+import { AxiosError } from 'axios'
+import EmptyState from '@atlaskit/empty-state'
+import Spinner from '@atlaskit/spinner'
 
 const Issues = () => {
     const { ref, inView } = useInView()
@@ -23,14 +27,11 @@ const Issues = () => {
         },
     })
 
+    const aaaa = useErrorNotifier(error)
+
     useEffect(() => {
-        if (error) {
-            notify.error({
-                title: `Error loading task`,
-                description: JSON.stringify(error.response?.data),
-            })
-        }
-    }, [error])
+        aaaa(AxiosError)
+    }, [])
 
     useEffect(() => {
         if (inView && !isFetching) {
@@ -40,6 +41,18 @@ const Issues = () => {
 
     return (
         <>
+            {isFetching && (data?.pages[0]?.issues.length === 0) && (
+                <EmptyState
+                    header=""
+                    description={<Spinner />}
+                />
+            )}
+            {!isLoading && !isFetching && (data?.pages[0]?.issues.length === 0 || !data?.pages.length) && (
+                <EmptyState
+                    header="No Issues Found"
+                    description="There are no issues matching your criteria. Please check your filters or search settings, or try again later."
+                />
+            )}
             {data?.pages.map((page) =>
                 page.issues.map((task) => (
                     <Issue
@@ -51,7 +64,7 @@ const Issues = () => {
                 ))
             )}
 
-            {!isLoading && (
+            {!isLoading && data?.pages && (data?.pages[0]?.issues.length > 0) && (
                 <Box xcss={xcss({ marginTop: 'space.400' })}>
                     <Button
                         appearance={isFetchingNextPage ? 'default' : hasNextPage ? 'primary' : 'default'}

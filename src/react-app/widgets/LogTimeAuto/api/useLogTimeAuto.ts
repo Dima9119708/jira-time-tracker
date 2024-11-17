@@ -5,7 +5,7 @@ import { produce } from 'immer'
 import { AxiosError } from 'axios'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
-import { TimerRef } from 'react-app/shared/components/Timer/ui/Timer'
+import { TimerRef } from 'react-app/shared/components/Timer'
 import { Issue, IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useWorklogCrud } from 'react-app/features/WorklogCrud'
 import { CreateIssueWorklog } from 'react-app/entities/IssueWorklogs/api/useIssueWorklogPOST'
@@ -111,7 +111,6 @@ export const useLogTimeAuto = (issueId: string) => {
        await issueWorklogs
             .refetch()
             .then((worklogs) => {
-                console.log('worklogs =>', worklogs)
                 if (worklogs.error !== null) return add(settingTimeSecond)
 
                 if (worklogs.data && worklogs.data.length > 0) {

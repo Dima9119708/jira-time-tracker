@@ -19,7 +19,10 @@ import { createSearchParams, useNavigate } from 'react-router-dom'
 import { electron } from 'react-app/shared/lib/electron/electron'
 import { useFilterPUT } from 'react-app/entities/Filters'
 import EditorWarningIcon from '@atlaskit/icon/glyph/editor/warning'
+import EditorInfoIcon from '@atlaskit/icon/glyph/editor/info';
 import Tooltip from '@atlaskit/tooltip'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
+import Checkbox from '@atlaskit/checkbox'
 
 export type FormValues = UseGlobalState['settings']
 
@@ -70,6 +73,8 @@ const Settings = () => {
         },
     })
 
+    useErrorNotifier(filterPUT.error)
+
     const onSave: SubmitHandler<FormValues> = (data) => {
         const newSettings: Partial<UseGlobalState['settings']> = {
             plugin: data.plugin,
@@ -107,6 +112,8 @@ const Settings = () => {
             },
             workingHoursPerDay: data.workingHoursPerDay,
             workingDaysPerWeek: data.workingDaysPerWeek,
+            storyPointField: data.storyPointField,
+            useStoryPointsAsTimeEstimate: data.useStoryPointsAsTimeEstimate,
         }
 
         filterPUT.mutate({
@@ -190,18 +197,6 @@ const Settings = () => {
                                                 Connect
                                             </Button>
                                         )}
-
-                                        {/*{field.value === PLUGINS.TEMPO ? (*/}
-                                        {/*    <CheckCircleIcon*/}
-                                        {/*        label="tempo"*/}
-                                        {/*        primaryColor={token('color.text.accent.green')}*/}
-                                        {/*    />*/}
-                                        {/*) : (*/}
-                                        {/*    <CrossCircleIcon*/}
-                                        {/*        label="tempo"*/}
-                                        {/*        primaryColor={token('color.text.accent.red')}*/}
-                                        {/*    />*/}
-                                        {/*)}*/}
                                     </Flex>
                                 )
                             }}
@@ -360,7 +355,25 @@ const Settings = () => {
                             justifyContent="space-between"
                             alignItems="center"
                         >
-                            <Heading size="small">Plugin logout alerts</Heading>
+                            <Flex
+                                columnGap="space.100"
+                                alignItems="center"
+                            >
+                                <Tooltip content="Enable notifications to alert you when a connected plugin (e.g., Tempo) loses access due to a session timeout.">
+                                    {(tooltipProps) => (
+                                        <div {...tooltipProps}>
+                                            <EditorInfoIcon
+                                                label="information"
+                                                primaryColor={token('color.icon.information')}
+                                            />
+                                        </div>
+                                    )}
+                                </Tooltip>
+
+                                <Heading size="small">Plugin logout alerts</Heading>
+                            </Flex>
+
+
 
                             <Flex
                                 wrap="nowrap"
@@ -590,6 +603,107 @@ const Settings = () => {
                                 </Flex>
                             </>
                         )}
+
+                        <Flex
+                            xcss={styles.divider}
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
+                            <Flex
+                                columnGap="space.100"
+                                alignItems="center"
+                            >
+                                <Tooltip content="This setting allows you to specify the custom field key used for Story Points in Jira. By default, Story Points might be located in a custom field (e.g., customfield_10016). If your Jira administrator has configured Story Points to use a different custom field, you can update the key here to ensure proper functionality.">
+                                    {(tooltipProps) => (
+                                        <div {...tooltipProps}>
+                                            <EditorInfoIcon
+                                                label="information"
+                                                primaryColor={token('color.icon.information')}
+                                            />
+                                        </div>
+                                    )}
+                                </Tooltip>
+
+                                <Heading size="small">Custom field for story points</Heading>
+                            </Flex>
+
+                            <Flex
+                                wrap="nowrap"
+                                alignItems="center"
+                                columnGap="space.100"
+                            >
+                                <Controller
+                                    name="storyPointField"
+                                    control={control}
+                                    rules={{ required: 'Required' }}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box>
+                                                <Textfield
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                />
+
+                                                {fieldState.error?.message && (
+                                                    <ErrorMessage>{fieldState.error?.message}</ErrorMessage>
+                                                )}
+                                            </Box>
+                                        )
+                                    }}
+                                />
+                            </Flex>
+                        </Flex>
+
+                        <Flex
+                            xcss={styles.divider}
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
+                            <Flex
+                                columnGap="space.100"
+                                alignItems="center"
+                            >
+                                <Tooltip content="Enable the use of story points as an equivalent to time estimation (e.g., hours or minutes) for tasks. When enabled, story points will be treated as a time value for tracking and planning purposes.">
+                                    {(tooltipProps) => (
+                                        <div {...tooltipProps}>
+                                            <EditorInfoIcon
+                                                label="information"
+                                                primaryColor={token('color.icon.information')}
+                                            />
+                                        </div>
+                                    )}
+                                </Tooltip>
+
+                                <Heading size="small">Use story points as time estimate</Heading>
+                            </Flex>
+
+                            <Flex
+                                wrap="nowrap"
+                                alignItems="center"
+                                columnGap="space.100"
+                            >
+                                <Controller
+                                    name="useStoryPointsAsTimeEstimate"
+                                    control={control}
+                                    render={({ field, fieldState }) => {
+                                        return (
+                                            <Box>
+                                                <Checkbox
+                                                    isChecked={field.value}
+                                                    onChange={field.onChange}
+                                                    onBlur={field.onBlur}
+                                                />
+
+                                                {fieldState.error?.message && (
+                                                    <ErrorMessage>{fieldState.error?.message}</ErrorMessage>
+                                                )}
+                                            </Box>
+                                        )
+                                    }}
+                                />
+                            </Flex>
+                        </Flex>
                     </ModalBody>
                     <ModalFooter>
                         <Button

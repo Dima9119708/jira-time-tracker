@@ -12,6 +12,7 @@ export interface FavoriteIssueProps {
     isEditGroup?: boolean
     isDeleteGroup?: boolean,
     isAddNewGroup?: boolean
+    isButtonCompact?: boolean
 }
 
 export interface FavoriteItemProps extends FavoriteIssueProps {

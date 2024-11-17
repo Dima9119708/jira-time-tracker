@@ -7,6 +7,7 @@ import { ChangeStatusTaskProps } from '../types/types'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { IssueResponse, Status, Transition } from 'react-app/shared/types/Jira/Issues'
 import { StatusesByIssueDropdown } from 'react-app/entities/Issues'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
     const { issueId, queryKeys, status, issueName, position, disabled, trigger, onMutate, xcss, onSuccess } = props
@@ -14,6 +15,8 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
     const queryClient = useQueryClient()
 
     const notify = useNotifications()
+
+    const handleAxiosError = useErrorNotifier()
 
     const { mutate, isPending } = useMutation<
         AxiosResponse<Status>,
@@ -67,7 +70,7 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
             }
 
             if (typeof onMutate === 'function') {
-                onMutate(variables)
+              await onMutate(variables)
             }
             const notificationMessage = `from ${status.name} to ${variables.name}`
             const dismissFn = notify.loading({
@@ -81,7 +84,7 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
                 oldStates: oldStates,
             }
         },
-        onSuccess: (data, variables, context) => {
+        onSuccess: async (data, variables, context) => {
             context?.dismissFn()
             notify.success({
                 title: 'Status changes',
@@ -89,16 +92,15 @@ const ChangeStatusIssue = (props: ChangeStatusTaskProps) => {
             })
 
             if (typeof onSuccess === 'function') {
-                onSuccess()
+               await onSuccess()
             }
+
+            queryClient.invalidateQueries()
         },
         onError: (error, variables, context) => {
             context?.dismissFn()
 
-            notify.error({
-                title: `Error issue ${issueName}`,
-                description: JSON.stringify(error.response?.data),
-            })
+            handleAxiosError(error)
 
             if (Array.isArray(context?.oldStates)) {
                 for (const [queryKey, oldState] of context.oldStates) {

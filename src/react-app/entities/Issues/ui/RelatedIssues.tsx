@@ -6,7 +6,7 @@ import { token } from '@atlaskit/tokens'
 
 interface RelatedIssueCardProps {
     iconSlot: ReactNode
-    // parentIssueSlot: ReactNode
+    favoriteSlot: ReactNode
     typeSlot: ReactNode
     keySlot: ReactNode
     summarySlot: ReactNode
@@ -31,7 +31,7 @@ const styles = {
     }),
     wrap: xcss({
         display: 'grid',
-        gridTemplateColumns: '20px auto auto 1fr auto auto auto auto',
+        gridTemplateColumns: '20px auto auto 1fr auto auto auto auto auto',
         alignItems: 'center',
         padding: 'space.100',
         columnGap: 'space.100',
@@ -86,7 +86,7 @@ export const RelatedIssuesNestedWrap = (props: { children: ReactNode; marginLeft
 }
 
 const RelatedIssues = (props: RelatedIssueCardProps) => {
-    const { iconSlot, typeSlot, keySlot, playerSlot, prioritySlot, summarySlot, statusSlot, assigneeSlot } = props
+    const { iconSlot, typeSlot, keySlot, playerSlot, favoriteSlot, prioritySlot, summarySlot, statusSlot, assigneeSlot } = props
 
     return (
         <Box xcss={styles.wrap}>
@@ -94,6 +94,7 @@ const RelatedIssues = (props: RelatedIssueCardProps) => {
             <Box xcss={styles.element}>{typeSlot}</Box>
             <Box xcss={styles.key}>{keySlot}</Box>
             <Box xcss={styles.summary}>{summarySlot}</Box>
+            <Box xcss={styles.element}>{favoriteSlot}</Box>
             <Box xcss={styles.element}>{prioritySlot}</Box>
             <Box xcss={styles.element}>{assigneeSlot}</Box>
             <Box xcss={styles.element}>{statusSlot}</Box>

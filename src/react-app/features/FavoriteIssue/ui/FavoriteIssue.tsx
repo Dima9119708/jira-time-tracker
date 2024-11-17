@@ -17,7 +17,7 @@ import AddGroup from 'react-app/features/FavoriteIssue/ui/AddGroup'
 import FavoriteContentBox from 'react-app/features/FavoriteIssue/ui/FavoriteContentBox'
 
 const FavoriteIssue = (props: FavoriteIssueProps) => {
-    const { issueId, isEditGroup = true, isDeleteGroup = true, isAddNewGroup = true } = props
+    const { issueId, isEditGroup = true, isDeleteGroup = true, isAddNewGroup = true, isButtonCompact = false } = props
     const [isOpen, setIsOpen] = useState(false)
 
     const { reasonLoading, onAddNewGroup, removeFromAllGroups, hasFavorite, favorites } = useFavoriteControl()
@@ -102,6 +102,7 @@ const FavoriteIssue = (props: FavoriteIssueProps) => {
                     label="Favorite"
                     // @ts-ignore
                     appearance="default"
+                    spacing={isButtonCompact ? 'compact' : 'default'}
                     onClick={() => setIsOpen(!isOpen)}
                 />
             )}

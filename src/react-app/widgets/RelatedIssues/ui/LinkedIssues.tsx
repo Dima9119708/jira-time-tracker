@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react'
+import React, { memo, useEffect, useMemo } from 'react'
 import { Issue, IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { useQuery } from '@tanstack/react-query'
 import { axiosInstance } from 'react-app/shared/config/api/api'
@@ -7,6 +7,7 @@ import { RelatedIssuesProps, RelatedIssuesQuery } from '../types/types'
 import { RenderRelatedIssue } from '../ui/RenderRelatedIssue'
 import Heading from '@atlaskit/heading'
 import { RelatedIssuesRoot, RelatedIssuesWrap } from 'react-app/entities/Issues'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 type RelatedIssuesWithType = (RelatedIssuesQuery & { type: string })[]
 
@@ -17,7 +18,7 @@ export const LinkedIssues = memo((props: RelatedIssuesProps) => {
 
     const queryKey = useMemo(() => ['linked issues', issueId], [issueId])
 
-    const { data, isLoading } = useQuery<QueryResult>({
+    const { data, isLoading, error } = useQuery<QueryResult>({
         queryKey: queryKey,
         queryFn: async (context) => {
             const responseIssue = await axiosInstance.get<Issue>('/issue', {
@@ -98,6 +99,8 @@ export const LinkedIssues = memo((props: RelatedIssuesProps) => {
             return Object.entries(Object.groupBy(result, (issueLink) => issueLink.type)) as QueryResult
         },
     })
+
+    useErrorNotifier(error)
 
     return (
         <RelatedIssuesRoot>

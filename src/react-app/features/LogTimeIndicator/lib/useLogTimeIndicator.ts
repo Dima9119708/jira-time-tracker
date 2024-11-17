@@ -1,12 +1,30 @@
 import { useMemo } from 'react'
 import { secondsToUIFormat } from 'react-app/shared/lib/helpers/secondsToUIFormat'
 import { LogTimeIndicatorProps } from '../ui/LogTimeIndicator'
+import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
+import { IssueFields } from 'react-app/shared/types/Jira/Issues'
+import dayjs from 'dayjs'
 
 const isNumberMoreThanZero = (value: unknown): value is number => typeof value === 'number' && value > 0
 const isZero = (value: null | number) => value === null || value === 0
 
-export const useLogTimeIndicator = ({ timespent, timeestimate, timeoriginalestimate }: LogTimeIndicatorProps) => {
+export const useLogTimeIndicator = (props: LogTimeIndicatorProps) => {
+    const useStoryPointsAsTimeEstimate = useGlobalState((state) => state.settings.useStoryPointsAsTimeEstimate)
+    const storyPointField = useGlobalState((state) => state.settings.storyPointField)
+
+    const storyPointValue = props.fields[storyPointField as keyof IssueFields]
+
     return useMemo(() => {
+        const { fields } = props
+
+        let { timespent, timeestimate, timeoriginalestimate } = fields
+
+        if (useStoryPointsAsTimeEstimate) {
+            if (typeof storyPointValue === 'number') {
+                timeoriginalestimate = dayjs.duration(storyPointValue, 'hours').asSeconds();
+            }
+        }
+
         /*
          * timespent = 0
          * timeestimate = 100
@@ -252,5 +270,5 @@ export const useLogTimeIndicator = ({ timespent, timeestimate, timeoriginalestim
             timeLoggedWidth: '0',
             overEstimateWidth: '0',
         }
-    }, [timeoriginalestimate, timespent, timeestimate])
+    }, [props.fields, useStoryPointsAsTimeEstimate, storyPointField, storyPointValue])
 }

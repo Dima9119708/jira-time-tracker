@@ -18,6 +18,7 @@ import Button from '@atlaskit/button/new'
 import { useFilterPUT } from 'react-app/entities/Filters'
 import SectionMessage from '@atlaskit/section-message'
 import Heading from '@atlaskit/heading'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 interface AuthTempoForm {
     client_id: string
@@ -78,20 +79,14 @@ export const AuthPluginTempo = () => {
         },
     })
 
+    useErrorNotifier(filterPUT.error)
+    useErrorNotifier(checkConnectionPlugin.error)
+
     useEffect(() => {
         if (checkConnectionPlugin.isSuccess) {
             filterPUT.mutate({ settings: { plugin: PLUGINS.TEMPO } })
         }
     }, [checkConnectionPlugin.isSuccess])
-
-    useEffect(() => {
-        if (checkConnectionPlugin.isError) {
-            notify.error({
-                title: ``,
-                description: JSON.stringify(checkConnectionPlugin.error.message),
-            })
-        }
-    }, [checkConnectionPlugin.isError, checkConnectionPlugin.error])
 
     useEffect(() => {
         return () =>

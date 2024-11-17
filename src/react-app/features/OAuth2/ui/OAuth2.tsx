@@ -8,6 +8,7 @@ import Spinner from '@atlaskit/spinner'
 import { Box, Flex, xcss, Text } from '@atlaskit/primitives'
 
 import { JiraLogo } from '@atlaskit/logo'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const styles = {
     wrap: xcss({
@@ -40,6 +41,7 @@ const OAuth2 = () => {
 
     const navigate = useNavigate()
     const queryClient = useQueryClient()
+    const handleError = useErrorNotifier()
 
     useEffect(() => {
         const unsubscribe = electron((methods) => {
@@ -72,6 +74,7 @@ const OAuth2 = () => {
 
                     setLoading(false)
                 } catch (e) {
+                    handleError(e)
                     setLoading(false)
                 }
             }

@@ -21,6 +21,8 @@ export interface UseGlobalState {
         jqlBasic: JQLBasic | null
         autoStart: boolean
         favorites: Array<{ name: string; issueIds: string[] }>
+        storyPointField: string,
+        useStoryPointsAsTimeEstimate: boolean,
         timeLoggingInterval: {
             unit: Unit
             displayTime: number
@@ -97,6 +99,8 @@ export const useGlobalState = createStore<UseGlobalState>(
             favorites: [],
             jqlBasic: null,
             autoStart: true,
+            storyPointField: 'customfield_10016',
+            useStoryPointsAsTimeEstimate: false,
             timeLoggingInterval: {
                 unit: TIME_OPTIONS[0],
                 displayTime: 1,

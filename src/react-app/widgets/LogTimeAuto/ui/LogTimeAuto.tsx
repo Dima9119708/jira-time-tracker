@@ -1,4 +1,4 @@
-import Timer from 'react-app/shared/components/Timer/ui/Timer'
+import { Timer } from 'react-app/shared/components/Timer'
 import { Box, xcss } from '@atlaskit/primitives'
 import { useLogTimeAuto } from '../api/useLogTimeAuto'
 import { ReactNode } from 'react'

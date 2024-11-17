@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor, session } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor, session, Tray, Menu } = require('electron')
 const path = require('path')
 const portfinder = require('portfinder')
 const url = require('url')
@@ -18,17 +18,6 @@ const { AuthStorage, ThemeStorage, ZoomStorage } = require('./auth/keyService')
 const AuthWindowPlugin = require('./auth/AuthPlugin/AuthPlugin')
 
 const isProd = process.env.NODE_ENV === 'production'
-
-
-const reduxDevToolsPath = path.join(
-    os.homedir(),
-    '.config/google-chrome/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/3.2.7_0'
-);
-
-const reactDevToolsPath = path.join(
-    os.homedir(),
-    '.config/google-chrome/Default/Extensions/gphhapmejobijbbhgpjhcjognlahblep/12_0'
-);
 
 const createChangePort = () => {
     return new Promise((resolve) => {
@@ -82,8 +71,6 @@ const createChangePort = () => {
 
         mainWindow.webContents.on('did-finish-load', () => {
             mainWindow.setTitle('Time Tracking')
-
-            mainWindow.webContents.setZoomFactor(3.0)
         })
 
         if (isProd) {
@@ -195,15 +182,55 @@ const createMainWindow = (port) => {
         mainWindow.webContents.openDevTools()
     }
 
+    const tray = new Tray(path.join(__dirname, 'build', 'icons', '512x512.png'));
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: 'Open',
+            click: () => {
+                mainWindow.show();
+            }
+        },
+        {
+            label: 'Quit',
+            click: () => {
+                app.quit();
+            }
+        }
+    ]);
+
+    tray.setToolTip('Time Tracking');
+    tray.setContextMenu(contextMenu);
+
+    mainWindow.on('close', (event) => {
+        if (!mainWindow.isVisible()) {
+            return;
+        }
+        event.preventDefault();
+        mainWindow.hide();
+    });
+
+
     return mainWindow
 }
 
 app.whenReady().then(async () => {
-    try {
-        await session.defaultSession.loadExtension(reduxDevToolsPath);
-        await session.defaultSession.loadExtension(reactDevToolsPath);
-    } catch (e) {
-        console.error(e);
+    if (!isProd) {
+        try {
+            const reduxDevToolsPath = path.join(
+                os.homedir(),
+                '.config/google-chrome/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/3.2.7_0'
+            );
+
+            const reactDevToolsPath = path.join(
+                os.homedir(),
+                '.config/google-chrome/Default/Extensions/gphhapmejobijbbhgpjhcjognlahblep/12_0'
+            );
+
+            await session.defaultSession.loadExtension(reduxDevToolsPath);
+            await session.defaultSession.loadExtension(reactDevToolsPath);
+        } catch (e) {
+            console.error(e);
+        }
     }
 })
     .then(async () => {

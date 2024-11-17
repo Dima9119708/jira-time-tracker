@@ -14,6 +14,7 @@ import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { ChangeStatusIssue } from 'react-app/features/ChangeStatusIssue'
 import { QueryKey, useQueryClient } from '@tanstack/react-query'
 import { token } from '@atlaskit/tokens'
+import { FavoriteIssue } from 'react-app/features/FavoriteIssue'
 
 export const RenderRelatedIssue = memo(
     (props: RelatedIssuesQuery & { RenderRelatedIssues: FC<{ issueId: Issue['id'] }>; queryKey: QueryKey }) => {
@@ -32,17 +33,13 @@ export const RenderRelatedIssue = memo(
             () => queryClient.getQueryData<RelatedIssuesQuery[]>(queryKey)?.findIndex((issue) => issue.id === id),
             [queryKey]
         )
-        console.log('indexIssue =>', indexIssue)
+
         const isDone = useMemo(() => fields.status.statusCategory.key === 'done', [fields.status.statusCategory.key])
         const textDecorationLineThrough = useMemo(() => (isDone ? { textDecoration: 'line-through' } : {}), [isDone])
 
         const onMutate = useCallback(async () => {
             await useGlobalState.getState().changeIssueIdsSearchParams('add', id)
         }, [id])
-
-        const onSuccess = useCallback(() => {
-            queryClient.invalidateQueries()
-        }, [])
 
         return (
             <>
@@ -71,6 +68,7 @@ export const RenderRelatedIssue = memo(
                     }
                     keySlot={<span style={textDecorationLineThrough}>{issueKey}</span>}
                     summarySlot={fields.summary}
+                    favoriteSlot={<FavoriteIssue issueId={id} isButtonCompact />}
                     prioritySlot={
                         <Tooltip content={fields.priority.name}>
                             {(triggerProps) => (
@@ -109,7 +107,6 @@ export const RenderRelatedIssue = memo(
                             queryKeys={() => []}
                             position="left"
                             onMutate={onMutate}
-                            onSuccess={onSuccess}
                             trigger={(triggerButtonProps, isPending) => (
                                 <IconButton
                                     {...triggerButtonProps}

@@ -5,6 +5,7 @@ import { memo } from 'react'
 import { useGlobalState } from '../../../shared/lib/hooks/useGlobalState'
 import { useFilterPUT } from 'react-app/entities/Filters'
 import { useQueryClient } from '@tanstack/react-query'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const JQLEditor = () => {
     const query = useGlobalState((state) => state.jql)
@@ -21,6 +22,8 @@ const JQLEditor = () => {
             })
         },
     })
+
+    useErrorNotifier(filterPUT.error)
 
     const autocompleteProvider = useAutocompleteProvider('autocomplete', getInitialData, getSuggestions)
 

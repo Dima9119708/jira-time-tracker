@@ -1,6 +1,5 @@
-import React, { lazy, memo, useCallback, useMemo } from 'react'
+import React, { memo, useCallback } from 'react'
 import { useQueryClient, InfiniteData } from '@tanstack/react-query'
-import { secondsToUIFormat } from '../../../shared/lib/helpers/secondsToUIFormat'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
 import { produce } from 'immer'
 import { IssueProps } from '../types/types'
@@ -12,23 +11,23 @@ import { IconButton } from '@atlaskit/button/new'
 import VidPlayIcon from '@atlaskit/icon/glyph/vid-play'
 import { LogTimeButton } from 'react-app/widgets/LogTime'
 import { CardIssueDetailsBadges, CardIssueHeader, CardIssue, useStatusStyles, IssueActivityFeedUIButtons } from 'react-app/entities/Issues'
-import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
+import { FavoriteIssue } from 'react-app/features/FavoriteIssue'
 import { LogTimeErrorNotification } from 'react-app/features/PersistLostTime'
 import { LogTimeAutoBase } from 'react-app/widgets/LogTimeAuto'
-import { ChildIssues, isInwardIssue, LinkedIssues } from 'react-app/widgets/RelatedIssues'
+import { ChildIssues, LinkedIssues } from 'react-app/widgets/RelatedIssues'
 
 const Issue = (props: IssueProps) => {
     const { fields, id, issueKey } = props
     const queryClient = useQueryClient()
 
     const invalidateQueries = useCallback(() => {
-        return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues']
+        return ['issues']
     }, [])
 
     const styles = useStatusStyles(fields)
 
-    const onPlayTracking = () => {
-        useGlobalState.getState().changeIssueIdsSearchParams('add', id)
+    const onPlayTracking = async () => {
+        await useGlobalState.getState().changeIssueIdsSearchParams('add', id)
 
         const issues = queryClient.getQueryData<InfiniteData<IssueResponse>>(['issues'])
 
@@ -58,34 +57,9 @@ const Issue = (props: IssueProps) => {
         }
     }
 
-    const onSuccessStatusChange = useCallback(() => {
-        const statuses = useGlobalState.getState().settings.jqlBasic?.statuses
-
-        if (Array.isArray(statuses)) {
-            if (!statuses.includes(fields.status.name)) {
-                queryClient.invalidateQueries({ queryKey: ['issues'] })
-            }
-        }
-    }, [fields.status.name])
-
-    const onSuccessAssigneeChange = useCallback(() => {
-        const assignees = useGlobalState.getState().settings.jqlBasic?.assignees
-
-        if (Array.isArray(assignees)) {
-            if (!assignees.includes(fields.assignee === null ? null : fields.assignee.accountId)) {
-                queryClient.invalidateQueries({ queryKey: ['issues'] })
-            }
-        }
-    }, [fields.status.name])
-
     return (
         <CardIssue active={false}>
-            <CardIssueHeader
-                summary={fields.summary}
-                timeoriginalestimate={fields.timeoriginalestimate}
-                timespent={fields.timespent}
-                duedate={fields.duedate}
-            />
+            <CardIssueHeader fields={fields} />
 
             <LogTimeErrorNotification
                 issueId={id}
@@ -120,7 +94,6 @@ const Issue = (props: IssueProps) => {
                         queryKeys={invalidateQueries}
                         trigger={fields.status.name}
                         xcss={styles.STATUTES_DROPDOWN_BUTTON}
-                        onSuccess={onSuccessStatusChange}
                     />
 
                     <ChangeAssigneeIssue
@@ -128,7 +101,6 @@ const Issue = (props: IssueProps) => {
                         issueName={fields.summary}
                         issueKey={issueKey}
                         queryKeys={invalidateQueries}
-                        onSuccess={onSuccessAssigneeChange}
                     />
 
                     <LogTimeButton issueId={id} />

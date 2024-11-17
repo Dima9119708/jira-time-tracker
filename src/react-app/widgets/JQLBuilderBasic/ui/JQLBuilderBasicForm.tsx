@@ -1,6 +1,6 @@
-import { Box, Flex, xcss } from '@atlaskit/primitives'
+import { Flex, xcss } from '@atlaskit/primitives'
 import { StatusesDropdown } from 'react-app/entities/Status'
-import { Control, FormProvider, useController, useForm, useFormContext, useWatch } from 'react-hook-form'
+import { FormProvider, useController, useForm, useFormContext, useWatch } from 'react-hook-form'
 import { ProjectsDropdown } from 'react-app/entities/Projects'
 import { AssignableMultiProjectSearch, UserSearchDropdown } from 'react-app/entities/UserSearch'
 import DropdownMenu, { DropdownItemRadio } from '@atlaskit/dropdown-menu'
@@ -12,10 +12,11 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useFilterPUT } from 'react-app/entities/Filters'
 import { JQLBasicDropdownTriggerButton } from 'react-app/shared/components/JQLBasicDropdownTriggerButton'
-import { SearchByIssues, SearchData } from 'react-app/features/SearchByIssues'
-import { Assignee, Priority as PriorityType, Status as StatusType } from 'react-app/shared/types/Jira/Issues'
+import { SearchByIssues, SearchByIssuesExpanded, SearchData } from 'react-app/features/SearchByIssues'
+import { Assignee, Issue, Priority as PriorityType, Status as StatusType } from 'react-app/shared/types/Jira/Issues'
 import { EnumSortOrder } from 'react-app/shared/types/common'
 import deepmerge from 'react-app/shared/lib/utils/deepMerge'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 export type JQLBasic = {
     priority: Array<PriorityType['name']> | undefined
@@ -26,6 +27,7 @@ export type JQLBasic = {
     createdSort: EnumSortOrder
     statusSort: EnumSortOrder
     search: SearchData | undefined
+    issueSelect: Issue['id'] | undefined
 }
 
 interface SortCriteria {
@@ -43,6 +45,7 @@ const DEFAULT_VALUES: JQLBasic = {
     prioritySort: EnumSortOrder.NONE,
     createdSort: EnumSortOrder.NONE,
     statusSort: EnumSortOrder.NONE,
+    issueSelect: '',
     search: {
         value: '',
         issueIds: [],
@@ -79,6 +82,31 @@ const Search = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
                 handleSubmit(onSubmit)()
             }}
         />
+    )
+}
+
+const IssueSelect = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
+    const { control, handleSubmit, reset } = useFormContext<JQLBasic>()
+
+    const { field } = useController({
+        control,
+        name: 'issueSelect',
+    })
+console.log('field =>', field.value)
+    const onChange = useCallback((issue: Issue) => {
+        reset(Object.assign(DEFAULT_VALUES, {
+            issueSelect: issue.id,
+        }))
+        handleSubmit(onSubmit)()
+    }, [])
+
+    return (
+        <div style={{ flexBasis: '100%' }}>
+            <SearchByIssuesExpanded
+                issueId={field.value}
+                onChange={onChange}
+            />
+        </div>
     )
 }
 
@@ -353,7 +381,7 @@ const StatusSort = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
 }
 
 const ResetForm = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
-    const { reset, control, handleSubmit } = useFormContext<JQLBasic>()
+    const { reset, control, handleSubmit, setValue } = useFormContext<JQLBasic>()
 
     const formValues = useWatch({
         control,
@@ -373,7 +401,7 @@ const ResetForm = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
             <Button
                 appearance="warning"
                 onClick={() => {
-                    reset(DEFAULT_VALUES)
+                    reset({ ...DEFAULT_VALUES, issueSelect: '' })
                     handleSubmit(onSubmit)()
                 }}
             >
@@ -386,7 +414,7 @@ const ResetForm = ({ onSubmit }: { onSubmit: SubmitHandler }) => {
 const JQLBuilderBasicForm = () => {
     const formMethods = useForm<JQLBasic>({
         mode: 'onChange',
-        defaultValues: deepmerge(DEFAULT_VALUES, useGlobalState.getState().settings.jqlBasic),
+        defaultValues: deepmerge(DEFAULT_VALUES, useGlobalState.getState().settings.jqlBasic, { clone: true }),
     })
 
     const queryClient = useQueryClient()
@@ -402,8 +430,21 @@ const JQLBuilderBasicForm = () => {
         },
     })
 
+    useErrorNotifier(filterPUT.error)
+
+    useEffect(() => {
+        const { unsubscribe } = formMethods.watch((value, info) => {
+            if (info.name !== 'issueSelect' && info.type === 'change') {
+                formMethods.setValue('issueSelect', '')
+            }
+        })
+
+        return unsubscribe
+    }, [formMethods.watch])
+
     const onSubmit = useCallback((data: JQLBasic) => {
         const JQLSeparatedAndOperator = [
+            formatJQLInClause('issue', data.issueSelect ? [data.issueSelect] : []),
             formatJQLInClause('issue', data.search?.issueIds),
             formatJQLInClause('project', data.projects, (project: ProjectValue) => project.id),
             formatJQLInClause('status', data.statuses, (status: string) => `"${status}"`),
@@ -438,6 +479,7 @@ const JQLBuilderBasicForm = () => {
             xcss={xcss({ marginBottom: 'space.250' })}
         >
             <FormProvider {...formMethods}>
+                <IssueSelect onSubmit={onSubmit} />
                 <Search onSubmit={onSubmit} />
                 <Projects onSubmit={onSubmit} />
                 <Statuses onSubmit={onSubmit} />

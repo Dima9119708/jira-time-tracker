@@ -8,6 +8,7 @@ import { produce } from 'immer'
 import { ChangeAssigneeProps } from '../types/types'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { Assignee, IssueResponse } from 'react-app/shared/types/Jira/Issues'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
     const { issueKey, assignee, queryKeys, position = 'bottom-start', onSuccess } = props
@@ -15,6 +16,8 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
     const queryClient = useQueryClient()
 
     const notify = useNotifications()
+
+    const handleAxiosError = useErrorNotifier()
 
     const { mutate } = useMutation<
         AxiosResponse<Assignee>,
@@ -87,14 +90,13 @@ const ChangeAssigneeIssue = (props: ChangeAssigneeProps) => {
             if (typeof onSuccess === 'function') {
                 onSuccess()
             }
+
+            queryClient.invalidateQueries()
         },
         onError: (error, variables, context) => {
             context!.dismissFn()
 
-            notify.error({
-                title: 'Assignee changes',
-                description: JSON.stringify(error.response?.data),
-            })
+            handleAxiosError(error)
 
             if (Array.isArray(context?.oldStates)) {
                 for (const [queryKey, oldState] of context.oldStates) {

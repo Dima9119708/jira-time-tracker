@@ -385,19 +385,8 @@ export const LogTimeDialog = (props: { issueId: string }) => {
         if (wasMutationSuccessfulAndCacheCleared()) {
             setIsFetchingOtherQueries(true)
 
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: ['issues'],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: ['issues tracking'],
-                }),
-                ...useGlobalState.getState().settings.favorites.map(({ name }) => {
-                    return queryClient.invalidateQueries({
-                        queryKey: [`favorite group ${name}`],
-                    })
-                }),
-            ])
+            await queryClient.invalidateQueries()
+
             setIsFetchingOtherQueries(isFetchingOtherQueries)
         }
 

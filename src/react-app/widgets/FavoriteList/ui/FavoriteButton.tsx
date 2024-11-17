@@ -6,13 +6,20 @@ import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down'
 import ChevronUpIcon from '@atlaskit/icon/glyph/chevron-up'
 import { useGlobalBoolean } from 'use-global-boolean'
 import EditorAddIcon from '@atlaskit/icon/glyph/editor/add'
-import { AddGroup, EnumReasonLoading, FavoriteContentBox, useFavoriteControl } from 'react-app/features/FavoriteIssue'
+import {
+    AddGroup,
+    EnumReasonLoading,
+    FavoriteContentBox,
+    useFavoriteControl,
+    useFavoriteStore,
+} from 'react-app/features/FavoriteIssue'
 import { useEffect, useState } from 'react'
 import { Popup } from '@atlaskit/popup'
 
 const FavoriteButton = () => {
     const { toggle, watchBoolean } = useGlobalBoolean()
     const [isOpenAddGroup, setIsOpenAddGroup] = useState(false)
+    const favoriteList = useFavoriteStore((state) => state.favorites)
 
     const [isOpenFavorite] = watchBoolean('FAVORITE LIST')
     const { reasonLoading, onAddNewGroup } = useFavoriteControl()
@@ -49,7 +56,7 @@ const FavoriteButton = () => {
                         toggle('FAVORITE LIST')
                     }}
                 >
-                    <Heading size="small">Favorite list</Heading>
+                    <Heading size="small">Favorite list {favoriteList.length ? `(${favoriteList.length})` : ''}</Heading>
                     {isOpenFavorite ? <ChevronUpIcon label="arrow up favorite" /> : <ChevronDownIcon label="arrow down favorite" />}
                 </Box>
 

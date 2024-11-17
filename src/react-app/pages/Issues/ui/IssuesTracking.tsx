@@ -1,11 +1,12 @@
 import IssueTracking from './IssueTracking'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { useIssuesTrackingGET } from 'react-app/entities/Issues'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 const IssuesTracking = () => {
     const notify = useNotifications()
 
-    const { data } = useIssuesTrackingGET({
+    const { data, error } = useIssuesTrackingGET({
         onReject: (reject) => {
             notify.error({
                 title: `Issue ${reject.config?.params.id}`,
@@ -13,6 +14,8 @@ const IssuesTracking = () => {
             })
         },
     })
+
+    useErrorNotifier(error)
 
     return data?.map((task) => (
         <IssueTracking

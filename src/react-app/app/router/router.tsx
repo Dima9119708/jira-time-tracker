@@ -37,7 +37,7 @@ export const router = createRouter([
                         },
                     },
                     {
-                        path: 'auth-plugin',
+                        path: 'auth-plugin/:pluginName',
                         shouldRevalidate: () => false,
                         lazy: async () => {
                             const { ErrorBoundary } = await import('../../pages/Issues')

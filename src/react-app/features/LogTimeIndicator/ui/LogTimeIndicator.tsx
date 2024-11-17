@@ -2,15 +2,15 @@ import { Box, xcss } from '@atlaskit/primitives'
 import { Issue } from 'react-app/shared/types/Jira/Issues'
 import { useLogTimeIndicator } from 'react-app/features/LogTimeIndicator/lib/useLogTimeIndicator'
 
-export interface LogTimeIndicatorProps extends Pick<Issue['fields'], 'timespent' | 'timeoriginalestimate' | 'timeestimate'> {}
+export interface LogTimeIndicatorProps  {
+    fields: Issue['fields']
+}
 
 const LogTimeIndicator = (props: LogTimeIndicatorProps) => {
-    const { timeoriginalestimate, timespent, timeestimate } = props
+    const { fields } = props
 
     const { timeLogged, timeRemaining, timeLoggedWidth, overEstimateWidth, timeRemainingFromOriginalEstimate } = useLogTimeIndicator({
-        timeoriginalestimate,
-        timespent,
-        timeestimate,
+        fields,
     })
 
     return (

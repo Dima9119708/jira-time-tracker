@@ -19,7 +19,7 @@ import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import CalendarIcon from '@atlaskit/icon/glyph/calendar';
 import UnauthorizedPluginHandler from '../GlobalComponents/UnauthorizedPluginHandler/UnauthorizedPluginHandler'
 import { token } from '@atlaskit/tokens'
-import { useQueryClient } from '@tanstack/react-query'
+import { focusManager, useQuery, useQueryClient } from '@tanstack/react-query'
 import { MySelf } from 'react-app/shared/types/Jira/MySelf'
 import Image from '@atlaskit/image'
 import Tooltip from '@atlaskit/tooltip'

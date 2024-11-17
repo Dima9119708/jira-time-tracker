@@ -19,7 +19,6 @@ import {
     useStatusStyles,
     IssueActivityFeedUIButtons,
 } from 'react-app/entities/Issues'
-import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
 import { FavoriteIssue, useFavoriteStore } from 'react-app/features/FavoriteIssue'
 import { LogTimeIndicator } from 'react-app/features/LogTimeIndicator'
 import { LogTimeErrorNotification } from 'react-app/features/PersistLostTime'
@@ -27,11 +26,10 @@ import { ChildIssues, isInwardIssue, LinkedIssues } from 'react-app/widgets/Rela
 
 const IssueTracking = (props: IssueProps) => {
     const { fields, id, issueKey } = props
-    const queryClient = useQueryClient()
     const [isLoading, setLoading] = useState(false)
 
     const invalidateQueries = useCallback(() => {
-        return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
+        return ['issues tracking']
     }, [])
 
     const isOnline = useSyncExternalStore(onlineManager.subscribe, () => onlineManager.isOnline())
@@ -43,17 +41,6 @@ const IssueTracking = (props: IssueProps) => {
 
         await useGlobalState.getState().changeIssueIdsSearchParams('delete', id)
 
-        await queryClient.invalidateQueries()
-
-        queryClient.setQueryData(['issues tracking'], (old: IssueResponse['issues']): IssueResponse['issues'] => {
-            return produce(old, (draft) => {
-                const idx = draft.findIndex((a) => a.id === id)
-                if (idx !== -1) {
-                    draft.splice(idx, 1)
-                }
-            })
-        })
-
         setLoading(false)
     }
 
@@ -64,9 +51,7 @@ const IssueTracking = (props: IssueProps) => {
                     issueId={id}
                     indicatorSlot={
                         <LogTimeIndicator
-                            timeoriginalestimate={fields.timeoriginalestimate}
-                            timespent={fields.timespent}
-                            timeestimate={fields.timeestimate}
+                            fields={fields}
                         />
                     }
                 />
@@ -95,10 +80,7 @@ const IssueTracking = (props: IssueProps) => {
                 )}
 
                 <CardIssueHeader
-                    summary={fields.summary}
-                    timeoriginalestimate={fields.timeoriginalestimate}
-                    timespent={fields.timespent}
-                    duedate={fields.duedate}
+                    fields={fields}
                 />
 
                 <CardIssueDetailsBadges

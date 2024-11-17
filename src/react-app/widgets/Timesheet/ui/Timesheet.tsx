@@ -67,8 +67,15 @@ interface RenderWorklogProps {
     worklogsQueryRefetch: QueryObserverBaseResult['refetch']
 }
 
-interface RenderWorklogRef {
-    isMutationSuccess: boolean
+const styles = {
+    editCell: xcss({
+        // @ts-ignore
+        '&:hover': {
+            outlineWidth: '1px',
+            outlineStyle: 'solid',
+            outlineColor: token('color.blanket'),
+        },
+    }),
 }
 
 const LogTime = memo((props: LogTimeProps) => {
@@ -295,12 +302,14 @@ const RenderDescription = memo(
                                 gridColumn: '2 / -1',
                             })}
                         >
-                            <span
+                            <Box
+                                as="span"
+                                xcss={styles.editCell}
                                 {...triggerProps}
                                 onClick={() => setOpen((prevState) => !prevState)}
                             >
                                 {description}
-                            </span>
+                            </Box>
                         </Box>
                     )}
                 />
@@ -359,7 +368,12 @@ const RenderLogged = memo(
                         {...triggerProps}
                         onClick={() => setOpen((prevState) => !prevState)}
                     >
-                        {secondsToUIFormat(timeSpentSeconds, true)}
+                        <Box
+                            as="span"
+                            xcss={styles.editCell}
+                        >
+                            {secondsToUIFormat(timeSpentSeconds, true)}
+                        </Box>
                     </Box>
                 )}
             />
@@ -405,20 +419,20 @@ const RenderIssue = memo(
                 )}
                 shouldRenderToParent
                 trigger={(triggerProps) => (
-                    <div
+                    <Box
                         {...triggerProps}
-                        style={{ maxWidth: 'max-content' }}
                         onClick={() => setOpen((prevState) => !prevState)}
                     >
                         <Flex
                             columnGap="space.050"
                             wrap="wrap"
+                            xcss={styles.editCell}
                         >
                             <Image src={issueIcon} />
                             <Text>{issueKey}</Text>
                             <Text>{issueSummary}</Text>
                         </Flex>
-                    </div>
+                    </Box>
                 )}
             />
         )
@@ -444,7 +458,7 @@ const RenderAuthor = memo(({ authorAvatarUrl, authorDisplayName }: Pick<RenderWo
 const RenderDate = memo(
     ({ date, onChange }: Pick<RenderWorklogProps, 'date'> & { onChange: (newDate: RenderWorklogProps['date']) => void }) => {
         const [isOpen, setOpen] = useState(false)
-        console.log('RenderDate =>')
+
         return (
             <Popup
                 isOpen={isOpen}
@@ -475,7 +489,13 @@ const RenderDate = memo(
                         {...triggerProps}
                         onClick={() => setOpen((prevState) => !prevState)}
                     >
-                        {date}
+                        <Box
+                            as="span"
+                            xcss={styles.editCell}
+                        >
+                            {' '}
+                            {date}
+                        </Box>
                     </Box>
                 )}
             />
@@ -534,8 +554,10 @@ const RenderWorklog = memo((props: RenderWorklogProps) => {
             },
         },
         delete: {
-            onSuccess: () => {
-                worklogsQueryRefetch()
+            onSuccess: (variables) => {
+                if (variables.customFields?.isRefetchWorklogsAfterDelete !== false) {
+                    worklogsQueryRefetch()
+                }
             },
             onError: () => {
                 worklogsQueryRefetch()
@@ -797,19 +819,8 @@ const Timesheet = () => {
         if (wasMutationSuccessfulAndCacheCleared()) {
             setIsFetchingOtherQueries(true)
 
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: ['issues'],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: ['issues tracking'],
-                }),
-                ...useGlobalState.getState().settings.favorites.map(({ name }) => {
-                    return queryClient.invalidateQueries({
-                        queryKey: [`favorite group ${name}`],
-                    })
-                }),
-            ])
+            await queryClient.invalidateQueries()
+
             setIsFetchingOtherQueries(isFetchingOtherQueries)
         }
 

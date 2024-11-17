@@ -14,6 +14,7 @@ import Spinner from '@atlaskit/spinner'
 import { DropdownItem } from '@atlaskit/dropdown-menu'
 import { useInView } from 'react-intersection-observer'
 import Button from '@atlaskit/button/new'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
 
 interface SearchByIssuesExpandedProps {
     issueId?: Issue['id'],
@@ -82,6 +83,8 @@ const Content = (props: SearchByIssuesExpandedProps & { issueKey: Issue['key'], 
         jql: jql,
         maxResults: 8,
     })
+
+    useErrorNotifier(issueQuery.error)
 
     useEffect(() => {
         if (inView && !issueQuery.isFetching) {
@@ -176,6 +179,8 @@ const SearchByIssuesExpanded = (props: SearchByIssuesExpandedProps) => {
         enabled: !!issueId,
     })
 
+    useErrorNotifier(currentIssueQuery.error)
+
     const icon = currentIssueQuery.data?.fields?.issuetype.iconUrl || ''
     const key = currentIssueQuery.data?.key || ''
     const summary = currentIssueQuery.data?.fields?.summary || ''
@@ -204,7 +209,7 @@ const SearchByIssuesExpanded = (props: SearchByIssuesExpandedProps) => {
                             <Flex columnGap="space.100">
                                 <Image src={icon} />
                                 <Text>
-                                    {key} · {summary}
+                                     {key} · {summary}
                                 </Text>
                             </Flex>
                         )}

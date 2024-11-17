@@ -5,6 +5,8 @@ import { Filter } from 'react-app/shared/types/Jira/Filter'
 import { UseGlobalState, useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 import { useNotifications } from 'react-app/shared/lib/hooks/useNotifications'
 import { useCallback } from 'react'
+import { useErrorNotifier } from 'react-app/shared/lib/hooks/useErrorNotifier'
+import { useSuccessNotifier } from 'react-app/shared/lib/hooks/useSuccessNotifier'
 
 interface FilterPUT<TCustomVariable> {
     settings?: Partial<UseGlobalState['settings']>
@@ -21,9 +23,12 @@ export const useFilterPUT = <TCustomVariable>(props?: {
     onError?: (error: AxiosError, variables: FilterPUT<TCustomVariable>) => void
 }) => {
     const titleLoading = props?.titleLoading ?? 'Loading...'
-    const titleSuccess = props?.titleSuccess ?? 'Update settings'
-    const titleError = props?.titleError ?? 'Update settings'
+    const titleSuccess = props?.titleSuccess
+    const titleError = props?.titleError
     const notify = useNotifications()
+
+    const handleError = useErrorNotifier()
+    const handleSuccess = useSuccessNotifier()
 
     const isFormEmpty = useCallback((values: any) => {
         if (typeof values === 'object' && values !== null) {
@@ -64,9 +69,7 @@ export const useFilterPUT = <TCustomVariable>(props?: {
             context?.()
 
             if (titleSuccess && titleSuccess.trim()) {
-                notify.success({
-                    title: titleSuccess,
-                })
+               handleSuccess(data)
             }
 
             useGlobalState.getState().updateJQL(data.data.jql)
@@ -78,10 +81,7 @@ export const useFilterPUT = <TCustomVariable>(props?: {
             context?.()
 
             if (titleError && titleError.trim()) {
-                notify.error({
-                    title: titleError,
-                    description: JSON.stringify(error.response?.data),
-                })
+               handleError(error)
             }
 
             props?.onError?.(error, variables)

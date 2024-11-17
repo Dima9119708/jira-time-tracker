@@ -1,6 +1,5 @@
-import React, { memo, useCallback, useMemo } from 'react'
+import React, { memo, useCallback } from 'react'
 import { useQueryClient, InfiniteData } from '@tanstack/react-query'
-import { secondsToUIFormat } from '../../../shared/lib/helpers/secondsToUIFormat'
 import { ChangeStatusIssue } from '../../../features/ChangeStatusIssue'
 import { produce } from 'immer'
 import { IssueResponse } from 'react-app/shared/types/Jira/Issues'
@@ -24,7 +23,7 @@ const Issue = (props: FavoriteIssueProps) => {
     const isTrackingIssue = useGlobalState((state) => state.issueIdsSearchParams.currentParams.includes(id))
 
     const invalidateQueries = useCallback(() => {
-        return [...useFavoriteStore.getState().favorites.map(({ name }) => `favorite group ${name}`), 'issues tracking']
+        return [queryKey]
     }, [queryKey])
 
     const styles = useStatusStyles(fields)
@@ -61,12 +60,7 @@ const Issue = (props: FavoriteIssueProps) => {
 
     return (
         <CardIssue active={false}>
-            <CardIssueHeader
-                summary={fields.summary}
-                timeoriginalestimate={fields.timeoriginalestimate}
-                timespent={fields.timespent}
-                duedate={fields.duedate}
-            />
+            <CardIssueHeader fields={fields} />
 
             <CardIssueDetailsBadges
                 issueKey={issueKey}
@@ -84,7 +78,10 @@ const Issue = (props: FavoriteIssueProps) => {
                 gap="space.100"
                 wrap="wrap"
             >
-                <Flex gap="space.100" wrap="wrap">
+                <Flex
+                    gap="space.100"
+                    wrap="wrap"
+                >
                     <ChangeStatusIssue
                         issueId={id}
                         issueName={fields.summary}
@@ -101,9 +98,7 @@ const Issue = (props: FavoriteIssueProps) => {
                         queryKeys={invalidateQueries}
                     />
 
-                    <LogTimeButton
-                        issueId={id}
-                    />
+                    <LogTimeButton issueId={id} />
 
                     <FavoriteIssue
                         issueId={id}
@@ -119,7 +114,7 @@ const Issue = (props: FavoriteIssueProps) => {
                     status={fields.status}
                     queryKeys={invalidateQueries}
                     position="left"
-                    onMutate={() => onPlayTracking()}
+                    onMutate={onPlayTracking}
                     trigger={(triggerButtonProps) => (
                         <IconButton
                             {...triggerButtonProps}

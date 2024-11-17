@@ -3,19 +3,33 @@ import Heading from '@atlaskit/heading'
 import Badge from '@atlaskit/badge'
 import React, { memo, useMemo } from 'react'
 import { token } from '@atlaskit/tokens'
-import { Issue } from 'react-app/shared/types/Jira/Issues'
+import { Issue, IssueFields } from 'react-app/shared/types/Jira/Issues'
 import { secondsToUIFormat } from 'react-app/shared/lib/helpers/secondsToUIFormat'
 import Tooltip from '@atlaskit/tooltip'
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from 'react-app/shared/const'
+import { useGlobalState } from 'react-app/shared/lib/hooks/useGlobalState'
 
-interface CardIssueHeader extends Pick<Issue['fields'], 'duedate' | 'summary' | 'timespent' | 'timeoriginalestimate'> {}
+interface CardIssueHeader {
+    fields: IssueFields
+}
 
-const CardHeader = (props: CardIssueHeader) => {
-    const { summary, timespent, timeoriginalestimate, duedate } = props
+const CardHeader = memo((props: CardIssueHeader) => {
+    const { fields } = props
+    const { summary, timespent, timeoriginalestimate, duedate } = fields
+
+    const storyPointField = useGlobalState((state) => state.settings.storyPointField)
+    const useStoryPointsAsTimeEstimate = useGlobalState((state) => state.settings.useStoryPointsAsTimeEstimate)
+
+    const storyPointValue = fields[storyPointField as keyof IssueFields]
 
     const dateUIFormat = useMemo(() => {
-        const format: { timespent: string; timeoriginalestimate: string, due?: { formattedTime: string; isOverdue: boolean, originalTime: string } | null } = {
+        const format: {
+            timespent: string
+            timeoriginalestimate: string
+            due?: { formattedTime: string; isOverdue: boolean; originalTime: string } | null
+            storyPoint?: string
+        } = {
             due: null,
             timespent: '',
             timeoriginalestimate: '',
@@ -25,14 +39,14 @@ const CardHeader = (props: CardIssueHeader) => {
             const now = dayjs()
             const due = dayjs(duedate)
 
-            const differenceInMinutes = due.diff(now, 'minute');
-            const isOverdue = differenceInMinutes < 0;
+            const differenceInMinutes = due.diff(now, 'minute')
+            const isOverdue = differenceInMinutes < 0
 
-            const absMinutes = Math.abs(differenceInMinutes);
-            const hours = Math.floor(absMinutes / 60);
-            const minutes = absMinutes % 60;
+            const absMinutes = Math.abs(differenceInMinutes)
+            const hours = Math.floor(absMinutes / 60)
+            const minutes = absMinutes % 60
 
-            const formattedTime = `${isOverdue ? '-' : ''} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}h`;
+            const formattedTime = `${isOverdue ? '-' : ''}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}h`
 
             format.due = {
                 formattedTime,
@@ -41,11 +55,26 @@ const CardHeader = (props: CardIssueHeader) => {
             }
         }
 
+        if (!useStoryPointsAsTimeEstimate && storyPointField in fields) {
+            format.storyPoint = storyPointValue
+        }
+
         format.timespent = secondsToUIFormat(timespent)
-        format.timeoriginalestimate = timeoriginalestimate ? secondsToUIFormat(timeoriginalestimate) : '-'
+
+        if (useStoryPointsAsTimeEstimate) {
+            if (typeof storyPointValue === 'number') {
+                const seconds = dayjs.duration(storyPointValue, 'hours').asSeconds();
+
+                format.timeoriginalestimate = secondsToUIFormat(seconds)
+            } else {
+                format.timeoriginalestimate = '-'
+            }
+        } else {
+            format.timeoriginalestimate = timeoriginalestimate ? secondsToUIFormat(timeoriginalestimate) : '-'
+        }
 
         return format
-    }, [timespent, timeoriginalestimate, duedate])
+    }, [timespent, timeoriginalestimate, duedate, storyPointValue, storyPointField, useStoryPointsAsTimeEstimate])
 
     return (
         <Flex justifyContent="space-between">
@@ -56,18 +85,41 @@ const CardHeader = (props: CardIssueHeader) => {
             <Flex
                 gap="space.100"
                 direction="column"
+                alignItems="end"
                 xcss={xcss({
                     flexShrink: '0',
                 })}
             >
-                {(dateUIFormat.due) && (
+                {
+                    dateUIFormat.storyPoint && (
+                        <Badge>
+                            <Flex columnGap="space.075" justifyContent="center" alignItems="center">
+                                <Text
+                                    weight="medium"
+                                    size="large"
+                                >
+                                    <Tooltip content={'Story point estimate'}>{(triggerProps) => <span {...triggerProps}>Story point:</span>}</Tooltip>
+                                </Text>
+                                <Text
+                                    weight="medium"
+                                    size="large"
+                                >
+                                    <Tooltip content={'Story point estimate'}>
+                                        {(triggerProps) => <span {...triggerProps}>{dateUIFormat.storyPoint}</span>}
+                                    </Tooltip>
+                                </Text>
+                            </Flex>
+                        </Badge>
+                    )
+                }
+                {dateUIFormat.due && (
                     <Badge appearance={dateUIFormat.due.isOverdue ? 'removed' : 'default'}>
-                        <Flex columnGap="space.075">
+                        <Flex columnGap="space.075" justifyContent="center" alignItems="center">
                             <Text
                                 weight="medium"
                                 size="large"
                             >
-                                Due:
+                                <Tooltip content={'Due date'}>{(triggerProps) => <span {...triggerProps}>Due:</span>}</Tooltip>
                             </Text>
                             <Text
                                 weight="medium"
@@ -81,7 +133,7 @@ const CardHeader = (props: CardIssueHeader) => {
                     </Badge>
                 )}
                 <Badge>
-                    <Flex columnGap="space.075">
+                    <Flex columnGap="space.075" justifyContent="center" alignItems="center">
                         <Text
                             weight="medium"
                             size="large"
@@ -92,7 +144,7 @@ const CardHeader = (props: CardIssueHeader) => {
                             weight="medium"
                             size="large"
                         >
-                            /
+                            |
                         </Text>
                         <Text
                             weight="medium"
@@ -107,6 +159,6 @@ const CardHeader = (props: CardIssueHeader) => {
             </Flex>
         </Flex>
     )
-}
+})
 
 export default memo(CardHeader)
