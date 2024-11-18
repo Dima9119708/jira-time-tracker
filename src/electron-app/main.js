@@ -202,6 +202,16 @@ const createMainWindow = (port) => {
     tray.setToolTip('Time Tracking');
     tray.setContextMenu(contextMenu);
 
+    tray.on('right-click', () => {
+        tray.popUpContextMenu(contextMenu);
+    });
+
+    tray.on('click', () => {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        if (!mainWindow.isVisible()) mainWindow.show();
+        mainWindow.focus();
+    });
+
     mainWindow.on('close', (event) => {
         if (!mainWindow.isVisible()) {
             return;
