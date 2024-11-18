@@ -92,6 +92,7 @@ const createMainWindow = (port) => {
     const mainWindow = new BrowserWindow({
         width: 1920,
         height: 1080,
+        title: 'Time Tracking',
         icon: path.join(__dirname, 'build', 'icons', '512x512.png'),
         useContentSize: true,
         webPreferences: {
@@ -213,77 +214,97 @@ const createMainWindow = (port) => {
     return mainWindow
 }
 
-app.whenReady().then(async () => {
-    if (!isProd) {
-        try {
-            const reduxDevToolsPath = path.join(
-                os.homedir(),
-                '.config/google-chrome/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/3.2.7_0'
-            );
+const gotTheLock = app.requestSingleInstanceLock();
 
-            const reactDevToolsPath = path.join(
-                os.homedir(),
-                '.config/google-chrome/Default/Extensions/gphhapmejobijbbhgpjhcjognlahblep/12_0'
-            );
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.whenReady().then(async () => {
+        if (!isProd) {
+            try {
+                const reduxDevToolsPath = path.join(
+                    os.homedir(),
+                    '.config/google-chrome/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/3.2.7_0'
+                );
 
-            await session.defaultSession.loadExtension(reduxDevToolsPath);
-            await session.defaultSession.loadExtension(reactDevToolsPath);
-        } catch (e) {
-            console.error(e);
-        }
-    }
-})
-    .then(async () => {
-        try {
-            portfinder.setBasePort(10000)
-            return await portfinder.getPortPromise()
-        } catch (e) {
-            return createChangePort()
+                const reactDevToolsPath = path.join(
+                    os.homedir(),
+                    '.config/google-chrome/Default/Extensions/gphhapmejobijbbhgpjhcjognlahblep/12_0'
+                );
+
+                await session.defaultSession.loadExtension(reduxDevToolsPath);
+                await session.defaultSession.loadExtension(reactDevToolsPath);
+            } catch (e) {
+                console.error(e);
+            }
         }
     })
-    .then((port) =>
-        server(port, (error) => {
-            dialog
-                .showMessageBox({
-                    type: 'error',
-                    title: 'Server error',
-                    message: error,
-                    buttons: ['Reload'],
-                })
-                .then(() => {
-                    AuthStorage.clear([AUTH_DATA])
-                    app.quit()
-                    app.relaunch()
-                })
-        })
-    )
-    .then((port) => {
-        const mainWindow = createMainWindow(port)
-
-        ControllerAuth()
-        ControllerAuthPlugin()
-        OAuth2Window(mainWindow)
-        AuthWindowPlugin(mainWindow)
-        BasicAuth()
-
-        app.on('activate', () => {
-            if (BrowserWindow.getAllWindows().length === 0) {
-                createMainWindow(port)
+        .then(async () => {
+            try {
+                portfinder.setBasePort(10000)
+                return await portfinder.getPortPromise()
+            } catch (e) {
+                return createChangePort()
             }
         })
-    })
-    .catch(() => {
-        AuthStorage.clear([AUTH_DATA])
+        .then((port) =>
+            server(port, (error) => {
+                dialog
+                    .showMessageBox({
+                        type: 'error',
+                        title: 'Server error',
+                        message: error,
+                        buttons: ['Reload'],
+                    })
+                    .then(() => {
+                        AuthStorage.clear([AUTH_DATA])
+                        app.quit()
+                        app.relaunch()
+                    })
+            })
+        )
+        .then((port) => {
+            const mainWindow = createMainWindow(port)
+
+            ControllerAuth()
+            ControllerAuthPlugin()
+            OAuth2Window(mainWindow)
+            AuthWindowPlugin(mainWindow)
+            BasicAuth()
+
+            app.on('second-instance', (event, commandLine, workingDirectory) => {
+                    if (mainWindow) {
+                        if (!mainWindow.isVisible()) {
+                            mainWindow.show();
+                        }
+
+                        if (mainWindow.isMinimized()) mainWindow.restore();
+                        mainWindow.focus();
+                    }
+                });
+
+            app.on('activate', () => {
+                if (BrowserWindow.getAllWindows().length === 0) {
+                    createMainWindow(port)
+                } else {
+                    mainWindow.focus();
+                }
+            })
+        })
+        .catch(() => {
+            AuthStorage.clear([AUTH_DATA])
+        })
+
+    app.on('window-all-closed', () => {
+        if (process.platform !== 'darwin') {
+            app.quit()
+        }
     })
 
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit()
-    }
-})
-
-app.on('web-contents-created', (event, contents) => {
-    contents.on('did-finish-load', () => {
-        contents.setZoomFactor(ZoomStorage.get())
+    app.on('web-contents-created', (event, contents) => {
+        contents.on('did-finish-load', () => {
+            contents.setZoomFactor(ZoomStorage.get())
+        })
     })
-})
+}
+
