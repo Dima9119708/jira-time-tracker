@@ -3,6 +3,7 @@ const path = require('path')
 const portfinder = require('portfinder')
 const url = require('url')
 const os = require('os');
+const { autoUpdater } = require('electron-updater');
 
 require('dotenv').config({
     path: app.isPackaged ? path.join(process.resourcesPath, '.env.production') : path.resolve(process.cwd(), '.env'),
@@ -184,6 +185,7 @@ const createMainWindow = (port) => {
     }
 
     const tray = new Tray(path.join(__dirname, 'build', 'icons', '512x512.png'));
+
     const contextMenu = Menu.buildFromTemplate([
         {
             label: 'Open',
@@ -221,7 +223,7 @@ const createMainWindow = (port) => {
     });
 
 
-    return mainWindow
+    return { mainWindow, tray }
 }
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -274,13 +276,82 @@ if (!gotTheLock) {
             })
         )
         .then((port) => {
-            const mainWindow = createMainWindow(port)
+            autoUpdater.autoInstallOnAppQuit = true
+            autoUpdater.checkForUpdates();
+
+            const { mainWindow, tray } = createMainWindow(port)
 
             ControllerAuth()
             ControllerAuthPlugin()
             OAuth2Window(mainWindow)
             AuthWindowPlugin(mainWindow)
             BasicAuth()
+
+            const currentMenu = Menu.getApplicationMenu();
+
+            const onUpdateNotAvailable = () => {
+                dialog.showMessageBox(mainWindow,{
+                    type: 'info',
+                    title: 'No Updates',
+                    message: 'No updates are available at the moment.',
+                }).then(() => {})
+                    .catch(() => {});
+
+            }
+
+            const updateMenuItem = {
+                label: 'Check for updates and download them',
+                click: () => {
+                    autoUpdater.checkForUpdates();
+                    autoUpdater.once('update-not-available', onUpdateNotAvailable);
+                },
+            };
+
+            const updatedMenu = Menu.buildFromTemplate([
+                ...(currentMenu ? currentMenu.items.map((item) => item) : []),
+                {
+                    label: 'Updates',
+                    submenu: [updateMenuItem],
+                },
+            ]);
+
+            Menu.setApplicationMenu(updatedMenu);
+
+            autoUpdater.on('update-available', () => {
+                dialog.showMessageBox(mainWindow, {
+                    type: 'info',
+                    title: 'Update Available',
+                    message: 'A new version of the application is available. It will be downloaded in the background.',
+                }).then(() => {})
+                    .catch(() => {});
+            });
+
+            autoUpdater.on('update-downloaded', () => {
+                dialog.showMessageBox(
+                    mainWindow,
+                    {
+                        type: 'info',
+                        title: 'Restart Required',
+                        message: 'To apply the changes, the application must be completely closed, including the system Tray. Please close the application manually through the system menu.',
+                        buttons: ['OK', 'Cancel'],
+                    },
+                ).then(({ response }) => {
+                    if (response === 1) return
+
+                    app.quit()
+                    app.relaunch()
+                });
+            });
+
+            autoUpdater.on('error', (error) => {
+                dialog.showErrorBox('Update Error', `An error occurred while checking for updates: ${error.message}`);
+            });
+
+            app.on('quit', () => {
+                if (tray) {
+                    tray.destroy();
+                }
+            });
 
             app.on('second-instance', (event, commandLine, workingDirectory) => {
                     if (mainWindow) {

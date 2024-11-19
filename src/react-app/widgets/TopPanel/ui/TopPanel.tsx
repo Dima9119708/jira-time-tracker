@@ -55,13 +55,25 @@ const TopPanel = () => {
 
     const onZoomInStart = useCallback(() => {
         zoomIntervalTimeout.current = setInterval(() => {
-            setZoom((prevState) => prevState + 0.01)
+            setZoom((prevState) => {
+                if (prevState >= 3.0) {
+                    return 3.0
+                }
+
+                return prevState + 0.01
+            })
         }, 50)
     }, [])
 
     const onZoomOutStart = useCallback(() => {
         zoomIntervalTimeout.current = setInterval(() => {
-            setZoom((prevState) => prevState - 0.01)
+            setZoom((prevState) => {
+                if (prevState <= 0.1) {
+                    return 0.1
+                }
+
+                return prevState - 0.01
+            })
         }, 50)
     }, [])
 

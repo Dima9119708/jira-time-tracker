@@ -1,6 +1,6 @@
 {
   "name": "jira-time-tracker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "main": "src/electron-app/main.js",
   "homepage": "https://github.com/Dima9119708/jira-time-tracker",
@@ -9,10 +9,12 @@
     "react:server:dev": "webpack serve --no-open --env port=3000",
     "electron:server:dev": "cross-env NODE_ENV=development electronmon -r ts-node/register/transpile-only .",
     "electron:server:prod": "NODE_ENV=production electron .",
-    "build:package:electron": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder -l -w",
-    "static:build:dev:browser": "webpack --env mode=development",
-    "static:build:prod:browser": "webpack --env mode=production baseRoute=/jira-time-tracker buildEnv=browser",
-    "static:build:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron",
+    "electron:package:build": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder -l -w",
+    "electron:publish": "export GH_TOKEN=$(cat .env.production | grep GH_TOKEN | cut -d '=' -f2) && electron-builder -l --publish always",
+    "build:electron:and:publish": "yarn electron:package:build && yarn electron:publish",
+    "static:frontend:dev:browser": "webpack --env mode=development",
+    "static:frontend:prod:browser": "webpack --env mode=production baseRoute=/jira-time-tracker buildEnv=browser",
+    "static:frontend:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron",
     "lint:ts": "../node_modules/.bin/eslint \\\"**/*.{ts,tsx,js,jsx}\\\"",
     "lint:ts:fix": "../node_modules/.bin/eslint \\\"**/*.{ts,tsx,js,jsx}\\\" --fix",
     "lint:css": "yarn ../node_modules/.bin/stylelint \\\"src/**/*.css\\\"",
@@ -40,6 +42,11 @@
       ],
       "icon": "build/icons/",
       "publisherName": "Dima Viron vivo@gmail.com"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Dima9119708",
+      "repo": "jira-time-tracker"
     }
   },
   "browserslist": {
@@ -183,6 +190,7 @@
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "electron-store": "^8.1.0",
+    "electron-updater": "^6.3.9",
     "electronmon": "^2.0.2",
     "express": "^4.18.2",
     "immer": "^10.0.3",
