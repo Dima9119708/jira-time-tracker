@@ -30,6 +30,8 @@ const styles = {
 
 const DEFAULT_COLOR_MODE = electron((methods) => methods.ipcRenderer.sendSync('GET_THEME'))
 const DEFAULT_ZOOM = electron<number>((methods) => methods.ipcRenderer.sendSync('GET_ZOOM'))
+const MAX_ZOOM = 2.5
+const MIN_ZOOM = 0.5
 
 const TopPanel = () => {
     const colorMode = useColorMode();
@@ -56,8 +58,8 @@ const TopPanel = () => {
     const onZoomInStart = useCallback(() => {
         zoomIntervalTimeout.current = setInterval(() => {
             setZoom((prevState) => {
-                if (prevState >= 3.0) {
-                    return 3.0
+                if (prevState >= MAX_ZOOM) {
+                    return MAX_ZOOM
                 }
 
                 return prevState + 0.01
@@ -68,8 +70,8 @@ const TopPanel = () => {
     const onZoomOutStart = useCallback(() => {
         zoomIntervalTimeout.current = setInterval(() => {
             setZoom((prevState) => {
-                if (prevState <= 0.1) {
-                    return 0.1
+                if (prevState <= MIN_ZOOM) {
+                    return MIN_ZOOM
                 }
 
                 return prevState - 0.01
@@ -93,9 +95,21 @@ const TopPanel = () => {
         const onWheel = (ev: WheelEvent) => {
             if (ev.ctrlKey) {
                 if (ev.deltaY > 0) {
-                    setZoom((prevState) => prevState - 0.1)
+                    setZoom((prevState) => {
+                        if (prevState <= MIN_ZOOM) {
+                            return MIN_ZOOM
+                        }
+
+                        return prevState - 0.10
+                    })
                 } else {
-                    setZoom((prevState) => prevState + 0.1)
+                    setZoom((prevState) => {
+                        if (prevState >= MAX_ZOOM) {
+                            return MAX_ZOOM
+                        }
+
+                        return prevState + 0.10
+                    })
                 }
             }
         }

@@ -1,14 +1,15 @@
 import { Issue } from 'react-app/shared/types/Jira/Issues'
-import SectionMessage, { SectionMessageAction } from '@atlaskit/section-message'
+import SectionMessage from '@atlaskit/section-message'
 import { secondsToUIFormat } from 'react-app/shared/lib/helpers/secondsToUIFormat'
 import { globalBooleanActions } from 'use-global-boolean'
 import { usePersistLostTime } from '../model/usePersistLostTime'
 import { ConfirmDelete } from 'react-app/shared/components/ConfirmDelete'
-import React, { FC, memo, useState } from 'react'
+import React, { memo, FC, PropsWithChildren, useState, HTMLAttributes } from 'react'
 import { useMidnightCountdown } from 'react-app/shared/lib/hooks/useMidnightCountdown'
 import { LogTimeAutoBaseProps } from 'react-app/widgets/LogTimeAuto'
 import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu'
 import Spinner from '@atlaskit/spinner'
+import { token } from '@atlaskit/tokens'
 
 interface LogTimeErrorNotificationProps extends Pick<LogTimeAutoBaseProps, 'invalidateQueries'> {
     issueId: Issue['id']
@@ -24,9 +25,22 @@ interface RenderMessageProps extends LogTimeErrorNotificationProps {
     clear: () => void
 }
 
+const SectionMessageAction = (props: PropsWithChildren<HTMLAttributes<HTMLSpanElement>>) => {
+    return <span style={{ color: token('color.link'), fontWeight: 500, cursor: 'pointer' }}>{props.children}</span>
+}
+
 const RenderMessage = (props: RenderMessageProps) => {
-    const { issueId, isAddToTimeSpentAction, isLogTimeAction, timeSpentSeconds, onAddToTimeSpent, remove, clear, LogTimeAutoComponent, invalidateQueries } =
-        props
+    const {
+        issueId,
+        isAddToTimeSpentAction,
+        isLogTimeAction,
+        timeSpentSeconds,
+        onAddToTimeSpent,
+        remove,
+        clear,
+        LogTimeAutoComponent,
+        invalidateQueries,
+    } = props
     const [isAddToTimeSpent, setIsAddToTimeSpent] = useState(false)
     const [isOpenDropdown, setOpenDropdown] = useState(false)
 
@@ -39,7 +53,7 @@ const RenderMessage = (props: RenderMessageProps) => {
             title={`Error During Logging at ${lostTimeUI}`}
             appearance={isAddToTimeSpent ? 'success' : 'error'}
             actions={[
-                <SectionMessageAction href="#">
+                <SectionMessageAction>
                     <ConfirmDelete
                         title="Are you sure you want to delete this time entry?"
                         onYes={() => {
@@ -61,7 +75,6 @@ const RenderMessage = (props: RenderMessageProps) => {
 
                 isAddToTimeSpentAction && (
                     <SectionMessageAction
-                        href="#"
                         onClick={() => {
                             onAddToTimeSpent?.(timeSpentSeconds)
                             setIsAddToTimeSpent(true)
@@ -76,7 +89,7 @@ const RenderMessage = (props: RenderMessageProps) => {
                         isOpen={isOpenDropdown}
                         onOpenChange={() => setOpenDropdown((prevState) => !prevState)}
                         trigger={(triggerButtonProps) => (
-                            <SectionMessageAction href="#">
+                            <SectionMessageAction>
                                 <div
                                     {...triggerButtonProps}
                                     ref={triggerButtonProps.triggerRef}
