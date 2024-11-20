@@ -276,8 +276,7 @@ if (!gotTheLock) {
             })
         )
         .then((port) => {
-            autoUpdater.autoInstallOnAppQuit = true
-            autoUpdater.checkForUpdates();
+            autoUpdater.autoInstallOnAppQuit = true;
 
             const { mainWindow, tray } = createMainWindow(port)
 
@@ -332,14 +331,16 @@ if (!gotTheLock) {
                     {
                         type: 'info',
                         title: 'Restart Required',
-                        message: 'To apply the changes, the application must be completely closed, including the system Tray. Please close the application manually through the system menu.',
-                        buttons: ['OK', 'Cancel'],
+                        message: 'A new version is detected. The application will exit for the update. Update now?',
+                        buttons: ['Update now', 'No'],
                     },
                 ).then(({ response }) => {
                     if (response === 1) return
 
+                    if(mainWindow && !mainWindow.isDestroyed()) mainWindow.hide()
+
+                    autoUpdater.quitAndInstall();
                     app.quit()
-                    app.relaunch()
                 });
             });
 
