@@ -1,13 +1,14 @@
+/*
+* TODO:
+    1. Refactor all JavaScript code to TypeScript.
+    2. Split the code into separate files/modules for better maintainability and modularity.
+* */
 const { app, BrowserWindow, dialog, ipcMain, Notification, powerMonitor, session, Tray, Menu } = require('electron')
 const path = require('path')
 const portfinder = require('portfinder')
 const url = require('url')
 const os = require('os');
 const { autoUpdater } = require('electron-updater');
-
-require('dotenv').config({
-    path: app.isPackaged ? path.join(process.resourcesPath, '.env.production') : path.resolve(process.cwd(), '.env'),
-})
 
 const OAuth2Window = require('./auth/oAuth2/OAuth2')
 const BasicAuth = require('./auth/BasicAuth')
@@ -19,13 +20,17 @@ const { AuthStorage, ThemeStorage, ZoomStorage } = require('./auth/keyService')
 const AuthWindowPlugin = require('./auth/AuthPlugin/AuthPlugin')
 
 const isProd = process.env.NODE_ENV === 'production'
+const isDev = process.env.NODE_ENV === 'development'
+
+const LogoPath = path.join(__dirname, '..', 'logos', '512x512.png')
+const HTMLPath = path.join(__dirname, '..', 'react-app', 'index.html')
 
 const createChangePort = () => {
     return new Promise((resolve) => {
         const mainWindow = new BrowserWindow({
             width: 1200,
             height: 800,
-            icon: path.join(__dirname, 'build', 'icons', '512x512.png'),
+            icon: LogoPath,
             useContentSize: true,
             webPreferences: {
                 nodeIntegration: true,
@@ -77,7 +82,7 @@ const createChangePort = () => {
         if (isProd) {
             mainWindow.webContents.loadURL(
                 url.format({
-                    pathname: path.join(__dirname, 'build/index.html'),
+                    pathname: HTMLPath,
                     hash: '/component-change-port',
                     protocol: 'file',
                 })
@@ -94,7 +99,7 @@ const createMainWindow = (port) => {
         width: 1920,
         height: 1080,
         title: 'Time Tracking',
-        icon: path.join(__dirname, 'build', 'icons', '512x512.png'),
+        icon: LogoPath,
         useContentSize: true,
         webPreferences: {
             nodeIntegration: true,
@@ -153,7 +158,7 @@ const createMainWindow = (port) => {
         const notification = new Notification({
             title: title,
             body: body,
-            icon: path.join(__dirname, 'build', 'icons', '512x512.png'),
+            icon: LogoPath,
         })
 
         notification.show()
@@ -178,50 +183,54 @@ const createMainWindow = (port) => {
     })
 
     if (isProd) {
-        mainWindow.loadFile(path.join(__dirname, 'build/index.html'))
+        mainWindow.loadFile(HTMLPath)
     } else {
         mainWindow.loadURL(`http://localhost:3000`)
         mainWindow.webContents.openDevTools()
     }
 
-    const tray = new Tray(path.join(__dirname, 'build', 'icons', '512x512.png'));
+    let tray
 
-    const contextMenu = Menu.buildFromTemplate([
-        {
-            label: 'Open',
-            click: () => {
-                mainWindow.show();
+    if (isProd) {
+        tray = new Tray(LogoPath);
+
+        const contextMenu = Menu.buildFromTemplate([
+            {
+                label: 'Open',
+                click: () => {
+                    mainWindow.show();
+                }
+            },
+            {
+                label: 'Quit',
+                click: () => {
+                    app.quit();
+                }
             }
-        },
-        {
-            label: 'Quit',
-            click: () => {
-                app.quit();
+        ]);
+
+        tray.setToolTip('Time Tracking');
+        tray.setContextMenu(contextMenu);
+
+        tray.on('right-click', () => {
+            tray.popUpContextMenu(contextMenu);
+        });
+
+        tray.on('click', () => {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            if (!mainWindow.isVisible()) mainWindow.show();
+            mainWindow.focus();
+        });
+
+        mainWindow.on('close', (event) => {
+            if (!mainWindow.isVisible()) {
+                return;
             }
-        }
-    ]);
+            event.preventDefault();
+            mainWindow.hide();
+        });
 
-    tray.setToolTip('Time Tracking');
-    tray.setContextMenu(contextMenu);
-
-    tray.on('right-click', () => {
-        tray.popUpContextMenu(contextMenu);
-    });
-
-    tray.on('click', () => {
-        if (mainWindow.isMinimized()) mainWindow.restore();
-        if (!mainWindow.isVisible()) mainWindow.show();
-        mainWindow.focus();
-    });
-
-    mainWindow.on('close', (event) => {
-        if (!mainWindow.isVisible()) {
-            return;
-        }
-        event.preventDefault();
-        mainWindow.hide();
-    });
-
+    }
 
     return { mainWindow, tray }
 }
@@ -232,7 +241,7 @@ if (!gotTheLock) {
     app.quit();
 } else {
     app.whenReady().then(async () => {
-        if (!isProd) {
+        if (isDev) {
             try {
                 const reduxDevToolsPath = path.join(
                     os.homedir(),

@@ -1,20 +1,21 @@
 {
   "name": "jira-time-tracker",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
-  "main": "src/electron-app/main.js",
+  "main": "build/electron-app/main.js",
   "homepage": "https://github.com/Dima9119708/jira-time-tracker",
   "author": "Dima Viron vivo@gmail.com",
   "scripts": {
-    "react:server:dev": "webpack serve --no-open --env port=3000 baseRoute=/ buildEnv=electron",
-    "electron:server:dev": "cross-env NODE_ENV=development electronmon -r ts-node/register/transpile-only .",
-    "electron:server:prod": "NODE_ENV=production electron .",
-    "electron:package:build": "rm -rf src/electron-app/build && cp -r build/ src/electron-app/build && electron-builder -l -w",
+    "renderer:dev": "webpack serve --no-open --env port=3000 baseRoute=/ buildEnv=electron --config ./webpack.config.renderer.ts",
+    "main:dev": "cross-env NODE_ENV=development webpack --watch --config ./webpack.config.main.ts",
+    "main:prod": "cross-env NODE_ENV=production webpack --watch --config ./webpack.config.main.ts",
+    "electron:package:build": "electron-builder -l -w",
     "electron:publish": "export GH_TOKEN=$(cat .env.production | grep GH_TOKEN | cut -d '=' -f2) && electron-builder -l -w --publish always",
     "build:electron:and:publish": "yarn electron:package:build && yarn electron:publish",
-    "static:frontend:dev:browser": "webpack --env mode=development",
-    "static:frontend:prod:browser": "webpack --env mode=production baseRoute=/jira-time-tracker buildEnv=browser",
-    "static:frontend:prod:electron": "webpack --env mode=production baseRoute=/ buildEnv=electron",
+    "build:renderer:dev": "webpack --env mode=development baseRoute=/ buildEnv=electron --config ./webpack.config.renderer.ts",
+    "build:renderer": "webpack --env mode=production baseRoute=/ buildEnv=electron --config ./webpack.config.renderer.ts",
+    "build:main": "webpack --env mode=production --config ./webpack.config.main.ts",
+    "build:renderer:and:main": "yarn build:renderer && yarn build:main",
     "lint:ts": "../node_modules/.bin/eslint \\\"**/*.{ts,tsx,js,jsx}\\\"",
     "lint:ts:fix": "../node_modules/.bin/eslint \\\"**/*.{ts,tsx,js,jsx}\\\" --fix",
     "lint:css": "yarn ../node_modules/.bin/stylelint \\\"src/**/*.css\\\"",
@@ -24,8 +25,8 @@
   "build": {
     "appId": "com.example.time-tracking",
     "productName": "Time Tracking",
-    "extraResources": [
-      ".env.production"
+    "files": [
+      "build/**/*"
     ],
     "linux": {
       "maintainer": "Dima Viron vivo@gmail.com",
@@ -33,14 +34,14 @@
         "AppImage",
         "deb"
       ],
-      "icon": "build/icons/"
+      "icon": "./logos/"
     },
     "win": {
       "target": [
         "nsis",
         "portable"
       ],
-      "icon": "build/icons/",
+      "icon": "./logos/",
       "publisherName": "Dima Viron vivo@gmail.com",
       "verifyUpdateCodeSignature": false,
       "signAndEditExecutable": false
@@ -70,7 +71,6 @@
     "@babel/plugin-transform-typescript": "^7.22.15",
     "@babel/preset-env": "^7.22.9",
     "@babel/preset-react": "^7.22.5",
-    "@babel/preset-typescript": "^7.22.5",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.10",
     "@svgr/webpack": "^8.0.1",
     "@testing-library/jest-dom": "^5.16.5",
@@ -125,6 +125,7 @@
     "prettierrc": "^0.0.0-5",
     "react-refresh": "^0.14.0",
     "redux-devtools-extension": "^2.13.9",
+    "spawn-sync": "^2.0.0",
     "style-loader": "^3.3.3",
     "terser-webpack-plugin": "^5.3.9",
     "ts-node": "^10.9.1",
@@ -133,7 +134,8 @@
     "webpack-bundle-analyzer": "^4.9.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.2",
-    "webpack-manifest-plugin": "^5.0.0"
+    "webpack-manifest-plugin": "^5.0.0",
+    "webpack-shell-plugin-next": "^2.3.2"
   },
   "dependencies": {
     "@atlaskit/app-provider": "^1.4.1",

@@ -40,7 +40,7 @@ export default (env: IBuildEnv) => {
         entry: path.resolve(__dirname, 'src', 'react-app', 'index.tsx'),
         output: {
             filename: isDev ? 'static/js/bundle.js' : 'static/js/[name].[contenthash:8].js',
-            path: path.resolve(__dirname, 'build'),
+            path: path.resolve(__dirname, 'build/react-app'),
             clean: true,
             publicPath: isDev ? '/' : '',
             assetModuleFilename: 'static/media/[name].[hash][ext]',
@@ -50,10 +50,7 @@ export default (env: IBuildEnv) => {
             preferAbsolute: true,
             mainFiles: ['index'],
             modules: [path.resolve(__dirname, 'src'), 'node_modules'],
-            alias: {
-                '@emotion/core': '@emotion/react',
-                // 'emotion-theming': '@emotion/react',
-            },
+            alias: {},
             fallback: {
                 assert: require.resolve('assert/'),
                 util: require.resolve('util/'),
@@ -95,9 +92,8 @@ export default (env: IBuildEnv) => {
             new webpack.ProvidePlugin({
                 Buffer: ['buffer', 'Buffer'],
             }),
-            // @ts-ignore
             new Dotenv({
-                path: isDev ? './.env' : './.env.production',
+                path: isDev ? path.resolve(__dirname, '.env') : path.resolve(__dirname, '.env.production'),
             }),
             isProd &&
                 new MiniCssExtractPlugin({
