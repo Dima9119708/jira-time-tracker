@@ -2,13 +2,14 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "strict": true,
-    "module": "ESNext",
+    "module": "CommonJS",
     "target": "ES5",
     "jsx": "react-jsx",
     "baseUrl": "./",
     "paths": {
       // "*": ["./src/*"],
       "react-app/*": ["./src/react-app/*"],
+      "electron-app/*": ["./src/electron-app/*"],
     },
     "allowJs": true,
     "moduleResolution": "node",
@@ -25,13 +26,10 @@
       "esnext"
     ]
   },
+
   "include": [
     "./src/**/*",
-    "webpack.config.ts"
+    "webpack.config.renderer.ts",
+    "webpack.config.main.ts"
   ],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
-  }
 }
